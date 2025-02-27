@@ -826,7 +826,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		try {
 			connectionObj = new HiveClient(serviceName,	connectionProperties);
 			if (connectionObj != null) {
-				testResult = connectionObj.getDatabaseList("*",null);
+				testResult = connectionObj.getDatabaseList("%",null);
 				if (testResult != null && testResult.size() != 0) {
 					connectivityStatus = true;
 				}

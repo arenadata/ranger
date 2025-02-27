@@ -122,7 +122,7 @@ public class HiveResourceMgr {
 					if ( databaseName != null
 							&& !databaseName.isEmpty()){
 						// get the DBList for given Input
-						databaseName += "*";
+						databaseName += "%";
 						finalDbName = databaseName;
 						callableObj = new Callable<List<String>>() {
 							@Override
@@ -134,7 +134,7 @@ public class HiveResourceMgr {
 					} else if ( tableName != null
 								&& !tableName.isEmpty()) {
 								// get  ColumnList for given Input	
-								tableName += "*";
+								tableName += "%";
 								finalTableName = tableName;
 								callableObj = new Callable<List<String>>() {
 
@@ -148,7 +148,7 @@ public class HiveResourceMgr {
 					} else if ( columnName != null
 									&& !columnName.isEmpty()) {
 							// get  ColumnList for given Input
-								columnName += "*";
+								columnName += "%";
 								finalColName = columnName;
 								finalDbName = databaseName;
 								finalTableName = tableName;
