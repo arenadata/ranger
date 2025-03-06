@@ -33,7 +33,7 @@
      },
      {
        "itemId": 2,
-       "name": "Rule",
+       "name": "rule",
        "type": "string",
        "level": 10,
        "parent": "",
@@ -60,7 +60,7 @@
      },
      {
        "itemId": 3,
-       "name": "Action",
+       "name": "action",
        "type": "string",
        "level": 10,
        "parent": "",
@@ -84,7 +84,7 @@
      },
      {
        "itemId": 4,
-       "name": "Audit",
+       "name": "audit",
        "type": "string",
        "level": 10,
        "parent": "",
