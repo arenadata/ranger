@@ -21,7 +21,7 @@ package org.apache.ranger.patch.cliutil;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.CredValidationUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.patch.BaseLoader;
@@ -278,9 +278,11 @@ public class ChangePasswordUtil extends BaseLoader {
 	private void validatePassword(String newPassword) {
 		boolean checkPassword = false;
 		if (newPassword != null) {
-			checkPassword = newPassword.trim().matches(StringUtil.VALIDATION_CRED);
+			checkPassword = newPassword.trim().matches(CredValidationUtil.credValidationRegex);
 			if (!checkPassword) {
-				String msg = "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.";
+				String msg = String.format("Password should match a regular expression %s " +
+								"(by default be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric).",
+						CredValidationUtil.credValidationRegex);
 				logger.error(msg);
 				System.out.println(msg);
 				throw restErrorUtil.createRESTException("serverMsg.changePasswordValidatePassword",

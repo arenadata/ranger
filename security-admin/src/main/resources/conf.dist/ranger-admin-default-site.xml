@@ -171,6 +171,12 @@
 		<value>5</value>
 	</property>
 
+<!-- # credential validation regex -->
+	<property>
+		<name>ranger.admin.login.validation.regex</name>
+		<value>(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}</value>
+	</property>
+
 <!-- # anonymous access -->
 	<property>
 		<name>ranger.admin.allow.unauthenticated.access</name>

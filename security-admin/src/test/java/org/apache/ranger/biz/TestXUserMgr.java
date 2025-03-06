@@ -36,6 +36,7 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.CredValidationUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
@@ -2811,7 +2812,10 @@ public class TestXUserMgr {
 		setup();
 		VXUser vxUser = vxUser();
 		vxUser.setPassword("password");
-		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.", null)).thenThrow(new WebApplicationException());
+		String msg = String.format("Password should match a regular expression %s " +
+						"(by default be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric).",
+				CredValidationUtil.credValidationRegex);
+		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, msg, null)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		xUserMgr.validatePassword(vxUser);
 	}

@@ -2597,10 +2597,13 @@ public class XUserMgr extends XUserMgrBase {
 	protected void validatePassword(VXUser vXUser) {
 		if (vXUser.getPassword() != null && !vXUser.getPassword().isEmpty()) {
 			boolean checkPassword = false;
-			checkPassword = vXUser.getPassword().trim().matches(StringUtil.VALIDATION_CRED);
+			checkPassword = vXUser.getPassword().trim().matches(CredValidationUtil.credValidationRegex);
 			if (!checkPassword) {
-				logger.warn("validatePassword(). Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.");
-				throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.", null);
+				String msg = String.format("Password should match a regular expression %s " +
+								"(by default be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric).",
+						CredValidationUtil.credValidationRegex);
+				logger.warn("validatePassword(). {}", msg);
+				throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, msg, null);
 			}
 		} else {
 			logger.warn("validatePassword(). Password cannot be blank/null.");

@@ -36,8 +36,6 @@ import org.springframework.stereotype.Component;
 public class StringUtil implements Serializable {
 	private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
 
-	static final public String VALIDATION_CRED = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
-
 	static final public String VALIDATION_NAME = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
 	static final public String VALIDATION_TEXT = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
 	static final public String VALIDATION_LOGINID = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
@@ -121,12 +119,11 @@ public class StringUtil implements Serializable {
 	}
 
 	public boolean validatePassword(String password, String[] invalidValues) {
-		// For now let's make sure we have minimum 8 characters
 		if (password == null) {
 			return false;
 		}
 		password = password.trim();
-		boolean checkPassword = password.matches(VALIDATION_CRED);
+		boolean checkPassword = password.matches(CredValidationUtil.credValidationRegex);
 		if (!checkPassword) {
 			return false;
 		}
