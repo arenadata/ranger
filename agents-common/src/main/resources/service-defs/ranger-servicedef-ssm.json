@@ -1,0 +1,145 @@
+{
+   "name": "ssm",
+   "label": "SSM Service",
+   "description": "SSM Ranger Security Plugin",
+   "guid": "b8290b7f-6f69-44a9-89cc-06b6975ea656",
+   "implClass": "io.arenadata.ranger.service.ssm.RangerServiceSsm",
+   "version": 1,
+   "isEnabled": 1,
+   "resources": [
+     {
+       "itemId": 1,
+       "name": "cluster",
+       "type": "string",
+       "level": 10,
+       "parent": "",
+       "mandatory": false,
+       "lookupSupported": true,
+       "recursiveSupported": true,
+       "excludesSupported": true,
+       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+       "matcherOptions": {
+         "wildCard": true,
+         "ignoreCase": true
+       },
+       "validationRegEx": "",
+       "validationMessage": "",
+       "uiHint": "",
+       "label": "Cluster",
+       "description": "List of SSM cluster nodes",
+       "accessTypeRestrictions": [
+         "VIEW"
+       ]
+     },
+     {
+       "itemId": 2,
+       "name": "Rule",
+       "type": "string",
+       "level": 10,
+       "parent": "",
+       "mandatory": false,
+       "lookupSupported": true,
+       "recursiveSupported": true,
+       "excludesSupported": true,
+       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+       "matcherOptions": {
+         "wildCard": true,
+         "ignoreCase": true
+       },
+       "validationRegEx": "",
+       "validationMessage": "",
+       "uiHint": "",
+       "label": "Rule",
+       "description": "Rule",
+       "accessTypeRestrictions": [
+         "VIEW",
+         "CREATE",
+         "DELETE",
+         "EDIT"
+       ]
+     },
+     {
+       "itemId": 3,
+       "name": "Action",
+       "type": "string",
+       "level": 10,
+       "parent": "",
+       "mandatory": false,
+       "lookupSupported": true,
+       "recursiveSupported": true,
+       "excludesSupported": true,
+       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+       "matcherOptions": {
+         "wildCard": true,
+         "ignoreCase": true
+       },
+       "validationRegEx": "",
+       "validationMessage": "",
+       "uiHint": "",
+       "label": "Action",
+       "description": "Action",
+       "accessTypeRestrictions": [
+         "VIEW", "SUBMIT"
+       ]
+     },
+     {
+       "itemId": 4,
+       "name": "Audit",
+       "type": "string",
+       "level": 10,
+       "parent": "",
+       "mandatory": false,
+       "lookupSupported": true,
+       "recursiveSupported": true,
+       "excludesSupported": true,
+       "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+       "matcherOptions": {
+         "wildCard": true,
+         "ignoreCase": true
+       },
+       "validationRegEx": "",
+       "validationMessage": "",
+       "uiHint": "",
+       "label": "Audit",
+       "description": "Audit",
+       "accessTypeRestrictions": [
+         "VIEW"
+       ]
+     }
+   ],
+   "accessTypes": [
+     {
+       "itemId": 1,
+       "name": "VIEW",
+       "label": "View"
+     },
+     {
+       "itemId": 2,
+       "name": "CREATE",
+       "label": "Create"
+     },
+     {
+       "itemId": 3,
+       "name": "DELETE",
+       "label": "Delete"
+     },
+     {
+       "itemId": 4,
+       "name": "EDIT",
+       "label": "Edit"
+     },
+     {
+       "itemId": 5,
+       "name": "SUBMIT",
+       "label": "Submit action"
+     }
+   ],
+   "configs": [
+   ],
+   "enums": [
+   ],
+   "contextEnrichers": [
+   ],
+   "policyConditions": [
+   ]
+   }
