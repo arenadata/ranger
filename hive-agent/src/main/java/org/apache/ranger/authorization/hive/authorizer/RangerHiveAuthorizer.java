@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -45,7 +43,6 @@ import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.HiveObjectRef;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -68,7 +65,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -88,6 +84,7 @@ import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
@@ -135,15 +132,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private boolean isCurrentRoleSet = false;
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
-								  HiveConf                   hiveConf,
-								  HiveAuthenticationProvider hiveAuthenticator,
-								  HiveAuthzSessionContext    sessionContext) {
+								HiveConf                   hiveConf,
+								HiveAuthenticationProvider hiveAuthenticator,
+								HiveAuthzSessionContext    sessionContext) {
 		super(metastoreClientFactory, hiveConf, hiveAuthenticator, sessionContext);
 
 		LOG.debug("RangerHiveAuthorizer.RangerHiveAuthorizer()");
 
 		RangerHivePlugin plugin = hivePlugin;
-		
+
 		if(plugin == null) {
 			synchronized(RangerHiveAuthorizer.class) {
 				plugin = hivePlugin;
@@ -155,11 +152,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						switch(sessionContext.getClientType()) {
 							case HIVECLI:
 								appType = "hiveCLI";
-							break;
+								break;
 
 							case HIVESERVER2:
 								appType = "hiveServer2";
-							break;
+								break;
 
 							/*
 							case HIVEMETASTORE:
@@ -730,9 +727,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								HivePrivilegeObject hivePrivObject,
 								HivePrincipal       grantorPrincipal,
 								boolean             grantOption)
-										throws HiveAuthzPluginException, HiveAccessControlException {
+			throws HiveAuthzPluginException, HiveAccessControlException {
 		if (LOG.isDebugEnabled()) {
-				LOG.debug("grantPrivileges() => HivePrivilegeObject:" + toString(hivePrivObject, new StringBuilder()) + "grantorPrincipal: " + grantorPrincipal + "hivePrincipals" + hivePrincipals + "hivePrivileges" + hivePrivileges);
+			LOG.debug("grantPrivileges() => HivePrivilegeObject:" + toString(hivePrivObject, new StringBuilder()) + "grantorPrincipal: " + grantorPrincipal + "hivePrincipals" + hivePrincipals + "hivePrivileges" + hivePrivileges);
 		}
 
 		if(! RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke) {
@@ -775,7 +772,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								 HivePrivilegeObject hivePrivObject,
 								 HivePrincipal       grantorPrincipal,
 								 boolean             grantOption)
-										 throws HiveAuthzPluginException, HiveAccessControlException {
+			throws HiveAuthzPluginException, HiveAccessControlException {
 		if(! RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke) {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
@@ -812,9 +809,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	@Override
 	public void checkPrivileges(HiveOperationType         hiveOpType,
 								List<HivePrivilegeObject> inputHObjs,
-							    List<HivePrivilegeObject> outputHObjs,
-							    HiveAuthzContext          context)
-		      throws HiveAuthzPluginException, HiveAccessControlException {
+								List<HivePrivilegeObject> outputHObjs,
+								HiveAuthzContext          context)
+			throws HiveAuthzPluginException, HiveAccessControlException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -856,46 +853,46 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						continue;
 					}
 
-          String pathStr = hiveObj.getObjectName();
+					String pathStr = hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
 
-          if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
+					if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
 
-            FsAction permission = getURIAccessType(hiveOpType);
-            Path path = new Path(pathStr);
-            FileSystem fs = null;
+						FsAction permission = getURIAccessType(hiveOpType);
+						Path path = new Path(pathStr);
+						FileSystem fs = null;
 
-            try {
-              fs = FileSystem.get(path.toUri(), getHiveConf());
-            } catch (IOException e) {
-              LOG.error("Error getting permissions for " + path, e);
-              throw new HiveAccessControlException(
-                  String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
-                      permission.name(), path),
-                  e);
-            }
+						try {
+							fs = FileSystem.get(path.toUri(), getHiveConf());
+						} catch (IOException e) {
+							LOG.error("Error getting permissions for " + path, e);
+							throw new HiveAccessControlException(
+									String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+											permission.name(), path),
+									e);
+						}
 
-            boolean shouldCheckAccess = true;
+						boolean shouldCheckAccess = true;
 
-            if (isMountedFs(fs)) {
-              Path resolvedPath = resolvePath(path, fs);
-              if (resolvedPath != null) {
-                // we know the resolved path scheme. Let's check the resolved path
-                // scheme is part of hivePlugin.getFSScheme.
-                shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
-              }
-            }
+						if (isMountedFs(fs)) {
+							Path resolvedPath = resolvePath(path, fs);
+							if (resolvedPath != null) {
+								// we know the resolved path scheme. Let's check the resolved path
+								// scheme is part of hivePlugin.getFSScheme.
+								shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
+							}
+						}
 
-            if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs)) {
-                throw new HiveAccessControlException(
-                    String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
-                        permission.name(), path));
-              }
-              continue;
-            }
-            // This means we got resolved path scheme is not part of
-            // hivePlugin.getFSScheme
+						if (shouldCheckAccess) {
+							if (!isURIAccessAllowed(user, permission, path, fs)) {
+								throw new HiveAccessControlException(
+										String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+												permission.name(), path));
+							}
+							continue;
+						}
+						// This means we got resolved path scheme is not part of
+						// hivePlugin.getFSScheme
 					}
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, hiveObjType, true);
@@ -915,34 +912,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
 					requests.add(request);
-				} else if (hiveOpType == HiveOperationType.SHOW_GRANT) {
-					String command = context.getCommandString();
-					String regexForShowGrantCommand = "SHOW GRANT\\s*(\\w+)?\\s*(\\w+)?\\s*ON\\s*(\\w+)?\\s*(\\S+)";
-					Pattern pattern = Pattern.compile(regexForShowGrantCommand, Pattern.CASE_INSENSITIVE);
-					Matcher matcher = pattern.matcher(command);
-
-					if (matcher.find()) {
-						String hiveObjectType = matcher.group(3);
-						String hiveObjectValue = matcher.group(4);
-
-						String dbName = hiveObjectValue;
-						String tableName = "";
-						if (hiveObjectValue.contains(".")) {
-							String[] parts = hiveObjectValue.split("\\.");
-							dbName = parts[0];
-							tableName = parts[1];
-						}
-
-						if (hiveObjectType.toUpperCase().equals(HiveObjectType.DATABASE.name())) {
-							RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName);
-							RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
-							requests.add(request);
-						} else if (hiveObjectType.toUpperCase().equals(HiveObjectType.TABLE.name())) {
-							RangerHiveResource resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
-							RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
-							requests.add(request);
-						}
-					}
 				} else if ( hiveOpType ==  HiveOperationType.REPLDUMP) {
 					// This happens when REPL DUMP command with null inputHObjs is sent in checkPrivileges()
 					// following parsing is done for Audit info
@@ -982,46 +951,46 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						continue;
 					}
 
-          String pathStr = hiveObj.getObjectName();
+					String pathStr = hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
 
-          if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
+					if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
 
-            FsAction permission = getURIAccessType(hiveOpType);
-            Path path = new Path(pathStr);
-            FileSystem fs = null;
+						FsAction permission = getURIAccessType(hiveOpType);
+						Path path = new Path(pathStr);
+						FileSystem fs = null;
 
-            try {
-              fs = FileSystem.get(path.toUri(), getHiveConf());
-            } catch (IOException e) {
-              LOG.error("Error getting permissions for " + path, e);
-              throw new HiveAccessControlException(
-                  String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
-                      permission.name(), path),
-                  e);
-            }
+						try {
+							fs = FileSystem.get(path.toUri(), getHiveConf());
+						} catch (IOException e) {
+							LOG.error("Error getting permissions for " + path, e);
+							throw new HiveAccessControlException(
+									String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+											permission.name(), path),
+									e);
+						}
 
-            boolean shouldCheckAccess = true;
+						boolean shouldCheckAccess = true;
 
-            if (isMountedFs(fs)) {
-              Path resolvedPath = resolvePath(path, fs);
-              if (resolvedPath != null) {
-                // we know the resolved path scheme. Let's check the resolved path
-                // scheme is part of hivePlugin.getFSScheme.
-                shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
-              }
-            }
+						if (isMountedFs(fs)) {
+							Path resolvedPath = resolvePath(path, fs);
+							if (resolvedPath != null) {
+								// we know the resolved path scheme. Let's check the resolved path
+								// scheme is part of hivePlugin.getFSScheme.
+								shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
+							}
+						}
 
-            if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs)) {
-                throw new HiveAccessControlException(
-                    String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
-                        permission.name(), path));
-              }
-              continue;
-            }
-            // This means we got resolved path scheme is not part of
-            // hivePlugin.getFSScheme
+						if (shouldCheckAccess) {
+							if (!isURIAccessAllowed(user, permission, path, fs)) {
+								throw new HiveAccessControlException(
+										String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+												permission.name(), path));
+							}
+							continue;
+						}
+						// This means we got resolved path scheme is not part of
+						// hivePlugin.getFSScheme
 					}
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, hiveObjType, false);
@@ -1121,7 +1090,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 						result.setIsAllowed(false);
 						result.setPolicyId(rowFilterResult.getPolicyId());
-						result.setPolicyVersion(rowFilterResult.getPolicyVersion());
 						result.setReason("User does not have access to all rows of the table");
 					} else {
 						// check if masking is enabled for any column in the table/view
@@ -1136,7 +1104,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 							result.setIsAllowed(false);
 							result.setPolicyId(dataMaskResult.getPolicyId());
-							result.setPolicyVersion(dataMaskResult.getPolicyVersion());
 							result.setReason("User does not have access to unmasked column values");
 						}
 					}
@@ -1153,7 +1120,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					String path = resource.getAsString();
 					path = (path == null) ? "Unknown resource!!" : buildPathForException(path, hiveOpType);
 					throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]",
-														 user, request.getHiveAccessType().name(), path));
+							user, request.getHiveAccessType().name(), path));
 				}
 			}
 		} finally {
@@ -1169,12 +1136,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	 * @throws HiveAuthzPluginException
 	 * @throws HiveAccessControlException
 	 */
-    // Commented out to avoid build errors until this interface is stable in Hive Branch
+	// Commented out to avoid build errors until this interface is stable in Hive Branch
 	// @Override
 	public List<HivePrivilegeObject> filterListCmdObjects(List<HivePrivilegeObject> objs,
 														  HiveAuthzContext          context)
-		      throws HiveAuthzPluginException, HiveAccessControlException {
-		
+			throws HiveAuthzPluginException, HiveAccessControlException {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> filterListCmdObjects(%s, %s)", objs, context));
 		}
@@ -1216,7 +1183,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(String.format("filterListCmdObjects: user[%s], groups[%s], roles[%s] ", user, groups, roles));
 			}
-			
+
 			if (ret == null) { // if we got any items to filter then we can't return back a null.  We must return back a list even if its empty.
 				ret = new ArrayList<HivePrivilegeObject>(objs.size());
 			}
@@ -1234,7 +1201,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					final String format = "filterListCmdObjects: actionType[%s], objectType[%s], objectName[%s], dbName[%s], columns[%s], partitionKeys[%s]; context: commandString[%s], ipAddress[%s]";
 					LOG.debug(String.format(format, actionType, objectType, objectName, dbName, columns, partitionKeys, commandString, ipAddress));
 				}
-				
+
 				RangerHiveResource resource = createHiveResourceForFiltering(privilegeObject, objOwners);
 				if (resource == null) {
 					LOG.error("filterListCmdObjects: RangerHiveResource returned by createHiveResource is null");
@@ -1492,18 +1459,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					columnTransformer = transformer.replace("{col}", columnName);
 				}
 
-				if (columnTransformer.contains("{colType}")) {
-					String colType = getColumnType(tableOrView, columnName, metaStoreClient);
-
-					if (StringUtils.isBlank(colType)) {
-						LOG.warn("addCellValueTransformerAndCheckIfTransformed(" + databaseName + ", " + tableOrViewName + ", " + columnName + "): failed to find column datatype");
-
-						colType = "string";
-					}
-
-					columnTransformer = columnTransformer.replace("{colType}", colType);
-				}
-
 				/*
 				String maskCondition = result.getMaskCondition();
 
@@ -1597,8 +1552,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				if (!isCreateOperation(hiveOpType)) {
 					setOwnerUser(ret, hiveObj, getMetaStoreClient(), objOwners);
 				}
-			break;
-	
+				break;
+
 			case TABLE:
 			case VIEW:
 			case FUNCTION:
@@ -1618,26 +1573,26 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 				}
 
-			break;
+				break;
 
 			case PARTITION:
-	
+
 			case COLUMN:
 				ret = new RangerHiveResource(objectType, hiveObj.getDbname(), hiveObj.getObjectName(), StringUtils.join(hiveObj.getColumns(), COLUMN_SEP));
 				setOwnerUser(ret, hiveObj, getMetaStoreClient(), objOwners);
-			break;
+				break;
 
-            case URI:
+			case URI:
 			case SERVICE_NAME:
 				ret = new RangerHiveResource(objectType, hiveObj.getObjectName());
-            break;
+				break;
 
 			case GLOBAL:
 				ret = new RangerHiveResource(objectType,hiveObj.getObjectName());
-			break;
+				break;
 
 			case NONE:
-			break;
+				break;
 		}
 
 		if (ret != null) {
@@ -1656,7 +1611,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case CREATE_MATERIALIZED_VIEW:
 			case CREATEFUNCTION:
 				ret = true;
-			break;
+				break;
 		}
 		return ret;
 	}
@@ -1696,11 +1651,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		switch(hiveObj.getType()) {
 			case DATABASE:
 				objType = HiveObjectType.DATABASE;
-			break;
+				break;
 
 			case PARTITION:
 				objType = HiveObjectType.PARTITION;
-			break;
+				break;
 
 			case TABLE_OR_VIEW:
 				if(! StringUtil.isEmpty(hiveObj.getColumns())) {
@@ -1710,34 +1665,34 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				} else {
 					objType = HiveObjectType.TABLE;
 				}
-			break;
+				break;
 
 			case FUNCTION:
 				objType = HiveObjectType.FUNCTION;
 				if (isTempUDFOperation(hiveOpTypeName, hiveObj)) {
 					objType = HiveObjectType.GLOBAL;
 				}
-			break;
+				break;
 
 			case DFS_URI:
 			case LOCAL_URI:
-                objType = HiveObjectType.URI;
-            break;
+				objType = HiveObjectType.URI;
+				break;
 
 			case COMMAND_PARAMS:
 			case GLOBAL:
 				if ( "add".equals(hiveOpTypeName) || "compile".equals(hiveOpTypeName)) {
 					objType = HiveObjectType.GLOBAL;
 				}
-			break;
+				break;
 
 			case SERVICE_NAME:
 				objType = HiveObjectType.SERVICE_NAME;
-			break;
+				break;
 
 			case COLUMN:
 				// Thejas: this value is unused in Hive; the case should not be hit.
-			break;
+				break;
 		}
 
 		return objType;
@@ -1756,368 +1711,374 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (hiveObjectType == HiveObjectType.URI && !isInput ) {
 			accessType = HiveAccessType.WRITE;
 			return accessType;
-		}
-
-		switch(objectActionType) {
-			case INSERT:
-			case INSERT_OVERWRITE:
-			case UPDATE:
-			case DELETE:
-				accessType = HiveAccessType.UPDATE;
-			break;
-			case OTHER:
-			switch(hiveOpType) {
-				case CREATEDATABASE:
-					if(hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
-						accessType = HiveAccessType.CREATE;
-					}
-				break;
-
-				case CREATEFUNCTION:
-					if(hiveObj.getType() == HivePrivilegeObjectType.FUNCTION) {
-						accessType = HiveAccessType.CREATE;
-					}
-					if(hiveObjectType == HiveObjectType.GLOBAL ) {
-						accessType = HiveAccessType.TEMPUDFADMIN;
-					}
-				break;
-
-				case CREATETABLE:
-				case CREATEVIEW:
-				case CREATETABLE_AS_SELECT:
-				case CREATE_MATERIALIZED_VIEW:
-					if(hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
-						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
-					}
-				break;
-				case ALTERVIEW_AS:
-					if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
-						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.ALTER;
-					} else if (hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
-						accessType = HiveAccessType.SELECT;
-					}
-				break;
-				case ALTERDATABASE:
-				case ALTERDATABASE_LOCATION:
-				case ALTERDATABASE_OWNER:
-				case ALTERPARTITION_BUCKETNUM:
-				case ALTERPARTITION_FILEFORMAT:
-				case ALTERPARTITION_LOCATION:
-				case ALTERPARTITION_MERGEFILES:
-				case ALTERPARTITION_PROTECTMODE:
-				case ALTERPARTITION_SERDEPROPERTIES:
-				case ALTERPARTITION_SERIALIZER:
-				case ALTERTABLE_ADDCOLS:
-				case ALTERTABLE_ADDPARTS:
-				case ALTERTABLE_ARCHIVE:
-				case ALTERTABLE_BUCKETNUM:
-				case ALTERTABLE_CLUSTER_SORT:
-				case ALTERTABLE_COMPACT:
-				case ALTERTABLE_DROPPARTS:
-				case ALTERTABLE_DROPCONSTRAINT:
-				case ALTERTABLE_ADDCONSTRAINT:
-				case ALTERTABLE_FILEFORMAT:
-				case ALTERTABLE_LOCATION:
-				case ALTERTABLE_MERGEFILES:
-				case ALTERTABLE_PARTCOLTYPE:
-				case ALTERTABLE_PROPERTIES:
-				case ALTERTABLE_PROTECTMODE:
-				case ALTERTABLE_RENAME:
-				case ALTERTABLE_RENAMECOL:
-				case ALTERTABLE_RENAMEPART:
-				case ALTERTABLE_REPLACECOLS:
-				case ALTERTABLE_SERDEPROPERTIES:
-				case ALTERTABLE_SERIALIZER:
-				case ALTERTABLE_SKEWED:
-				case ALTERTABLE_TOUCH:
-				case ALTERTABLE_UNARCHIVE:
-				case ALTERTABLE_UPDATEPARTSTATS:
-				case ALTERTABLE_UPDATETABLESTATS:
-				case ALTERTABLE_UPDATECOLUMNS:
-				case ALTERTBLPART_SKEWED_LOCATION:
-				case ALTERVIEW_PROPERTIES:
-				case ALTERVIEW_RENAME:
-				case ALTER_MATERIALIZED_VIEW_REWRITE:
-				case MSCK:
-					accessType = HiveAccessType.ALTER;
-				break;
-
-				case DROPFUNCTION:
-				case DROPTABLE:
-				case DROPVIEW:
-				case DROP_MATERIALIZED_VIEW:
-				case DROPDATABASE:
-					accessType = HiveAccessType.DROP;
-				break;
-
-				case IMPORT:
-					/*
-					This can happen during hive IMPORT command IFF a table is also being created as part of IMPORT.
-					If so then
-					- this would appear in the outputHObjs, i.e. accessType == false
-					- user then must have CREATE permission on the database
-
-					During IMPORT command it is not possible for a database to be in inputHObj list. Thus returning SELECT
-					when accessType==true is never expected to be hit in practice.
-					 */
-					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
+		} else {
+			switch (objectActionType) {
+				case INSERT:
+				case INSERT_OVERWRITE:
+				case UPDATE:
+				case DELETE:
+					accessType = HiveAccessType.UPDATE;
 					break;
+				case OTHER:
+					switch (hiveOpType) {
+						case CREATETABLE:
+						case CREATEVIEW:
+						case CREATETABLE_AS_SELECT:
+						case CREATE_MATERIALIZED_VIEW:
+							if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+								accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
+							} else if (hiveObj.getType() == HivePrivilegeObjectType.STORAGEHANDLER_URI) {
+								accessType = HiveAccessType.RWSTORAGE;
+							}
+							break;
+						case CREATEFUNCTION:
+							if (hiveObj.getType() == HivePrivilegeObjectType.FUNCTION) {
+								accessType = HiveAccessType.CREATE;
+							}
 
-				case EXPORT:
-				case LOAD:
-					accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.UPDATE;
-				break;
-
-				case LOCKDB:
-				case LOCKTABLE:
-				case UNLOCKDB:
-				case UNLOCKTABLE:
-					accessType = HiveAccessType.LOCK;
-				break;
-
-				/*
-				 * SELECT access is done for many of these metadata operations since hive does not call back for filtering.
-				 * Overtime these should move to _any/USE access (as hive adds support for filtering).
-				 */
-				case QUERY:
-				case SHOW_TABLESTATUS:
-				case SHOW_CREATETABLE:
-				case SHOWPARTITIONS:
-				case SHOW_TBLPROPERTIES:
-				case ANALYZE_TABLE:
-					accessType = HiveAccessType.SELECT;
-				break;
-
-				case SHOWCOLUMNS:
-				case DESCTABLE:
-					switch (StringUtil.toLower(hivePlugin.DescribeShowTableAuth)){
-						case "show-allowed":
-							// This is not implemented so defaulting to current behaviour of blocking describe/show columns not to show any columns.
-							// This has to be implemented when hive provides the necessary filterListCmdObjects for
-							// SELECT/SHOWCOLUMS/DESCTABLE to filter the columns based on access provided in ranger.
-						case "none":
-						case "":
+							if (hiveObjectType == HiveObjectType.GLOBAL) {
+								accessType = HiveAccessType.TEMPUDFADMIN;
+							}
+							break;
+						case CREATEDATABASE:
+							if (hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
+								accessType = HiveAccessType.CREATE;
+							}
+							break;
+						case ALTERDATABASE:
+						case ALTERDATABASE_LOCATION:
+						case ALTERDATABASE_OWNER:
+							accessType = HiveAccessType.ALTER;
+							break;
+						case ALTERVIEW_AS:
+							if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+								accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.ALTER;
+							} else if (hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
+								accessType = HiveAccessType.SELECT;
+							}
+							break;
+						case CACHE_METADATA:
+							break;
+						case ALTERPARTITION_BUCKETNUM:
+						case ALTERPARTITION_FILEFORMAT:
+						case ALTERPARTITION_LOCATION:
+						case ALTERPARTITION_MERGEFILES:
+						case ALTERPARTITION_PROTECTMODE:
+						case ALTERPARTITION_SERDEPROPERTIES:
+						case ALTERPARTITION_SERIALIZER:
+						case ALTERTABLE_ADDCOLS:
+						case ALTERTABLE_ADDPARTS:
+						case ALTERTABLE_ARCHIVE:
+						case ALTERTABLE_BUCKETNUM:
+						case ALTERTABLE_CLUSTER_SORT:
+						case ALTERTABLE_COMPACT:
+						case ALTERTABLE_DROPPARTS:
+						case ALTERTABLE_DROPCONSTRAINT:
+						case ALTERTABLE_ADDCONSTRAINT:
+						case ALTERTABLE_FILEFORMAT:
+						case ALTERTABLE_LOCATION:
+						case ALTERTABLE_MERGEFILES:
+						case ALTERTABLE_PARTCOLTYPE:
+						case ALTERTABLE_PROPERTIES:
+						case ALTERTABLE_PROTECTMODE:
+						case ALTERTABLE_RENAME:
+						case ALTERTABLE_RENAMECOL:
+						case ALTERTABLE_RENAMEPART:
+						case ALTERTABLE_REPLACECOLS:
+						case ALTERTABLE_SERDEPROPERTIES:
+						case ALTERTABLE_SERIALIZER:
+						case ALTERTABLE_SKEWED:
+						case ALTERTABLE_TOUCH:
+						case ALTERTABLE_UNARCHIVE:
+						case ALTERTABLE_UPDATEPARTSTATS:
+						case ALTERTABLE_UPDATETABLESTATS:
+						case ALTERTABLE_UPDATECOLUMNS:
+						case ALTERTBLPART_SKEWED_LOCATION:
+						case ALTERVIEW_PROPERTIES:
+						case ALTERVIEW_RENAME:
+						case ALTERTABLE_EXCHANGEPARTITION:
+						case ALTERTABLE_OWNER:
+						case ALTERTABLE_EXECUTE:
+						case ALTERTABLE_SETPARTSPEC:
+						case ALTER_MATERIALIZED_VIEW_REWRITE:
+							if (!isInput && this.isHiveOpTypeRenameTableOrView(hiveOpType)) {
+								if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW || hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
+									accessType = HiveAccessType.CREATE;
+								}
+							} else if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+								accessType = HiveAccessType.ALTER;
+							} else if (hiveObj.getType() == HivePrivilegeObjectType.STORAGEHANDLER_URI) {
+								accessType = HiveAccessType.RWSTORAGE;
+							}
+							break;
+						case MSCK:
+							accessType = HiveAccessType.ALTER;
+							break;
+						case DROPTABLE:
+						case DROPVIEW:
+						case DROP_MATERIALIZED_VIEW:
+							if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+								accessType = HiveAccessType.DROP;
+							} else if (hiveObj.getType() == HivePrivilegeObjectType.STORAGEHANDLER_URI) {
+								accessType = HiveAccessType.RWSTORAGE;
+							}
+							break;
+						case DROPFUNCTION:
+						case DROPDATABASE:
+							accessType = HiveAccessType.DROP;
+							break;
+						case IMPORT:
+							accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
+							break;
+						case EXPORT:
+						case LOAD:
+							accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.UPDATE;
+							break;
+						case LOCKDB:
+						case LOCKTABLE:
+						case UNLOCKDB:
+						case UNLOCKTABLE:
+							accessType = HiveAccessType.LOCK;
+							break;
+						case SHOW_CREATEDATABASE:
+							break;
+						case QUERY:
+						case SHOW_TABLESTATUS:
+						case SHOW_CREATETABLE:
+						case SHOWPARTITIONS:
+						case SHOW_TBLPROPERTIES:
+						case ANALYZE_TABLE:
 							accessType = HiveAccessType.SELECT;
 							break;
-						case "show-all":
+						case SHOWCOLUMNS:
+						case DESCTABLE:
+							RangerHivePlugin var10000 = hivePlugin;
+							switch (StringUtil.toLower(RangerHivePlugin.DescribeShowTableAuth)) {
+								case "show-allowed":
+								case "none":
+								case "":
+									accessType = HiveAccessType.SELECT;
+									return accessType;
+								case "show-all":
+									accessType = HiveAccessType.USE;
+									return accessType;
+								default:
+									return accessType;
+							}
+						case SHOWDATABASES:
+						case SWITCHDATABASE:
+						case DESCDATABASE:
+						case SHOWTABLES:
+						case SHOWVIEWS:
 							accessType = HiveAccessType.USE;
 							break;
+						case TRUNCATETABLE:
+							accessType = HiveAccessType.UPDATE;
+							break;
+						case GRANT_PRIVILEGE:
+						case REVOKE_PRIVILEGE:
+							accessType = HiveAccessType.NONE;
+							break;
+						case REPLDUMP:
+						case REPLLOAD:
+						case REPLSTATUS:
+							accessType = HiveAccessType.REPLADMIN;
+							break;
+						case KILL_QUERY:
+						case CREATE_RESOURCEPLAN:
+						case SHOW_RESOURCEPLAN:
+						case ALTER_RESOURCEPLAN:
+						case DROP_RESOURCEPLAN:
+						case CREATE_TRIGGER:
+						case ALTER_TRIGGER:
+						case DROP_TRIGGER:
+						case CREATE_POOL:
+						case ALTER_POOL:
+						case DROP_POOL:
+						case CREATE_MAPPING:
+						case ALTER_MAPPING:
+						case DROP_MAPPING:
+						case LLAP_CACHE_PURGE:
+						case LLAP_CLUSTER_INFO:
+						case CREATE_SCHEDULED_QUERY:
+						case ALTER_SCHEDULED_QUERY:
+						case DROP_SCHEDULED_QUERY:
+							accessType = HiveAccessType.SERVICEADMIN;
+							break;
+						case ADD:
+						case COMPILE:
+							accessType = HiveAccessType.TEMPUDFADMIN;
+						case DELETE:
+						case CREATEMACRO:
+						case CREATEROLE:
+						case DESCFUNCTION:
+						case DFS:
+						case DROPMACRO:
+						case DROPROLE:
+						case EXPLAIN:
+						case GRANT_ROLE:
+						case REVOKE_ROLE:
+						case RESET:
+						case SET:
+						case SHOWCONF:
+						case SHOWFUNCTIONS:
+						case SHOWLOCKS:
+						case SHOW_COMPACTIONS:
+						case SHOW_GRANT:
+						case SHOW_ROLES:
+						case SHOW_ROLE_GRANT:
+						case SHOW_ROLE_PRINCIPALS:
+						case SHOW_TRANSACTIONS:
+						case SHOWMATERIALIZEDVIEWS:
+							break;
+						case RELOADFUNCTION:
+							break;
+						case ABORT_TRANSACTIONS:
+							break;
+						case START_TRANSACTION:
+							break;
+						case COMMIT:
+							break;
+						case ROLLBACK:
+							break;
+						case SET_AUTOCOMMIT:
+							break;
+						case GET_CATALOGS:
+							break;
+						case GET_COLUMNS:
+							break;
+						case GET_FUNCTIONS:
+							break;
+						case GET_SCHEMAS:
+							break;
+						case GET_TABLES:
+							break;
+						case GET_TABLETYPES:
+							break;
+						case GET_TYPEINFO:
+							break;
+						case CREATEDATACONNECTOR:
+						case DROPDATACONNECTOR:
+						case SHOWDATACONNECTORS:
+						case ALTERDATACONNECTOR:
+						case ALTERDATACONNECTOR_OWNER:
+						case ALTERDATACONNECTOR_URL:
+						case DESCDATACONNECTOR:
+						case ALTERTABLE_CONVERT:
+						case ALTERTABLE_CREATEBRANCH:
+						case ALTERTABLE_DROPBRANCH:
+						case ALTERTABLE_CREATETAG:
+						case ALTERTABLE_DROPTAG:
+						case ALTER_MATERIALIZED_VIEW_REBUILD:
+						case PREPARE:
+						case EXECUTE:
+						case ABORT_COMPACTION:
+							break;
 					}
-				break;
-
-				// any access done for metadata access of actions that have support from hive for filtering
-				case SHOWDATABASES:
-				case SHOW_GRANT:
-				case SWITCHDATABASE:
-				case DESCDATABASE:
-				case SHOWTABLES:
-				case SHOWVIEWS:
-					accessType = HiveAccessType.USE;
-				break;
-
-				case TRUNCATETABLE:
-					accessType = HiveAccessType.UPDATE;
-				break;
-
-				case GRANT_PRIVILEGE:
-				case REVOKE_PRIVILEGE:
-					accessType = HiveAccessType.NONE; // access check will be performed at the ranger-admin side
-				break;
-
-				case REPLDUMP:
-				case REPLLOAD:
-				case REPLSTATUS:
-					accessType = HiveAccessType.REPLADMIN;
-				break;
-
-				case KILL_QUERY:
-				case CREATE_RESOURCEPLAN:
-				case SHOW_RESOURCEPLAN:
-				case ALTER_RESOURCEPLAN:
-				case DROP_RESOURCEPLAN:
-				case CREATE_TRIGGER:
-				case ALTER_TRIGGER:
-				case DROP_TRIGGER:
-				case CREATE_POOL:
-				case ALTER_POOL:
-				case DROP_POOL:
-				case CREATE_MAPPING:
-				case ALTER_MAPPING:
-				case DROP_MAPPING:
-				case LLAP_CACHE_PURGE:
-				case LLAP_CLUSTER_INFO:
-					accessType = HiveAccessType.SERVICEADMIN;
-				break;
-
-				case ADD:
-				case COMPILE:
-					accessType = HiveAccessType.TEMPUDFADMIN;
-				break;
-
-				case DELETE:
-				case CREATEMACRO:
-				case CREATEROLE:
-				case DESCFUNCTION:
-				case DFS:
-				case DROPMACRO:
-				case DROPROLE:
-				case EXPLAIN:
-				case GRANT_ROLE:
-				case REVOKE_ROLE:
-				case RESET:
-				case SET:
-				case SHOWCONF:
-				case SHOWFUNCTIONS:
-				case SHOWLOCKS:
-				case SHOW_COMPACTIONS:
-				case SHOW_ROLES:
-				case SHOW_ROLE_GRANT:
-				case SHOW_ROLE_PRINCIPALS:
-				case SHOW_TRANSACTIONS:
-				break;
 			}
-			break;
+
+			return accessType;
 		}
-		
-		return accessType;
+	}
+
+	private boolean isHiveOpTypeRenameTableOrView(HiveOperationType hiveOpType) {
+		boolean ret = false;
+		if (hiveOpType.equals(HiveOperationType.ALTERTABLE_RENAME) || hiveOpType.equals(HiveOperationType.ALTERVIEW_RENAME)) {
+			ret = true;
+		}
+
+		return ret;
 	}
 
 	private FsAction getURIAccessType(HiveOperationType hiveOpType) {
 		FsAction ret = FsAction.NONE;
-
-		switch(hiveOpType) {
-			case LOAD:
-			case IMPORT:
-				ret = FsAction.READ;
-			break;
-
-			case EXPORT:
-				ret = FsAction.WRITE;
-			break;
-
-			case CREATEDATABASE:
+		switch (hiveOpType) {
 			case CREATETABLE:
 			case CREATETABLE_AS_SELECT:
 			case CREATEFUNCTION:
-			case DROPFUNCTION:
-			case RELOADFUNCTION:
+			case CREATEDATABASE:
 			case ALTERDATABASE:
 			case ALTERDATABASE_LOCATION:
 			case ALTERDATABASE_OWNER:
-			case ALTERTABLE_ADDCOLS:
-			case ALTERTABLE_REPLACECOLS:
-			case ALTERTABLE_RENAMECOL:
-			case ALTERTABLE_RENAMEPART:
-			case ALTERTABLE_RENAME:
-			case ALTERTABLE_DROPPARTS:
-			case ALTERTABLE_ADDPARTS:
-			case ALTERTABLE_TOUCH:
-			case ALTERTABLE_ARCHIVE:
-			case ALTERTABLE_UNARCHIVE:
-			case ALTERTABLE_PROPERTIES:
-			case ALTERTABLE_SERIALIZER:
-			case ALTERTABLE_PARTCOLTYPE:
-			case ALTERTABLE_DROPCONSTRAINT:
-			case ALTERTABLE_ADDCONSTRAINT:
-			case ALTERTABLE_SERDEPROPERTIES:
-			case ALTERTABLE_CLUSTER_SORT:
-			case ALTERTABLE_BUCKETNUM:
-			case ALTERTABLE_UPDATETABLESTATS:
-			case ALTERTABLE_UPDATEPARTSTATS:
-			case ALTERTABLE_UPDATECOLUMNS:
-			case ALTERTABLE_PROTECTMODE:
-			case ALTERTABLE_FILEFORMAT:
-			case ALTERTABLE_LOCATION:
-			case ALTERTABLE_MERGEFILES:
-			case ALTERTABLE_SKEWED:
-			case ALTERTABLE_COMPACT:
-			case ALTERTABLE_EXCHANGEPARTITION:
-			case ALTERPARTITION_SERIALIZER:
-			case ALTERPARTITION_SERDEPROPERTIES:
 			case ALTERPARTITION_BUCKETNUM:
-			case ALTERPARTITION_PROTECTMODE:
 			case ALTERPARTITION_FILEFORMAT:
 			case ALTERPARTITION_LOCATION:
 			case ALTERPARTITION_MERGEFILES:
+			case ALTERPARTITION_PROTECTMODE:
+			case ALTERPARTITION_SERDEPROPERTIES:
+			case ALTERPARTITION_SERIALIZER:
+			case ALTERTABLE_ADDCOLS:
+			case ALTERTABLE_ADDPARTS:
+			case ALTERTABLE_ARCHIVE:
+			case ALTERTABLE_BUCKETNUM:
+			case ALTERTABLE_CLUSTER_SORT:
+			case ALTERTABLE_COMPACT:
+			case ALTERTABLE_DROPPARTS:
+			case ALTERTABLE_DROPCONSTRAINT:
+			case ALTERTABLE_ADDCONSTRAINT:
+			case ALTERTABLE_FILEFORMAT:
+			case ALTERTABLE_LOCATION:
+			case ALTERTABLE_MERGEFILES:
+			case ALTERTABLE_PARTCOLTYPE:
+			case ALTERTABLE_PROPERTIES:
+			case ALTERTABLE_PROTECTMODE:
+			case ALTERTABLE_RENAME:
+			case ALTERTABLE_RENAMECOL:
+			case ALTERTABLE_RENAMEPART:
+			case ALTERTABLE_REPLACECOLS:
+			case ALTERTABLE_SERDEPROPERTIES:
+			case ALTERTABLE_SERIALIZER:
+			case ALTERTABLE_SKEWED:
+			case ALTERTABLE_TOUCH:
+			case ALTERTABLE_UNARCHIVE:
+			case ALTERTABLE_UPDATEPARTSTATS:
+			case ALTERTABLE_UPDATETABLESTATS:
+			case ALTERTABLE_UPDATECOLUMNS:
 			case ALTERTBLPART_SKEWED_LOCATION:
+			case ALTERTABLE_EXCHANGEPARTITION:
 			case ALTERTABLE_OWNER:
+			case ALTERTABLE_EXECUTE:
+			case ALTERTABLE_SETPARTSPEC:
+			case DROPFUNCTION:
+			case QUERY:
 			case ADD:
 			case DELETE:
-			case QUERY:
+			case RELOADFUNCTION:
 				ret = FsAction.ALL;
-				break;
-
-			case EXPLAIN:
-			case DROPDATABASE:
-			case SWITCHDATABASE:
-			case LOCKDB:
-			case UNLOCKDB:
-			case DROPTABLE:
-			case DESCTABLE:
-			case DESCFUNCTION:
-			case MSCK:
-			case ANALYZE_TABLE:
-			case CACHE_METADATA:
-			case SHOWDATABASES:
-			case SHOWTABLES:
-			case SHOWCOLUMNS:
-			case SHOW_TABLESTATUS:
-			case SHOW_TBLPROPERTIES:
-			case SHOW_CREATEDATABASE:
-			case SHOW_CREATETABLE:
-			case SHOWFUNCTIONS:
-			case SHOWVIEWS:
-			case SHOWPARTITIONS:
-			case SHOWLOCKS:
-			case SHOWCONF:
-			case CREATEMACRO:
-			case DROPMACRO:
 			case CREATEVIEW:
-			case DROPVIEW:
 			case CREATE_MATERIALIZED_VIEW:
+			case ALTERVIEW_AS:
 			case ALTERVIEW_PROPERTIES:
-			case DROP_MATERIALIZED_VIEW:
+			case ALTERVIEW_RENAME:
 			case ALTER_MATERIALIZED_VIEW_REWRITE:
+			case MSCK:
+			case DROPTABLE:
+			case DROPVIEW:
+			case DROP_MATERIALIZED_VIEW:
+			case DROPDATABASE:
+			case LOCKDB:
 			case LOCKTABLE:
+			case UNLOCKDB:
 			case UNLOCKTABLE:
-			case CREATEROLE:
-			case DROPROLE:
+			case SHOW_TABLESTATUS:
+			case SHOW_CREATETABLE:
+			case SHOWPARTITIONS:
+			case SHOW_TBLPROPERTIES:
+			case ANALYZE_TABLE:
+			case SHOWCOLUMNS:
+			case DESCTABLE:
+			case SHOWDATABASES:
+			case SWITCHDATABASE:
+			case DESCDATABASE:
+			case SHOWTABLES:
+			case SHOWVIEWS:
+			case TRUNCATETABLE:
 			case GRANT_PRIVILEGE:
 			case REVOKE_PRIVILEGE:
-			case SHOW_GRANT:
-			case GRANT_ROLE:
-			case REVOKE_ROLE:
-			case SHOW_ROLES:
-			case SHOW_ROLE_GRANT:
-			case SHOW_ROLE_PRINCIPALS:
-			case TRUNCATETABLE:
-			case DESCDATABASE:
-			case ALTERVIEW_RENAME:
-			case ALTERVIEW_AS:
-			case SHOW_COMPACTIONS:
-			case SHOW_TRANSACTIONS:
-			case ABORT_TRANSACTIONS:
-			case SET:
-			case RESET:
-			case DFS:
-			case COMPILE:
-			case START_TRANSACTION:
-			case COMMIT:
-			case ROLLBACK:
-			case SET_AUTOCOMMIT:
-			case GET_CATALOGS:
-			case GET_COLUMNS:
-			case GET_FUNCTIONS:
-			case GET_SCHEMAS:
-			case GET_TABLES:
-			case GET_TABLETYPES:
-			case GET_TYPEINFO:
 			case REPLDUMP:
 			case REPLLOAD:
 			case REPLSTATUS:
 			case KILL_QUERY:
-			case LLAP_CACHE_PURGE:
-			case LLAP_CLUSTER_INFO:
 			case CREATE_RESOURCEPLAN:
 			case SHOW_RESOURCEPLAN:
 			case ALTER_RESOURCEPLAN:
@@ -2131,6 +2092,70 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case CREATE_MAPPING:
 			case ALTER_MAPPING:
 			case DROP_MAPPING:
+			case LLAP_CACHE_PURGE:
+			case LLAP_CLUSTER_INFO:
+			case CREATE_SCHEDULED_QUERY:
+			case ALTER_SCHEDULED_QUERY:
+			case DROP_SCHEDULED_QUERY:
+			case COMPILE:
+			case CREATEMACRO:
+			case CREATEROLE:
+			case DESCFUNCTION:
+			case DFS:
+			case DROPMACRO:
+			case DROPROLE:
+			case EXPLAIN:
+			case GRANT_ROLE:
+			case REVOKE_ROLE:
+			case RESET:
+			case SET:
+			case SHOWCONF:
+			case SHOWFUNCTIONS:
+			case SHOWLOCKS:
+			case SHOW_COMPACTIONS:
+			case SHOW_GRANT:
+			case SHOW_ROLES:
+			case SHOW_ROLE_GRANT:
+			case SHOW_ROLE_PRINCIPALS:
+			case SHOW_TRANSACTIONS:
+			case CACHE_METADATA:
+			case SHOW_CREATEDATABASE:
+			case ABORT_TRANSACTIONS:
+			case START_TRANSACTION:
+			case COMMIT:
+			case ROLLBACK:
+			case SET_AUTOCOMMIT:
+			case GET_CATALOGS:
+			case GET_COLUMNS:
+			case GET_FUNCTIONS:
+			case GET_SCHEMAS:
+			case GET_TABLES:
+			case GET_TABLETYPES:
+			case GET_TYPEINFO:
+			default:
+				break;
+			case IMPORT:
+			case LOAD:
+				ret = FsAction.READ;
+				break;
+			case EXPORT:
+				ret = FsAction.WRITE;
+			case CREATEDATACONNECTOR:
+			case DROPDATACONNECTOR:
+			case SHOWDATACONNECTORS:
+			case ALTERDATACONNECTOR:
+			case ALTERDATACONNECTOR_OWNER:
+			case ALTERDATACONNECTOR_URL:
+			case DESCDATACONNECTOR:
+			case ALTERTABLE_CONVERT:
+			case ALTERTABLE_CREATEBRANCH:
+			case ALTERTABLE_DROPBRANCH:
+			case ALTERTABLE_CREATETAG:
+			case ALTERTABLE_DROPTAG:
+			case ALTER_MATERIALIZED_VIEW_REBUILD:
+			case PREPARE:
+			case EXECUTE:
+			case ABORT_COMPACTION:
 				break;
 		}
 
@@ -2159,7 +2184,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-  private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
+	private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
 		return isURIAccessAllowed(userName, action, filePath, fs, RangerHivePlugin.URIPermissionCoarseCheck);
 	}
 
@@ -2217,28 +2242,28 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-  /**
-   * Resolves the path to actual target fs path. In the mount based file systems
-   * like ViewHDFS, the resolved target path could be the path of other mounted
-   * target fs path. Returns null if file does not exist or any other IOException.
-   */
-  private Path resolvePath(Path path, FileSystem fs) {
-    try {
-      return fs.resolvePath(path);
-    } catch (IOException e) {
-      return null;
-    }
-  }
+	/**
+	 * Resolves the path to actual target fs path. In the mount based file systems
+	 * like ViewHDFS, the resolved target path could be the path of other mounted
+	 * target fs path. Returns null if file does not exist or any other IOException.
+	 */
+	private Path resolvePath(Path path, FileSystem fs) {
+		try {
+			return fs.resolvePath(path);
+		} catch (IOException e) {
+			return null;
+		}
+	}
 
-  /**
-   * Returns true if the given fs supports mount functionality. In general we can
-   * have child file systems only in the case of mount fs like ViewFileSystem,
-   * ViewFsOverloadScheme or ViewDistributedFileSystem. Returns false if the
-   * getChildFileSystems API returns null.
-   */
-  private boolean isMountedFs(FileSystem fs) {
-    return fs.getChildFileSystems() != null;
-  }
+	/**
+	 * Returns true if the given fs supports mount functionality. In general we can
+	 * have child file systems only in the case of mount fs like ViewFileSystem,
+	 * ViewFsOverloadScheme or ViewDistributedFileSystem. Returns false if the
+	 * getChildFileSystems API returns null.
+	 */
+	private boolean isMountedFs(FileSystem fs) {
+		return fs.getChildFileSystems() != null;
+	}
 
 
 
@@ -2246,7 +2271,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								  List<HivePrivilegeObject> inputHObjs,
 								  String                    user,
 								  RangerHiveAuditHandler    auditHandler)
-	      throws HiveAuthzPluginException, HiveAccessControlException {
+			throws HiveAuthzPluginException, HiveAccessControlException {
 
 		String dfsCommandParams = null;
 
@@ -2273,7 +2298,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		auditHandler.logAuditEventForDfs(user, dfsCommandParams, false, serviceType, serviceName);
 
 		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
-											 user, hiveOpType.name()));
+				user, hiveOpType.name()));
 	}
 
 	private boolean existsByResourceAndAccessType(Collection<RangerHiveAccessRequest> requests, RangerHiveResource resource, HiveAccessType accessType) {
@@ -2325,14 +2350,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 													 List<HivePrivilege> hivePrivileges,
 													 HivePrincipal       grantorPrincipal,
 													 boolean             grantOption)
-														  throws HiveAccessControlException {
+			throws HiveAccessControlException {
 		if(resource == null ||
-		  ! (   resource.getObjectType() == HiveObjectType.DATABASE
-		     || resource.getObjectType() == HiveObjectType.TABLE
-		     || resource.getObjectType() == HiveObjectType.VIEW
-		     || resource.getObjectType() == HiveObjectType.COLUMN
-		   )
-		  ) {
+				! (   resource.getObjectType() == HiveObjectType.DATABASE
+						|| resource.getObjectType() == HiveObjectType.TABLE
+						|| resource.getObjectType() == HiveObjectType.VIEW
+						|| resource.getObjectType() == HiveObjectType.COLUMN
+				)
+		) {
 			throw new HiveAccessControlException("grant/revoke: unexpected object type '" + (resource == null ? null : resource.getObjectType().name()));
 		}
 
@@ -2376,7 +2401,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			switch(principal.getType()) {
 				case USER:
 					ret.getUsers().add(principal.getName());
-				break;
+					break;
 
 				case GROUP:
 					ret.getGroups().add(principal.getName());
@@ -2387,23 +2412,23 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					break;
 
 				case UNKNOWN:
-				break;
+					break;
 			}
 		}
 
 		for(HivePrivilege privilege : hivePrivileges) {
 			String privName = privilege.getName();
-			
+
 			if(StringUtils.equalsIgnoreCase(privName, HiveAccessType.ALL.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.ALTER.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.CREATE.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.DROP.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.LOCK.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.SELECT.name()) ||
-			   StringUtils.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.ALTER.name()) ||
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.CREATE.name()) ||
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.DROP.name()) ||
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.LOCK.name()) ||
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.SELECT.name()) ||
+					StringUtils.equalsIgnoreCase(privName, HiveAccessType.UPDATE.name())) {
 				ret.getAccessTypes().add(privName.toLowerCase());
 			} else if (StringUtils.equalsIgnoreCase(privName, "Insert") ||
-							StringUtils.equalsIgnoreCase(privName, "Delete")) {
+					StringUtils.equalsIgnoreCase(privName, "Delete")) {
 				// Mapping Insert/Delete to Update
 				ret.getAccessTypes().add(HiveAccessType.UPDATE.name().toLowerCase());
 			} else {
@@ -2451,12 +2476,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private HivePrivilegeObjectType getPluginPrivilegeObjType(
 			org.apache.hadoop.hive.metastore.api.HiveObjectType objectType) {
 		switch (objectType) {
-		case DATABASE:
-			return HivePrivilegeObjectType.DATABASE;
-		case TABLE:
-			return HivePrivilegeObjectType.TABLE_OR_VIEW;
-		default:
-			throw new AssertionError("Unexpected object type " + objectType);
+			case DATABASE:
+				return HivePrivilegeObjectType.DATABASE;
+			case TABLE:
+				return HivePrivilegeObjectType.TABLE_OR_VIEW;
+			default:
+				throw new AssertionError("Unexpected object type " + objectType);
 		}
 	}
 
@@ -2829,7 +2854,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 							HiveAuthzContext          context,
 							HiveAuthzSessionContext   sessionContext) {
 		StringBuilder sb = new StringBuilder();
-		
+
 		sb.append("'checkPrivileges':{");
 		sb.append("'hiveOpType':").append(hiveOpType);
 
@@ -2864,7 +2889,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				toString(privObjs.get(i), sb);
 			}
 		}
-		
+
 		return sb;
 	}
 
@@ -3200,9 +3225,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								owner = database.getOwnerName();
 							}
 						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Owner for database " + objName + " is already known");
-							}
+							LOG.info("Owner for database " + hiveObj.getDbname() + " is already known");
 						}
 					} catch (Exception excp) {
 						LOG.error("failed to get database object from Hive metastore. dbName=" + hiveObj.getDbname(), excp);
@@ -3222,9 +3245,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								owner = table.getOwner();
 							}
 						} else {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Owner for table " + objName + " is already known");
-							}
+							LOG.info("Owner for table " + hiveObj.getDbname() + "." + hiveObj.getObjectName() + " is already known");
 						}
 					} catch (Exception excp) {
 						LOG.error("failed to get table object from Hive metastore. dbName=" + hiveObj.getDbname() + ", tblName=" + hiveObj.getObjectName(), excp);
@@ -3246,39 +3267,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 	}
 
-	private static String getColumnType(HivePrivilegeObject hiveObj, String colName, IMetaStoreClient metaStoreClient) {
-		String ret = null;
-
-		if (hiveObj != null && metaStoreClient != null) {
-			try {
-				switch (hiveObj.getType()) {
-					case TABLE_OR_VIEW:
-					case COLUMN:
-						Table             table = metaStoreClient.getTable(hiveObj.getDbname(), hiveObj.getObjectName());
-						List<FieldSchema> cols  = table != null && table.getSd() != null ? table.getSd().getCols() : null;
-
-						if (CollectionUtils.isNotEmpty(cols)) {
-							for (FieldSchema col : cols) {
-								if (StringUtils.equalsIgnoreCase(col.getName(), colName)) {
-									ret = col.getType();
-									break;
-								}
-							}
-						}
-						break;
-				}
-			} catch (Exception excp) {
-				LOG.error("failed to get column type from Hive metastore. dbName=" + hiveObj.getDbname() + ", tblName=" + hiveObj.getObjectName() + ", colName=" + colName, excp);
-			}
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("getColumnType(" + hiveObj + ", " + colName + "): columnType=" + ret);
-		}
-
-		return ret;
-	}
-
 	private IMetaStoreClient getMetaStoreClient() {
 		IMetaStoreClient ret = null;
 
@@ -3293,7 +3281,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 }
 
 enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
-enum HiveAccessType { NONE, CREATE, ALTER, DROP, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN };
+enum HiveAccessType { NONE, CREATE, ALTER, DROP, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN, RWSTORAGE };
 
 class HiveObj {
 	String databaseName;
@@ -3302,7 +3290,7 @@ class HiveObj {
 	HiveObj() {}
 
 	HiveObj(HiveAuthzContext context) {
-	 fetchHiveObj(context);
+		fetchHiveObj(context);
 	}
 
 	public String getDatabaseName() {
