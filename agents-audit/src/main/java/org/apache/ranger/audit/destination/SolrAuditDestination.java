@@ -163,58 +163,96 @@ public class SolrAuditDestination extends AuditDestination {
 					if (zkHosts != null && !zkHosts.isEmpty()) {
 						LOG.info("Connecting to solr cloud using zkHosts="
 								+ zkHosts);
-						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
-								SolrHttpClientBuilder kb = krbBuild.getBuilder();
-								HttpClientUtil.setHttpClientBuilder(kb);
+						try {
+							// Instantiate
+							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+							SolrHttpClientBuilder kb = krbBuild.getBuilder();
+							HttpClientUtil.setHttpClientBuilder(kb);
 
-								final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
-								final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
-									@Override
-									public CloudSolrClient run() throws Exception {
-										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
-										return solrCloudClient;
-									}
+							final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
+							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
+								@Override
+								public CloudSolrClient run()  throws Exception {
+									CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
+									return solrCloudClient;
+								};
+							});
 
-									;
-								});
-
-								solrCloudClient.setDefaultCollection(collectionName);
-								me = solrClient = solrCloudClient;
+							solrCloudClient.setDefaultCollection(collectionName);
+							me = solrClient = solrCloudClient;
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. ZooKeepers="
 									+ zkHosts, t);
 						}
+						finally {
+							resetInitializerInSOLR();
+						}
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
-						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
-								LOG.info("Connecting to Solr using URLs=" + solrURLs);
-								SolrHttpClientBuilder kb = krbBuild.getBuilder();
-								HttpClientUtil.setHttpClientBuilder(kb);
-								final List<String> solrUrls = solrURLs;
-								final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
-									@Override
-									public LBHttpSolrClient run() throws Exception {
-										LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
-										builder.withBaseSolrUrl(solrUrls.get(0));
-										builder.withConnectionTimeout(1000);
-										LBHttpSolrClient lbSolrClient = builder.build();
-										return lbSolrClient;
-									}
+						try {
+							LOG.info("Connecting to Solr using URLs=" + solrURLs);
+							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+							SolrHttpClientBuilder kb = krbBuild.getBuilder();
+							HttpClientUtil.setHttpClientBuilder(kb);
+							final List<String> solrUrls = solrURLs;
+							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
+								@Override
+								public LBHttpSolrClient run()  throws Exception {
+									LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
+									builder.withBaseSolrUrl(solrUrls.get(0));
+									builder.withConnectionTimeout(1000);
+									LBHttpSolrClient lbSolrClient = builder.build();
+									return lbSolrClient;
+								};
+							});
 
-									;
-								});
-
-								for (int i = 1; i < solrURLs.size(); i++) {
-									lbSolrClient.addSolrServer(solrURLs.get(i));
-								}
-								me = solrClient = lbSolrClient;
+							for (int i = 1; i < solrURLs.size(); i++) {
+								lbSolrClient.addSolrServer(solrURLs.get(i));
+							}
+							me = solrClient = lbSolrClient;
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. URL="
 									+ solrURLs, t);
+						}
+						finally {
+							resetInitializerInSOLR();
 						}
 					}
 				}
 			}
 		}
+	}
+
+
+	private void resetInitializerInSOLR() {
+		javax.security.auth.login.Configuration solrConfig = javax.security.auth.login.Configuration.getConfiguration();
+		String solrConfigClassName = solrConfig.getClass().getName();
+		String solrJassConfigEnd = "SolrJaasConfiguration";
+		if (solrConfigClassName.endsWith(solrJassConfigEnd)) {
+			try {
+				Field f = solrConfig.getClass().getDeclaredField("initiateAppNames");
+				if (f != null) {
+					f.setAccessible(true);
+					HashSet<String> val = new HashSet<String>();
+					f.set(solrConfig, val);
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug("resetInitializerInSOLR: successfully reset the initiateAppNames");
+					}
+
+				} else {
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not have initiateAppNames variable name.");
+					}
+				}
+			} catch (Throwable t) {
+				logError("resetInitializerInSOLR: Unable to reset SOLRCONFIG.initiateAppNames to be empty", t);
+			}
+		}
+		else {
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not endwith [" + solrJassConfigEnd + "]");
+			}
+		}
+
 	}
 
 	@Override
@@ -321,22 +359,22 @@ public class SolrAuditDestination extends AuditDestination {
 				 } else {
 					LOG.warn("No Client JAAS config present in solr audit config. Ranger Audit to Kerberized Solr will fail...");
 				}
-			 }
+			}
 
-			 LOG.info("Loading SolrClient JAAS config from Ranger audit config if present...");
+			LOG.info("Loading SolrClient JAAS config from Ranger audit config if present...");
 
-			 InMemoryJAASConfiguration conf = InMemoryJAASConfiguration.init(props);
+			InMemoryJAASConfiguration conf = InMemoryJAASConfiguration.init(props);
 
-			 KerberosUser kerberosUser = new KerberosJAASConfigUser("Client", conf);
+			KerberosUser kerberosUser = new KerberosJAASConfigUser("Client", conf);
 
-			 if (kerberosUser.getPrincipal() != null) {
+			if (kerberosUser.getPrincipal() != null) {
 				this.kerberosUser = kerberosUser;
-			 }
+			}
 		} catch (Exception e) {
 			LOG.error("ERROR: Unable to load SolrClient JAAS config from Audit config file. Audit to Kerberized Solr will fail...", e);
 		} finally {
-			 String confFileName = System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
-			 LOG.info("In solrAuditDestination.init() (finally) : JAAS Configuration set as [" + confFileName + "]");
+			String confFileName = System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
+			LOG.info("In solrAuditDestination.init() (finally) : JAAS Configuration set as [" + confFileName + "]");
 		}
 		LOG.info("<==SolrAuditDestination.init()" );
 	}
@@ -456,7 +494,7 @@ public class SolrAuditDestination extends AuditDestination {
 
 			if (kerberosUser != null) {
 				// execute the privileged action as the given keytab user
-				final KerberosAction kerberosAction = new KerberosAction<>(kerberosUser, action, LOG);
+				final KerberosAction<UpdateResponse> kerberosAction = new KerberosAction<UpdateResponse>(kerberosUser, action, LOG);
 
 				ret = (UpdateResponse) kerberosAction.execute();
 			} else {
