@@ -133,7 +133,19 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         if (!registerSynchronization()) {
             LOG.info("Transaction synchronization is NOT ACTIVE. Executing right now runnable {" + runnable + "}");
 
-            runnable.run();
+            TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+            txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+
+            txTemplate.execute(status -> {
+                try {
+                    runnable.run();
+                } catch (Exception e) {
+                    LOG.error("Error executing runnable inside transaction: ", e);
+                    throw e;
+                }
+                return null;
+            });
 
             return;
         }
