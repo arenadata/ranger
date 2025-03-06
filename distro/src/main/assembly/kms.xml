@@ -50,6 +50,7 @@
                     <include>org.mortbay.jetty:jetty</include>
                     <include>org.mortbay.jetty:jetty-util</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+                    <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
                     <include>org.apache.curator:curator-framework</include>
                     <include>org.apache.curator:curator-client</include>
                     <include>org.apache.curator:curator-test</include>
