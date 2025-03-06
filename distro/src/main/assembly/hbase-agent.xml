@@ -54,8 +54,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-lang:commons-lang</include>
-          <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
-          <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
           <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
