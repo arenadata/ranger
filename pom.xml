@@ -820,13 +820,12 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>plugin-adscc</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
-                <module>plugin-adscc</module>
-                <module>plugin-ssm</module>
                 <module>plugin-kylin</module>
                 <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
@@ -836,6 +835,7 @@
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
+                <module>plugin-ssm</module>
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
@@ -1148,24 +1148,22 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>plugin-adscc</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
-                <module>plugin-adscc</module>
-                <module>plugin-ssm</module>
                 <module>plugin-kylin</module>
                 <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
-                <module>plugin-adscc</module>
-                <module>plugin-ssm</module>
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
+                <module>plugin-ssm</module>
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
