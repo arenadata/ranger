@@ -102,10 +102,10 @@
         <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
         <hadoop.version>3.3.6</hadoop.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <hbase-shaded-miscellaneous>4.1.7</hbase-shaded-miscellaneous>
+        <hbase-shaded-miscellaneous>4.1.5</hbase-shaded-miscellaneous>
         <hbase-shaded-netty>4.1.7</hbase-shaded-netty>
         <hbase-shaded-protobuf>4.1.7</hbase-shaded-protobuf>
-        <hbase.version>2.6.0</hbase.version>
+        <hbase.version>2.5.10</hbase.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <hive.version>3.1.3</hive.version>
         <hppc.version>0.8.0</hppc.version>
@@ -223,7 +223,7 @@
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
         <trino.version>451</trino.version>
         <velocity.version>2.3</velocity.version>
-        <zookeeper.version>3.9.2</zookeeper.version>
+        <zookeeper.version>3.8.4</zookeeper.version>
     </properties>
     <dependencyManagement>
         <dependencies>
