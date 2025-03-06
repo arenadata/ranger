@@ -106,8 +106,8 @@
         <hbase-shaded-netty>4.1.7</hbase-shaded-netty>
         <hbase-shaded-protobuf>4.1.7</hbase-shaded-protobuf>
         <hbase.version>2.5.10</hbase.version>
-        <hive.storage-api.version>2.7.2</hive.storage-api.version>
-        <hive.version>3.1.3</hive.version>
+        <hive.storage-api.version>4.0.1</hive.storage-api.version>
+        <hive.version>4.0.1</hive.version>
         <hppc.version>0.8.0</hppc.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpasyncclient.version>4.1.4</httpcomponents.httpasyncclient.version>
@@ -155,7 +155,7 @@
         <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
         <kylin.version>4.0.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
-        <libthrift.version>0.14.0</libthrift.version>
+        <libthrift.version>0.16.0</libthrift.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j2.version>2.17.2</log4j2.version>
         <logback.version>1.3.14</logback.version>

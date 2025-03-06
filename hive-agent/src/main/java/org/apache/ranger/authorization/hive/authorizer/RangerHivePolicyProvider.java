@@ -35,7 +35,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 	private final RangerBasePlugin  rangerPlugin;
 	private final RangerHiveAuthorizer authorizer;
 
-	public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin, @NotNull RangerHiveAuthorizer authorizer) {
+	public RangerHivePolicyProvider(RangerBasePlugin hivePlugin, RangerHiveAuthorizer authorizer) {
 
 		Set<String> privileges = new HashSet<>();
 		for (HiveResourceACLs.Privilege privilege : HiveResourceACLs.Privilege.values()) {

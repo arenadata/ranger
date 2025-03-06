@@ -74,7 +74,6 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 
 			case TABLE:
 			case VIEW:
-			case INDEX:
 			case PARTITION:
 				setValue(KEY_DATABASE, firstLevelResource);
 				setValue(KEY_TABLE, secondLevelResource);
