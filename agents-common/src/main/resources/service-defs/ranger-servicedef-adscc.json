@@ -1,0 +1,242 @@
+{
+  "name": "adscc",
+  "label": "ADSCC Service",
+  "description": "ADSCC Ranger Security Plugin",
+  "guid": "b8290b7f-6f69-44a9-89cc-06b6975ea676",
+  "implClass": "org.apache.ranger.services.adscc.RangerServiceAdscc",
+  "version": 1,
+  "isEnabled": 1,
+  "resources": [
+    {
+      "itemId": 1,
+      "name": "cluster",
+      "type": "string",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint":"{ \"singleValue\":true }",
+      "label": "Cluster name",
+      "description": "Cluster name",
+      "accessTypeRestrictions": [
+        "READ"
+      ]
+    },
+    {
+      "itemId": 2,
+      "name": "topic",
+      "type": "string",
+      "level": 20,
+      "parent": "cluster",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Topic name",
+      "description": "Topic name",
+      "accessTypeRestrictions": [
+        "READ",
+        "CREATE",
+        "DELETE",
+        "CLEAR",
+        "READ_CONFIG",
+        "EDIT_CONFIG",
+        "READ_PARTITIONS",
+        "READ_CONSUMER_GROUPS",
+        "READ_MESSAGES",
+        "SEND_MESSAGE"
+      ]
+    },
+    {
+      "itemId": 3,
+      "name": "broker",
+      "type": "string",
+      "level": 20,
+      "parent": "cluster",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Broker id",
+      "description": "Broker id",
+      "accessTypeRestrictions": [
+        "READ"
+      ]
+    },
+    {
+      "itemId": 4,
+      "name": "consumer_group",
+      "type": "string",
+      "level": 20,
+      "parent": "cluster",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Consumer group name",
+      "description": "Consumer group name",
+      "accessTypeRestrictions": [
+        "READ", "DELETE"
+      ]
+    },
+    {
+      "itemId": 5,
+      "name": "connect",
+      "type": "string",
+      "level": 20,
+      "parent": "cluster",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Connect name",
+      "description": "Connect name",
+      "accessTypeRestrictions": [
+        "READ"
+      ]
+    }
+  ],
+  "accessTypes": [
+    {
+      "itemId": 1,
+      "name": "READ",
+      "label": "Read"
+    },
+    {
+      "itemId": 2,
+      "name": "CREATE",
+      "label": "Create"
+    },
+    {
+      "itemId": 3,
+      "name": "DELETE",
+      "label": "Delete"
+    },
+    {
+      "itemId": 4,
+      "name": "CLEAR",
+      "label": "Clear"
+    },
+    {
+      "itemId": 5,
+      "name": "READ_CONFIG",
+      "label": "Read config"
+    },
+    {
+      "itemId": 6,
+      "name": "EDIT_CONFIG",
+      "label": "Edit config"
+    },
+    {
+      "itemId": 7,
+      "name": "READ_PARTITIONS",
+      "label": "Read partitions"
+    },
+    {
+      "itemId": 8,
+      "name": "READ_CONSUMER_GROUPS",
+      "label": "Read consumer groups"
+    },
+    {
+      "itemId": 9,
+      "name": "READ_MESSAGES",
+      "label": "Read messages"
+    },
+    {
+      "itemId": 10,
+      "name": "SEND_MESSAGE",
+      "label": "Send messages"
+    }
+  ],
+  "configs": [
+    {
+      "itemId": 1,
+      "name": "username",
+      "type": "string",
+      "mandatory": true,
+      "label": " Username"
+    },
+    {
+      "itemId": 2,
+      "name": "password",
+      "type": "password",
+      "mandatory": true,
+      "label": " Password"
+    },
+    {
+      "itemId": 3,
+      "name": "hostname",
+      "type": "string",
+      "mandatory": true,
+      "label": "Host and port adscc server (http://localhost:8888)"
+    },
+    {
+      "itemId": 4,
+      "name": "ssl_truststore",
+      "type": "string",
+      "mandatory": false,
+      "label": "SSL truststore"
+    },
+    {
+      "itemId": 5,
+      "name": "ssl_truststore_type",
+      "type": "string",
+      "mandatory": false,
+      "label": "SSL truststore type"
+    },
+    {
+      "itemId": 6,
+      "name": "ssl_truststore_password",
+      "type": "string",
+      "mandatory": false,
+      "label": "SSL truststore password"
+    }
+  ],
+  "enums": [
+  ],
+  "contextEnrichers": [
+  ],
+  "policyConditions": [
+  ]
+}

@@ -825,6 +825,8 @@
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
+                <module>plugin-adscc</module>
+                <module>plugin-ssm</module>
                 <module>plugin-kylin</module>
                 <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
@@ -1151,12 +1153,16 @@
                 <module>plugin-kafka</module>
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
+                <module>plugin-adscc</module>
+                <module>plugin-ssm</module>
                 <module>plugin-kylin</module>
                 <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
+                <module>plugin-adscc</module>
+                <module>plugin-ssm</module>
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>

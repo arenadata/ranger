@@ -64,6 +64,20 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.apache.ranger:ranger-adscc-plugin</include>
+      </includes>
+      <binaries>
+        <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/adscc</outputDirectory>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+      </binaries>
+    </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
         <include>org.apache.ranger:ranger-hive-plugin</include>
       </includes>
       <binaries>
