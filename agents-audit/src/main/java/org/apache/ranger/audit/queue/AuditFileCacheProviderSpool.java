@@ -19,10 +19,12 @@
 
 package org.apache.ranger.audit.queue;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.utils.AuditFileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -39,12 +41,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +62,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
 
     public static final String PROP_FILE_SPOOL_LOCAL_DIR				= "filespool.dir";
     public static final String PROP_FILE_SPOOL_LOCAL_FILE_NAME 			= "filespool.filename.format";
+    public static final String PROP_FILE_SPOOL_PERMS                    = "filespool.perms";
     public static final String PROP_FILE_SPOOL_ARCHIVE_DIR 				= "filespool.archive.dir";
     public static final String PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT	= "filespool.archive.max.files";
     public static final String PROP_FILE_SPOOL_FILENAME_PREFIX 			= "filespool.file.prefix";
@@ -139,6 +138,10 @@ public class AuditFileCacheProviderSpool implements Runnable {
             // Initial folder and file properties
             String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
                     + "." + PROP_FILE_SPOOL_LOCAL_DIR);
+            String spoolFilePerms = StringUtils.defaultIfEmpty(StringUtils.trim(
+                            MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS)),
+                    "644");
+            Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
             logFileNameFormat = MiscUtil.getStringProperty(props,
                     basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
             String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -227,6 +230,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             + indexFile.getPath());
                     return false;
                 }
+                AuditFileUtil.setPermissions(indexFile, filePermissions);
             }
             logger.info("indexFile=" + indexFile + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
@@ -245,6 +249,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             + indexDoneFile.getPath());
                     return false;
                 }
+                AuditFileUtil.setPermissions(indexFile, filePermissions);
             }
             logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
