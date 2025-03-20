@@ -25,11 +25,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -56,6 +56,7 @@ public class PolicyRefresher extends Thread {
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
+	private final Set<PosixFilePermission>      cacheFilePerms;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -76,6 +77,8 @@ public class PolicyRefresher extends Thread {
 		this.serviceType = plugIn.getServiceType();
 		this.serviceName = plugIn.getServiceName();
 		this.cacheDir    = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
+		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
+		this.cacheFilePerms = parsePermissions(cacheFilePermsString);
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -434,8 +437,10 @@ public class PolicyRefresher extends Thread {
 				}
 
 				Writer writer = null;
-	
 				try {
+					if (!cacheFile.exists()) {
+						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
+					}
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, policies);
 		        } catch (Exception excp) {
@@ -565,5 +570,20 @@ public class PolicyRefresher extends Thread {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
 		}
+	}
+
+	private Set<PosixFilePermission> parsePermissions(String permStr) {
+		if (StringUtils.length(permStr) != 3) {
+			throw new IllegalArgumentException("The permission string must consist of 3 digits, for example '755'");
+		}
+		StringBuilder symbolic = new StringBuilder();
+		for (int i = 0; i < 3; i++) {
+			char c = permStr.charAt(i);
+			int value = c - '0';
+			symbolic.append((value & 4) != 0 ? "r" : "-");
+			symbolic.append((value & 2) != 0 ? "w" : "-");
+			symbolic.append((value & 1) != 0 ? "x" : "-");
+		}
+		return PosixFilePermissions.fromString(symbolic.toString());
 	}
 }
