@@ -19,13 +19,9 @@
 
 package org.apache.ranger.plugin.util;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
@@ -57,6 +53,7 @@ public class PolicyRefresher extends Thread {
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
 	private final Set<PosixFilePermission>      cacheFilePerms;
+	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -79,6 +76,9 @@ public class PolicyRefresher extends Thread {
 		this.cacheDir    = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
 		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
 		this.cacheFilePerms = parsePermissions(cacheFilePermsString);
+
+		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
+		this.cacheDirPerms = parsePermissions(cacheDirPermsString);
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -417,9 +417,10 @@ public class PolicyRefresher extends Thread {
 					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} else {
 					try {
-						cacheDirTmp.mkdirs();
+						FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(this.cacheDirPerms);
+						Files.createDirectories(cacheDirTmp.toPath(), attr);
 						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-					} catch (SecurityException ex) {
+					} catch (SecurityException | IOException ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
 				}
