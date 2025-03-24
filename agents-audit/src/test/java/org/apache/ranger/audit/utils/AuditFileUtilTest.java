@@ -5,13 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Comparator;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class FileUtilTest {
+public class AuditFileUtilTest {
 
     @Test
     public void testParsePermissions755() {
@@ -62,6 +65,30 @@ public class FileUtilTest {
         File nonExistentFile = new File("nonexistentfile.txt");
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxr-xr-x");
         AuditFileUtil.setPermissions(nonExistentFile, perms);
+    }
+
+    @Test
+    public void testCreateDirectoryWithPermissions() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("testCreateDir");
+        try {
+            File newDir = new File(tempBaseDir.toFile(), "newSubDir");
+            Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwxr-xr-x");
+
+            AuditFileUtil.createDirectoryWithPermissions(newDir, expectedPerms);
+
+            assertTrue("Directory should exist", newDir.exists());
+
+            Set<PosixFilePermission> actualPerms = Files.getPosixFilePermissions(newDir.toPath());
+            assertEquals("Directory permissions should match expected permissions", expectedPerms, actualPerms);
+        } finally {
+            Files.walk(tempBaseDir)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {}
+                    });
+        }
     }
 
 }

@@ -55,6 +55,7 @@ public class AuditFileSpool implements Runnable {
 	public static final String PROP_FILE_SPOOL_LOCAL_DIR = "filespool.dir";
 	public static final String PROP_FILE_SPOOL_LOCAL_FILE_NAME = "filespool.filename.format";
 	public static final String PROP_FILE_SPOOL_PERMS = "filespool.perms";
+	public static final String PROP_FILE_SPOOL_DIR_PERMS = "filespool.dir.perms";
 	public static final String PROP_FILE_SPOOL_ARCHIVE_DIR = "filespool.archive.dir";
 	public static final String PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT = "filespool.archive.max.files";
 	public static final String PROP_FILE_SPOOL_FILENAME_PREFIX = "filespool.file.prefix";
@@ -129,7 +130,11 @@ public class AuditFileSpool implements Runnable {
 			String spoolFilePerms = StringUtils.defaultIfEmpty(StringUtils.trim(
 					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS)),
 					"644");
+			String spoolDirPerms = StringUtils.defaultIfEmpty(StringUtils.trim(
+							MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS)),
+					"755");
 			Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
+			Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
 			logFileNameFormat = MiscUtil.getStringProperty(props,
 					basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
 			String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -155,7 +160,7 @@ public class AuditFileSpool implements Runnable {
 			}
 			logFolder = new File(logFolderProp);
 			if (!logFolder.isDirectory()) {
-				logFolder.mkdirs();
+				AuditFileUtil.createDirectoryWithPermissions(logFolder, dirPermissions);
 				if (!logFolder.isDirectory()) {
 					logger.error("File Spool folder not found and can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  queueProvider.getName());
 					return false;
@@ -175,7 +180,7 @@ public class AuditFileSpool implements Runnable {
 				archiveFolder = new File(archiveFolderProp);
 			}
 			if (!archiveFolder.isDirectory()) {
-				archiveFolder.mkdirs();
+				AuditFileUtil.createDirectoryWithPermissions(archiveFolder, dirPermissions);
 				if (!archiveFolder.isDirectory()) {
 					logger.error("File Spool archive folder not found and can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), queueProvider.getName());
 					return false;

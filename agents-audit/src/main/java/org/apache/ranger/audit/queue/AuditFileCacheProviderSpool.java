@@ -63,6 +63,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public static final String PROP_FILE_SPOOL_LOCAL_DIR				= "filespool.dir";
     public static final String PROP_FILE_SPOOL_LOCAL_FILE_NAME 			= "filespool.filename.format";
     public static final String PROP_FILE_SPOOL_PERMS                    = "filespool.perms";
+    public static final String PROP_FILE_SPOOL_DIR_PERMS                = "filespool.dir.perms";
     public static final String PROP_FILE_SPOOL_ARCHIVE_DIR 				= "filespool.archive.dir";
     public static final String PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT	= "filespool.archive.max.files";
     public static final String PROP_FILE_SPOOL_FILENAME_PREFIX 			= "filespool.file.prefix";
@@ -141,7 +142,11 @@ public class AuditFileCacheProviderSpool implements Runnable {
             String spoolFilePerms = StringUtils.defaultIfEmpty(StringUtils.trim(
                             MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS)),
                     "644");
+            String spoolDirPerms = StringUtils.defaultIfEmpty(StringUtils.trim(
+                            MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS)),
+                    "755");
             Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
+            Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
             logFileNameFormat = MiscUtil.getStringProperty(props,
                     basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
             String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -174,12 +179,9 @@ public class AuditFileCacheProviderSpool implements Runnable {
             }
             logFolder = new File(logFolderProp);
             if (!logFolder.isDirectory()) {
-                boolean result = logFolder.mkdirs();
-                if (!logFolder.isDirectory() || !result) {
-                    logger.error("File Spool folder not found and can't be created. folder="
-                            + logFolder.getAbsolutePath()
-                            + ", queueName="
-                            + FILE_CACHE_PROVIDER_NAME);
+                AuditFileUtil.createDirectoryWithPermissions(logFolder, dirPermissions);
+                if (!logFolder.isDirectory()) {
+                    logger.error("File Spool folder not found and can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  FILE_CACHE_PROVIDER_NAME);
                     return false;
                 }
             }
@@ -199,12 +201,9 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 archiveFolder = new File(archiveFolderProp);
             }
             if (!archiveFolder.isDirectory()) {
-                boolean result = archiveFolder.mkdirs();
-                if (!archiveFolder.isDirectory() || !result) {
-                    logger.error("File Spool archive folder not found and can't be created. folder="
-                            + archiveFolder.getAbsolutePath()
-                            + ", queueName="
-                            + FILE_CACHE_PROVIDER_NAME);
+                AuditFileUtil.createDirectoryWithPermissions(archiveFolder, dirPermissions);
+                if (!archiveFolder.isDirectory()) {
+                    logger.error("File Spool archive folder not found and can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), FILE_CACHE_PROVIDER_NAME);
                     return false;
                 }
             }
