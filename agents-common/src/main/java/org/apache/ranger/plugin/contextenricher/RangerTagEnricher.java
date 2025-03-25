@@ -39,17 +39,8 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.util.DownloadTrigger;
-import org.apache.ranger.plugin.util.DownloaderTask;
+import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.util.CachedResourceEvaluators;
-import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
-import org.apache.ranger.plugin.util.RangerCommonConstants;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.RangerReadWriteLock;
-import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
-import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
-import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +49,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -91,6 +85,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private boolean                            dedupStrings                  = true;
 	private Timer                              tagDownloadTimer;
 	private RangerServiceDefHelper             serviceDefHelper;
+	private Set<PosixFilePermission> cacheFilePerms;
+	private Set<PosixFilePermission>      cacheDirPerms;
 
 	private final BlockingQueue<DownloadTrigger> tagDownloadQueue = new LinkedBlockingQueue<>();
 	private final RangerReadWriteLock            lock             = new RangerReadWriteLock(false);
@@ -112,6 +108,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		dedupStrings               = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);
 		serviceDefHelper           = new RangerServiceDefHelper(serviceDef, false);
+
+		String cacheFilePermsString = StringUtils.trim(getConfig(propertyPrefix + ".policy.cache.file.perms", "644"));
+		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
 
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
@@ -150,7 +149,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.setPluginContext(getPluginContext());
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
-				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile);
+				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile, cacheFilePerms);
 				LOG.info("Created RangerTagRefresher Thread(" + tagRefresher.getName() + ")");
 
 				try {
@@ -886,16 +885,17 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private long lastKnownVersion;
 		private final BlockingQueue<DownloadTrigger> tagDownloadQueue;
 		private long lastActivationTimeInMillis;
-
+		private final  Set<PosixFilePermission> filePermissions;
 		private final String cacheFile;
 		private boolean      hasProvidedTagsToReceiver;
 
-		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, String cacheFile) {
+		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, String cacheFile, Set<PosixFilePermission> filePermissions) {
 			this.tagRetriever = tagRetriever;
 			this.tagEnricher = tagEnricher;
 			this.lastKnownVersion = lastKnownVersion;
 			this.tagDownloadQueue = tagDownloadQueue;
 			this.cacheFile = cacheFile;
+			this.filePermissions = filePermissions;
 			setName("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ")-" + getId());
 		}
 
@@ -1099,8 +1099,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					Writer writer = null;
 
 					try {
+						if (!cacheFile.exists()) {
+							Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.filePermissions));
+							Files.setPosixFilePermissions(cacheFile.toPath(), this.filePermissions);
+						}
 						writer = new FileWriter(cacheFile);
-
 						JsonUtils.objectToWriter(writer, serviceTags);
 					} catch (Exception excp) {
 						LOG.error("failed to save service-tags to cache file '" + cacheFile.getAbsolutePath() + "'", excp);

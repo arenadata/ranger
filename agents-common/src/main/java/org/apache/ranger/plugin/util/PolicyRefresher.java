@@ -75,10 +75,10 @@ public class PolicyRefresher extends Thread {
 		this.serviceName = plugIn.getServiceName();
 		this.cacheDir    = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
 		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
-		this.cacheFilePerms = parsePermissions(cacheFilePermsString);
+		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
 
 		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
-		this.cacheDirPerms = parsePermissions(cacheDirPermsString);
+		this.cacheDirPerms = FileUtils.parsePermissions(cacheDirPermsString);
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -417,10 +417,9 @@ public class PolicyRefresher extends Thread {
 					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} else {
 					try {
-						FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(this.cacheDirPerms);
-						Files.createDirectories(cacheDirTmp.toPath(), attr);
+						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
 						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-					} catch (SecurityException | IOException ex) {
+					} catch (Exception ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
 				}
@@ -441,6 +440,7 @@ public class PolicyRefresher extends Thread {
 				try {
 					if (!cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
+						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
 					}
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, policies);
@@ -469,7 +469,14 @@ public class PolicyRefresher extends Thread {
 					if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
 					}
-
+					try {
+						if (!backupCacheFile.exists()) {
+							Files.createFile(backupCacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
+							Files.setPosixFilePermissions(backupCacheFile.toPath(), this.cacheFilePerms);
+						}
+					} catch (Exception excp) {
+						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
+					}
 					try (Writer writer = new FileWriter(backupCacheFile)) {
 						JsonUtils.objectToWriter(writer, policies);
 					} catch (Exception excp) {
@@ -571,20 +578,5 @@ public class PolicyRefresher extends Thread {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
 		}
-	}
-
-	private Set<PosixFilePermission> parsePermissions(String permStr) {
-		if (StringUtils.length(permStr) != 3) {
-			throw new IllegalArgumentException("The permission string must consist of 3 digits, for example '755'");
-		}
-		StringBuilder symbolic = new StringBuilder();
-		for (int i = 0; i < 3; i++) {
-			char c = permStr.charAt(i);
-			int value = c - '0';
-			symbolic.append((value & 4) != 0 ? "r" : "-");
-			symbolic.append((value & 2) != 0 ? "w" : "-");
-			symbolic.append((value & 1) != 0 ? "x" : "-");
-		}
-		return PosixFilePermissions.fromString(symbolic.toString());
 	}
 }
