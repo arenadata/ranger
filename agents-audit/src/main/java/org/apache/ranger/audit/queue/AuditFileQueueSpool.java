@@ -244,7 +244,7 @@ public class AuditFileQueueSpool implements Runnable {
                             + indexDoneFile.getPath());
                     return false;
                 }
-                AuditFileUtil.setPermissions(indexFile, filePermissions);
+                AuditFileUtil.setPermissions(indexDoneFile, filePermissions);
             }
             logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
                     + FILE_QUEUE_PROVIDER_NAME);

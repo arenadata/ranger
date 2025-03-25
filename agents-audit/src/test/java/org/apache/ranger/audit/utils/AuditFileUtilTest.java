@@ -25,6 +25,22 @@ public class AuditFileUtilTest {
     }
 
     @Test
+    public void testParsePermissions666() {
+        // "666" -> "rw-rw-rw-"
+        Set<PosixFilePermission> actual = AuditFileUtil.parsePermissions("666");
+        Set<PosixFilePermission> expected = PosixFilePermissions.fromString("rw-rw-rw-");
+        assertEquals("Permissions for '666' should be 'rw-rw-rw-'", expected, actual);
+    }
+
+    @Test
+    public void testParsePermissions777() {
+        // "777" -> "rwxrwxrwx"
+        Set<PosixFilePermission> actual = AuditFileUtil.parsePermissions("777");
+        Set<PosixFilePermission> expected = PosixFilePermissions.fromString("rwxrwxrwx");
+        assertEquals("Permissions for '777' should be 'rwxrwxrwx'", expected, actual);
+    }
+
+    @Test
     public void testParsePermissions644() {
         // "644" -> "rw-r--r--"
         Set<PosixFilePermission> actual = AuditFileUtil.parsePermissions("644");
@@ -87,6 +103,33 @@ public class AuditFileUtilTest {
                         try {
                             Files.delete(path);
                         } catch (IOException e) {}
+                    });
+        }
+    }
+
+    @Test
+    public void testCreateDirectoryWithPermissions777() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("testCreateDir");
+        try {
+            File newDir = new File(tempBaseDir.toFile(), "newSubDir");
+            // "777" corresponds to "rwxrwxrwx"
+            Set<PosixFilePermission> expectedPerms = PosixFilePermissions.fromString("rwxrwxrwx");
+
+            AuditFileUtil.createDirectoryWithPermissions(newDir, expectedPerms);
+
+            assertTrue("Directory should exist", newDir.exists());
+
+            Set<PosixFilePermission> actualPerms = Files.getPosixFilePermissions(newDir.toPath());
+            assertEquals("Directory permissions should match expected permissions", expectedPerms, actualPerms);
+        } finally {
+            Files.walk(tempBaseDir)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            // Ignore cleanup exceptions
+                        }
                     });
         }
     }

@@ -38,6 +38,7 @@ public class AuditFileUtil {
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
         Path path = dir.toPath();
         Files.createDirectories(path, attr);
+        Files.setPosixFilePermissions(path, perms);
     }
 
 }

@@ -248,7 +248,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             + indexDoneFile.getPath());
                     return false;
                 }
-                AuditFileUtil.setPermissions(indexFile, filePermissions);
+                AuditFileUtil.setPermissions(indexDoneFile, filePermissions);
             }
             logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);

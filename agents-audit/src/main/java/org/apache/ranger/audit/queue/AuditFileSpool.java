@@ -223,7 +223,7 @@ public class AuditFileSpool implements Runnable {
 					logger.error("Error creating index done file. fileName={}", indexDoneFile.getPath());
 					return false;
 				}
-				AuditFileUtil.setPermissions(indexFile, filePermissions);
+				AuditFileUtil.setPermissions(indexDoneFile, filePermissions);
 			}
 			logger.info("indexDoneFile={}, queueName={}", indexDoneFile, queueProvider.getName());
 
