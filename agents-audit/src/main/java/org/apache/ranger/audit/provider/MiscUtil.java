@@ -575,6 +575,13 @@ public class MiscUtil {
 		}
 	}
 
+	public static void executePrivilegedAction(final Runnable runnable) {
+		executePrivilegedAction((PrivilegedAction<Void>) () -> {
+			runnable.run();
+			return null;
+		});
+	}
+
 	public static Subject getSubjectLoginUser() {
 		return subjectLoginUser;
 	}

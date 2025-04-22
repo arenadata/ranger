@@ -166,6 +166,10 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // close the file inline with audit logging.
             closeFileIfNeeded();
         }
+
+        // get closed log files and delete stale logs if needed
+        maybeRotateLogs();
+
         // Either there are no open log file or the previous one has been rolled over
         PrintWriter logWriter = createWriter();
         return logWriter;
@@ -218,7 +222,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
         executorService.scheduleAtFixedRate(new AuditFilePeriodicRollOverTask(), 0, periodicRollOverCheckTimeinSec, TimeUnit.SECONDS);
     }
 
-    class AuditFilePeriodicRollOverTaskThreadFactory implements ThreadFactory {
+    static class AuditFilePeriodicRollOverTaskThreadFactory implements ThreadFactory {
         //Threadfactory to create a daemon Thread.
         public Thread newThread(Runnable r) {
             Thread t = new Thread(r, "AuditFilePeriodicRollOverTask");

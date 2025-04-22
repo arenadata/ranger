@@ -17,6 +17,7 @@
 package org.apache.ranger.audit.provider.hdfs;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.ranger.audit.model.AuditEventBase;
@@ -25,6 +26,8 @@ import org.apache.ranger.audit.provider.DebugTracer;
 import org.apache.ranger.audit.provider.LocalFileLogBuffer;
 import org.apache.ranger.audit.provider.Log4jTracer;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.rotation.hdfs.HdfsStaleLogsManager;
+import org.apache.ranger.audit.rotation.hdfs.StaleLogsSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +78,9 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mHdfsDestination.setOpenRetryIntervalSeconds(hdfsDestinationOpenRetryIntervalSeconds);
 		mHdfsDestination.setConfigProps(configProps);
 
-		LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>(tracer);
+        maybeInitLogRotation(mHdfsDestination, props);
+
+        LocalFileLogBuffer<AuditEventBase> mLocalFileBuffer = new LocalFileLogBuffer<AuditEventBase>(tracer);
 
 		mLocalFileBuffer.setDirectory(localFileBufferDirectory);
 		mLocalFileBuffer.setFile(localFileBufferFile);
@@ -85,9 +90,28 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
 		mLocalFileBuffer.setRolloverIntervalSeconds(localFileBufferRolloverIntervalSeconds);
 		mLocalFileBuffer.setArchiveDirectory(localFileBufferArchiveDirectory);
 		mLocalFileBuffer.setArchiveFileCount(localFileBufferArchiveFileCount);
-		
+
 		setBufferAndDestination(mLocalFileBuffer, mHdfsDestination);
 	}
+
+    private void maybeInitLogRotation(HdfsLogDestination<AuditEventBase> mHdfsDestination, Properties props) {
+        long    hdfsRetentionMs     = MiscUtil.getLongProperty(props, "xasecure.audit.hdfs.config.destination.retention.ms", -1);
+        long    hdfsRetentionBytes  = MiscUtil.getLongProperty(props, "xasecure.audit.hdfs.config.destination.retention.bytes", -1);
+        boolean isAsyncLogRotation  = MiscUtil.getBooleanProperty(props, "xasecure.audit.hdfs.config.log.rotation.async", false);
+
+        Optional<StaleLogsSelector> logsSelector = StaleLogsSelector.composite(hdfsRetentionMs, hdfsRetentionBytes);
+
+        if (logsSelector.isPresent()) {
+            HdfsStaleLogsManager staleLogsCleaner = HdfsStaleLogsManager.create(
+                logsSelector.get(),
+                mHdfsDestination.getDirectory(),
+                mHdfsDestination.getHdfsConfig(),
+                isAsyncLogRotation
+            );
+            mHdfsDestination.setStaleLogsManager(staleLogsCleaner);
+            mHdfsDestination.setLogFilesFetcher(staleLogsCleaner);
+        }
+    }
 }
 
 

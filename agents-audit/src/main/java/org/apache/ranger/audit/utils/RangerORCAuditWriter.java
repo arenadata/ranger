@@ -97,6 +97,9 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
                 }
                 orcLogWriter = null;
             }
+
+            // get closed log files and delete stale logs if needed
+            maybeRotateLogs();
         }
         return ret;
     }

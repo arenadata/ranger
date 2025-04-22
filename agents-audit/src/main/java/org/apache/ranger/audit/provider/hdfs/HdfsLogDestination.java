@@ -26,21 +26,25 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Map;
 
+import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.DebugTracer;
 import org.apache.ranger.audit.provider.LogDestination;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.rotation.hdfs.LogFilesFetcher;
+import org.apache.ranger.audit.rotation.hdfs.StaleLogsManager;
 
 public class HdfsLogDestination<T> implements LogDestination<T> {
 	public final static String EXCP_MSG_FILESYSTEM_CLOSED = "Filesystem closed";
 
 	private String name = getClass().getName();
-	
+
 	private String  mDirectory                = null;
 	private String  mFile                     = null;
 	private int     mFlushIntervalSeconds     = 1 * 60;
@@ -57,13 +61,16 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	private long               mNextFlushTime      = 0;
 	private long               mLastOpenFailedTime = 0;
 	private boolean            mIsStopInProgress   = false;
-	private Map<String, String> configProps = null;
+	private Configuration 	   hdfsConfig = null;
+
+	private LogFilesFetcher	   logFilesFetcher = null;
+	private StaleLogsManager   staleLogsManager = null;
 
 	public HdfsLogDestination(DebugTracer tracer) {
 		mLogger = tracer;
 	}
 
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -76,7 +83,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	public String getName() {
 		return name;
 	}
-	
+
 	public String getDirectory() {
 		return mDirectory;
 	}
@@ -125,6 +132,22 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		this.mOpenRetryIntervalSeconds = minIntervalOpenRetrySeconds;
 	}
 
+	public StaleLogsManager getStaleLogsManager() {
+		return staleLogsManager;
+	}
+
+	public void setStaleLogsManager(StaleLogsManager staleLogsManager) {
+		this.staleLogsManager = staleLogsManager;
+	}
+
+	public LogFilesFetcher getLogFilesFetcher() {
+		return logFilesFetcher;
+	}
+
+	public void setLogFilesFetcher(LogFilesFetcher logFilesFetcher) {
+		this.logFilesFetcher = logFilesFetcher;
+	}
+
 	@Override
 	public void start() {
 		mLogger.debug("==> HdfsLogDestination.start()");
@@ -155,7 +178,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 	@Override
 	public boolean send(AuditEventBase log) {
 		boolean ret = true;
-		
+
 		if(log != null) {
 			String msg = MiscUtil.stringify(log);
 
@@ -165,7 +188,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		return ret;
 	}
 
-	
+
 	@Override
 	public boolean send(AuditEventBase[] logs) {
 		for (AuditEventBase log : logs) {
@@ -210,8 +233,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		}
 		return true;
 	}
-	
-	
+
+
 	@Override
 	public boolean flush() {
 		mLogger.debug("==> HdfsLogDestination.flush()");
@@ -223,7 +246,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		if(writer != null) {
 			try {
 				writer.flush();
-				
+
 				ret = true;
 			} catch (IOException excp) {
 				logException("HdfsLogDestination: flush() failed", excp);
@@ -265,7 +288,6 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		FSDataOutputStream ostream     = null;
 		FileSystem         fileSystem  = null;
 		Path               pathLogfile = null;
-		Configuration      conf        = null;
 		boolean            bOverwrite  = false;
 
 		try {
@@ -275,9 +297,8 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 			// TODO: mechanism to XA-HDFS plugin to disable auditing of access checks to the current HDFS file
 
-			conf        = createConfiguration();
 			pathLogfile = new Path(mHdfsFilename);
-			fileSystem  = FileSystem.get(uri, conf);
+			fileSystem  = FileSystem.get(uri, hdfsConfig);
 
 			try {
 				if(fileSystem.exists(pathLogfile)) { // file already exists. either append to the file or write to a new file
@@ -341,7 +362,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	private void closeFile() {
 		mLogger.debug("==> HdfsLogDestination.closeFile()");
-		
+
 		flush();
 
 		OutputStreamWriter writer = mWriter;
@@ -367,10 +388,25 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		closeFile();
 
+		maybeRotateLogs();
+
 		openFile();
 
 		mLogger.debug("<== HdfsLogDestination.rollover()");
 	}
+
+    private void maybeRotateLogs() {
+        if (staleLogsManager == null || logFilesFetcher == null) {
+            return;
+        }
+
+		try {
+			Set<FileStatus> fileStatuses = logFilesFetcher.listLogFiles(mDirectory);
+			staleLogsManager.deleteStaleLogs(fileStatuses);
+		} catch (IOException e) {
+			mLogger.warn("Error deleting stale logs in directory " + mDirectory, e);
+		}
+    }
 
 	private void checkFileStatus() {
 		long now = System.currentTimeMillis();
@@ -379,7 +415,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 			if(now > (mLastOpenFailedTime + (mOpenRetryIntervalSeconds * 1000L))) {
 				openFile();
 			}
-		} else  if(now > mNextRolloverTime) {
+		} else if(now > mNextRolloverTime) {
 			rollover();
 		} else if(now > mNextFlushTime) {
 			flush();
@@ -397,7 +433,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 					mLogger.warn("HdfsLogDestination.createWriter(): failed to create output writer.", excp);
 				}
 			}
-	
+
 			if(writer == null) {
 				writer = new OutputStreamWriter(os);
 			}
@@ -405,7 +441,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 	    return writer;
 	}
-	
+
 	private void createParents(Path pathLogfile, FileSystem fileSystem) {
 		try {
 			Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
@@ -429,17 +465,17 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
         	String ret = fileName;
 
 	        String strToAppend = "-" + Integer.toString(i);
-	
+
 	        int extnPos = ret.lastIndexOf(".");
-	
+
 	        if(extnPos < 0) {
 	            ret += strToAppend;
 	        } else {
 	            String extn = ret.substring(extnPos);
-	
+
 	            ret = ret.substring(0, extnPos) + strToAppend + extn;
 	        }
-	
+
 	        if(fileSystem != null && fileExists(ret, fileSystem)) {
         		continue;
 	        } else {
@@ -474,7 +510,7 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		String  excpMsgToExclude   = EXCP_MSG_FILESYSTEM_CLOSED;
 		String  excpMsg            = excp != null ? excp.getMessage() : null;
 		boolean excpExcludeLogging = (excpMsg != null && excpMsg.contains(excpMsgToExclude));
-		
+
 		if(! excpExcludeLogging) {
 			mLogger.warn(msg, excp);
 		}
@@ -489,15 +525,19 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 		sb.append("File=").append(mFile).append("; ");
 		sb.append("RolloverIntervalSeconds=").append(mRolloverIntervalSeconds);
 		sb.append("}");
-		
+
 		return sb.toString();
 	}
 
 	public void setConfigProps(Map<String,String> configProps) {
-		this.configProps = configProps;
+		this.hdfsConfig = createConfiguration(configProps);
 	}
 
-	Configuration createConfiguration() {
+	public Configuration getHdfsConfig() {
+		return hdfsConfig;
+	}
+
+	Configuration createConfiguration(Map<String,String> configProps) {
 		Configuration conf = new Configuration();
 		if (configProps != null) {
 			for (Map.Entry<String, String> entry : configProps.entrySet()) {

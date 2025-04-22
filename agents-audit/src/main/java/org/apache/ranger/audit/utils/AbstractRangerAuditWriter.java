@@ -19,10 +19,16 @@ package org.apache.ranger.audit.utils;
  * under the License.
  */
 
+import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.rotation.hdfs.HdfsStaleLogsManager;
+import org.apache.ranger.audit.rotation.hdfs.LogFilesFetcher;
+import org.apache.ranger.audit.rotation.hdfs.StaleLogsManager;
+import org.apache.ranger.audit.rotation.hdfs.StaleLogsSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +52,9 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public static final String    PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
     public static final String    PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
     public static final String    PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String    PROP_LOG_RETENTION_MS            = "retention.ms";
+    public static final String    PROP_LOG_RETENTION_BYTES         = "retention.bytes";
+    public static final String    PROP_LOG_ROTATION_ASYNC          = "log.rotation.async";
     public Configuration		  conf						       = null;
     public FileSystem		      fileSystem				       = null;
     public Map<String, String>    auditConfigs				       = null;
@@ -66,7 +75,9 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public boolean                rollOverByDuration               = false;
     public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
     private boolean               isHFlushCapableStream            = false;
-    protected boolean               reUseLastLogFile               = false;
+    protected boolean             reUseLastLogFile                 = false;
+    protected LogFilesFetcher     logFilesFetcher                  = null;
+    private StaleLogsManager staleLogsManager = null;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -206,6 +217,26 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logger.debug("<== AbstractRangerAuditWriter.init()");
         }
 
+        maybeInitLogRotation(props, propPrefix);
+    }
+
+    private void maybeInitLogRotation(Properties props, String propPrefix) {
+        long    hdfsRetentionMs     = MiscUtil.getLongProperty(props, propPrefix + "." + PROP_LOG_RETENTION_MS, -1);
+        long    hdfsRetentionBytes  = MiscUtil.getLongProperty(props, propPrefix + "." + PROP_LOG_RETENTION_BYTES, -1);
+        boolean isAsyncLogRotation  = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_LOG_ROTATION_ASYNC, false);
+
+        Optional<StaleLogsSelector> logsSelector = StaleLogsSelector.composite(hdfsRetentionMs, hdfsRetentionBytes);
+
+        if (logsSelector.isPresent()) {
+            HdfsStaleLogsManager staleLogsManager = HdfsStaleLogsManager.create(
+                logsSelector.get(),
+                logFolder,
+                conf,
+                isAsyncLogRotation
+            );
+            this.staleLogsManager = staleLogsManager;
+            this.logFilesFetcher = staleLogsManager;
+        }
     }
 
     public void closeFileIfNeeded() {
@@ -384,6 +415,19 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         ret  = logFolder.substring(0, (logFolder.indexOf(":")));
         ret  = ret.toUpperCase();
         return ret;
+    }
+
+    protected void maybeRotateLogs() {
+        if (logWriter != null || staleLogsManager == null || logFilesFetcher == null) {
+            return;
+        }
+
+        try {
+            Set<FileStatus> fileStatuses = logFilesFetcher.listLogFiles(logFolder);
+            staleLogsManager.deleteStaleLogs(fileStatuses);
+        } catch (IOException e) {
+            logger.warn("Error deleting stale logs in directory {}", logFolder, e);
+        }
     }
 
     public void setFileExtension(String fileExtension) {
