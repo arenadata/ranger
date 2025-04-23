@@ -2132,8 +2132,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case GET_TABLES:
 			case GET_TABLETYPES:
 			case GET_TYPEINFO:
-			default:
-				break;
 			case IMPORT:
 			case LOAD:
 				ret = FsAction.READ;
@@ -2156,6 +2154,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case PREPARE:
 			case EXECUTE:
 			case ABORT_COMPACTION:
+				break;
+			default:
 				break;
 		}
 
