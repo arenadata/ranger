@@ -86,7 +86,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private Timer                              tagDownloadTimer;
 	private RangerServiceDefHelper             serviceDefHelper;
 	private Set<PosixFilePermission> cacheFilePerms;
-	private Set<PosixFilePermission>      cacheDirPerms;
 
 	private final BlockingQueue<DownloadTrigger> tagDownloadQueue = new LinkedBlockingQueue<>();
 	private final RangerReadWriteLock            lock             = new RangerReadWriteLock(false);
