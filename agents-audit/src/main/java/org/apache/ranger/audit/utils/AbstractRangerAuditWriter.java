@@ -52,9 +52,9 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public static final String    PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
     public static final String    PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
     public static final String    PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
-    public static final String    PROP_LOG_RETENTION_MS            = "retention.ms";
-    public static final String    PROP_LOG_RETENTION_BYTES         = "retention.bytes";
-    public static final String    PROP_LOG_ROTATION_ASYNC          = "log.rotation.async";
+    public static final String    PROP_LOG_RETENTION_MS            = "file.retention.ms";
+    public static final String    PROP_LOG_RETENTION_BYTES         = "file.retention.bytes";
+    public static final String    PROP_LOG_ROTATION_ASYNC          = "file.rotation.async";
     public Configuration		  conf						       = null;
     public FileSystem		      fileSystem				       = null;
     public Map<String, String>    auditConfigs				       = null;
@@ -77,7 +77,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     private boolean               isHFlushCapableStream            = false;
     protected boolean             reUseLastLogFile                 = false;
     protected LogFilesFetcher     logFilesFetcher                  = null;
-    private StaleLogsManager staleLogsManager = null;
+    protected StaleLogsManager    staleLogsManager               = null;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -418,7 +418,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     }
 
     protected void maybeRotateLogs() {
-        if (logWriter != null || staleLogsManager == null || logFilesFetcher == null) {
+        // current log file is still active
+        if (logWriter != null
+            // or rotation is disabled
+            || staleLogsManager == null || logFilesFetcher == null) {
             return;
         }
 

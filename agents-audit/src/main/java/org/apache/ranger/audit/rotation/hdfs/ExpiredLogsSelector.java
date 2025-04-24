@@ -39,6 +39,7 @@ public class ExpiredLogsSelector implements StaleLogsSelector {
     public Set<FileStatus> getStaleFiles(Set<FileStatus> statuses) {
         long now = currentTimeSupplier.get();
         return statuses.stream()
+            .filter(status -> !status.isDirectory())
             .filter(status -> now - status.getModificationTime() >= retentionMillis)
             .collect(Collectors.toSet());
     }

@@ -36,6 +36,7 @@ public class StaleBySizeLogsSelector implements StaleLogsSelector {
     @Override
     public Set<FileStatus> getStaleFiles(Set<FileStatus> statuses) {
         long totalLogsSize = statuses.stream()
+            .filter(FileStatus::isFile)
             .map(FileStatus::getLen)
             .reduce(0L, Long::sum);
 
@@ -52,10 +53,10 @@ public class StaleBySizeLogsSelector implements StaleLogsSelector {
         Set<FileStatus> filesToDelete = new HashSet<>();
         long logsSizeAfterDeletion = totalLogsSize;
 
-        while (logsSizeAfterDeletion >= retentionSizeBytes) {
+        while (!fileQueue.isEmpty() && logsSizeAfterDeletion >= retentionSizeBytes) {
             FileStatus fileStatus = fileQueue.poll();
-            if (fileStatus == null) {
-                break;
+            if (fileStatus.isDirectory()) {
+                continue;
             }
 
             filesToDelete.add(fileStatus);

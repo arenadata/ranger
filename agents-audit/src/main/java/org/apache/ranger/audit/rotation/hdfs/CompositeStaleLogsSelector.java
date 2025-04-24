@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.audit.rotation.hdfs;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,10 @@ public class CompositeStaleLogsSelector implements StaleLogsSelector {
 
     public CompositeStaleLogsSelector(List<StaleLogsSelector> selectors) {
         this.selectors = selectors;
+    }
+
+    public CompositeStaleLogsSelector(StaleLogsSelector... selectors) {
+        this.selectors = Arrays.asList(selectors);
     }
 
     @Override

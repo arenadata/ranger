@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.ranger.audit.rotation.hdfs;
 
 import java.io.IOException;
@@ -21,12 +22,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
-import org.apache.commons.compress.utils.Sets;
-import org.apache.curator.shaded.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
+import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,8 @@ public class HdfsStaleLogsManager implements StaleLogsManager, LogFilesFetcher {
     public HdfsStaleLogsManager(
         StaleLogsSelector staleLogsSelector,
         FileSystem fileSystem,
-        ExecutorService executorService, Supplier<Long> currentTimeSupplier
+        ExecutorService executorService,
+        Supplier<Long> currentTimeSupplier
     ) {
         this.staleLogsSelector = staleLogsSelector;
         this.fileSystem = fileSystem;
@@ -81,7 +83,7 @@ public class HdfsStaleLogsManager implements StaleLogsManager, LogFilesFetcher {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         executorService.shutdown();
     }
 
