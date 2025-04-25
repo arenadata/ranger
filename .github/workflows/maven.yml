@@ -53,7 +53,7 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
       - name: build (8)
-        run: mvn -T 8 clean verify --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify --no-transfer-progress -B -V -Denunciate.skip=true
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -82,7 +82,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: build (11)
-        run: mvn -T 8 clean verify -pl '!knox-agent' --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify -pl '!knox-agent' --no-transfer-progress -B -V -Denunciate.skip=true
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
