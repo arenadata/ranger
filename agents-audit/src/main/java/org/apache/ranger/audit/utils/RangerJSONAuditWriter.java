@@ -207,6 +207,11 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             logWriter = null;
             ostream = null;
         }
+
+        if (staleLogsManager != null) {
+            staleLogsManager.close();
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("<== JSONWriter.stop()");
         }

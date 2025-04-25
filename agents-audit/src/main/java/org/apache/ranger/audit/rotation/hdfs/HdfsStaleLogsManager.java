@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -63,6 +64,10 @@ public class HdfsStaleLogsManager implements StaleLogsManager, LogFilesFetcher {
 
     @Override
     public void deleteStaleLogs(Set<FileStatus> logFiles) {
+        if (CollectionUtils.isEmpty(logFiles)) {
+            return;
+        }
+
         executorService.submit(() -> execDeleteStaleLogs(logFiles));
     }
 
@@ -73,12 +78,14 @@ public class HdfsStaleLogsManager implements StaleLogsManager, LogFilesFetcher {
     }
 
     private void deleteFiles(Set<FileStatus> files) {
-        try {
-            for (FileStatus fileStatus : files) {
+        for (FileStatus fileStatus : files) {
+            LOG.info("Removing stale audit log file {}", fileStatus.getPath());
+
+            try {
                 fileSystem.delete(fileStatus.getPath(), false);
+            } catch (IOException e) {
+                LOG.error("Error deleting stale audit log file {}", fileStatus.getPath(), e);
             }
-        } catch (IOException e) {
-            LOG.warn("Error deleting stale audit logs {}", files, e);
         }
     }
 

@@ -21,4 +21,7 @@ import org.apache.hadoop.fs.FileStatus;
 
 public interface StaleLogsManager extends AutoCloseable {
     void deleteStaleLogs(Set<FileStatus> logFiles);
+
+    @Override
+    void close();
 }

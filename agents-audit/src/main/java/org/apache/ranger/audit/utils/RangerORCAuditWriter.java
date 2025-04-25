@@ -131,6 +131,10 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
             }
             orcLogWriter = null;
         }
+
+        if (staleLogsManager != null) {
+            staleLogsManager.close();
+        }
     }
 
     @Override

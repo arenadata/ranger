@@ -231,7 +231,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             HdfsStaleLogsManager staleLogsManager = HdfsStaleLogsManager.create(
                 logsSelector.get(),
                 logFolder,
-                conf,
+                createConfiguration(),
                 isAsyncLogRotation
             );
             this.staleLogsManager = staleLogsManager;

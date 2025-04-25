@@ -97,7 +97,7 @@ public class HdfsAuditProvider extends BufferedAuditProvider {
     private void maybeInitLogRotation(HdfsLogDestination<AuditEventBase> mHdfsDestination, Properties props) {
         long    hdfsRetentionMs     = MiscUtil.getLongProperty(props, "xasecure.audit.hdfs.config.destination.retention.ms", -1);
         long    hdfsRetentionBytes  = MiscUtil.getLongProperty(props, "xasecure.audit.hdfs.config.destination.retention.bytes", -1);
-        boolean isAsyncLogRotation  = MiscUtil.getBooleanProperty(props, "xasecure.audit.hdfs.config.log.rotation.async", false);
+        boolean isAsyncLogRotation  = MiscUtil.getBooleanProperty(props, "xasecure.audit.hdfs.config.destination.rotation.async", false);
 
         Optional<StaleLogsSelector> logsSelector = StaleLogsSelector.composite(hdfsRetentionMs, hdfsRetentionBytes);
 

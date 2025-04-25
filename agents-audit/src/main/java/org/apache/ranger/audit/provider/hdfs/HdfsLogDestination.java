@@ -167,6 +167,10 @@ public class HdfsLogDestination<T> implements LogDestination<T> {
 
 		mIsStopInProgress = false;
 
+		if (staleLogsManager != null) {
+			staleLogsManager.close();
+		}
+
 		mLogger.debug("<== HdfsLogDestination.stop()");
 	}
 
