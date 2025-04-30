@@ -324,6 +324,6 @@ public abstract class RangerDaoManagerBase {
 	public XXRMSServiceResourceDao getXXRMSServiceResource() { return new XXRMSServiceResourceDao(this); }
 	public XXRMSResourceMappingDao getXXRMSResourceMapping() { return new XXRMSResourceMappingDao(this); }
 
-
+	public XXResourceMappingDiffDao getXXResourceMappingDiff() { return new XXResourceMappingDiffDao(this); }
 }
 

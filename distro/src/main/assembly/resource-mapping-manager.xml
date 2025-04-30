@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<assembly>
+	<id>resource-mapping-manager</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<baseDirectory>${project.parent.name}-${project.version}-resource-mapping-manager</baseDirectory>
+	<includeBaseDirectory>true</includeBaseDirectory>
+	<moduleSets>
+		<moduleSet>
+			<useAllReactorProjects>true</useAllReactorProjects>
+			<includes>
+				<include>org.apache.ranger:resource-mapping-manager</include>
+			</includes>
+			<binaries>
+				<outputDirectory>dist</outputDirectory>
+				<includeDependencies>true</includeDependencies>
+				<unpack>false</unpack>
+				<directoryMode>755</directoryMode>
+				<fileMode>644</fileMode>
+				<dependencySets>
+					<dependencySet>
+						<outputDirectory>lib</outputDirectory>
+						<unpack>false</unpack>
+						<includes>
+							<include>*:*</include>
+						</includes>
+					</dependencySet>
+				</dependencySets>
+			</binaries>
+		</moduleSet>
+	</moduleSets>
+
+	<fileSets>
+		<fileSet>
+			<directoryMode>755</directoryMode>
+			<fileMode>644</fileMode>
+			<outputDirectory>conf</outputDirectory>
+			<directory>../resource-mapping-manager/conf</directory>
+		</fileSet>
+		<fileSet>
+			<directoryMode>755</directoryMode>
+			<fileMode>544</fileMode>
+			<outputDirectory></outputDirectory>
+			<directory>../resource-mapping-manager/scripts</directory>
+			<excludes>
+				<exclude>ranger-resource-mapping-manager.sh</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directoryMode>755</directoryMode>
+			<outputDirectory></outputDirectory>
+			<directory>${project.build.directory}</directory>
+			<includes>
+				<include>version</include>
+			</includes>
+			<fileMode>444</fileMode>
+		</fileSet>
+	</fileSets>
+	<files>
+		<file>
+			<source>${project.parent.basedir}/resource-mapping-manager/scripts/ranger-resource-mapping-manager.sh</source>
+			<outputDirectory></outputDirectory>
+			<destName>ranger-resource-mapping-manager</destName>
+			<fileMode>755</fileMode>
+		</file>
+	</files>
+</assembly>

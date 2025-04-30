@@ -860,6 +860,7 @@
                 <module>ranger-tools</module>
                 <module>ranger-util</module>
                 <module>ranger-yarn-plugin-shim</module>
+                <module>resource-mapping-manager</module>
                 <module>security-admin</module>
                 <module>storm-agent</module>
                 <module>tagsync</module>
@@ -899,6 +900,7 @@
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
+                <module>resource-mapping-manager</module>
             </modules>
         </profile>
         <profile>
@@ -983,6 +985,7 @@
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
+                <module>resource-mapping-manager</module>
             </modules>
         </profile>
         <profile>
@@ -1188,6 +1191,7 @@
                 <module>ranger-tools</module>
                 <module>ranger-util</module>
                 <module>ranger-yarn-plugin-shim</module>
+                <module>resource-mapping-manager</module>
                 <module>security-admin</module>
                 <module>storm-agent</module>
                 <module>tagsync</module>
