@@ -30,16 +30,16 @@ import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
 @Slf4j
 @RequiredArgsConstructor
-public class DbResourceDiffApplier implements ResourceDiffApplier {
+public class DbResourceDiffCollector implements ResourceDiffCollector {
     private final ResourceMappingDiffDao resourceMappingDiffDao;
     private final RetrySupport retrySupport;
 
-    public void applyRecordsFrom(BlockingQueue<ResourceDiffStreamRecord> eventQueue) throws Exception {
+    public void collect(BlockingQueue<ResourceDiffStreamRecord> diffQueue) throws Exception {
         ResourceDiffStreamRecord event = null;
 
         while (event == null || !event.isLastRecord()) {
             try {
-                event = eventQueue.take();
+                event = diffQueue.take();
                 ResourceDiffStreamRecord lastEvent = event;
                 retrySupport.withRetries(() -> handleEvent(lastEvent));
             } catch (RetryException exception) {

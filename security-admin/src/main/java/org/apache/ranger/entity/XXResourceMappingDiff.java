@@ -70,8 +70,8 @@ public class XXResourceMappingDiff implements Serializable {
         return id;
     }
 
-    public void setId(Long eventId) {
-        this.id = eventId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public ResourceMapping getOldEntity() {

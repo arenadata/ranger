@@ -26,7 +26,7 @@ import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-public class ResourceMappingDiffDaoImpl implements ResourceMappingDiffDao {
+public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     private static final String ID_FIELD = "id";
     private static final String OLD_NAME_FIELD = "old_name";
     private static final String OLD_LOCATION_FIELD = "old_location";
@@ -39,7 +39,7 @@ public class ResourceMappingDiffDaoImpl implements ResourceMappingDiffDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public ResourceMappingDiffDaoImpl(DataSource dataSource) {
+    public DefaultResourceMappingDiffDao(DataSource dataSource) {
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     }
 

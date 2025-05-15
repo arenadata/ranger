@@ -22,9 +22,9 @@ import java.util.List;
 import javax.persistence.NoResultException;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXResourceMappingDiff;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
-@Service
+@Repository
 public class XXResourceMappingDiffDao extends BaseDao<XXResourceMappingDiff> {
     public XXResourceMappingDiffDao(RangerDaoManagerBase daoManager) {
         super(daoManager);

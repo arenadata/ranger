@@ -26,6 +26,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -53,11 +54,9 @@ import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
 @Slf4j
 public class HiveMetastoreEventFetcher implements ResourceDiffSource {
-    public static final long INITIAL_EVENT_ID = 0L;
     public static final Set<String> SUPPORTED_TABLE_TYPES = Sets.newHashSet(
         TableType.EXTERNAL_TABLE.name(),
-        TableType.MANAGED_TABLE.name(),
-        TableType.INDEX_TABLE.name()
+        TableType.MANAGED_TABLE.name()
     );
 
     private final IMetaStoreClient metaStoreClient;
@@ -68,9 +67,11 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
     private final int eventBatchSize;
     private final long fetchPeriodMs;
 
+    @Getter
     private final BlockingQueue<ResourceDiffStreamRecord> outputQueue;
     private final AtomicBoolean pollStarted;
 
+    @Getter
     private volatile long lastEventId;
 
     @lombok.Builder(builderClassName = "Builder")
@@ -78,10 +79,10 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         IMetaStoreClient metaStoreClient,
         MessageDeserializer eventMessageDeserializer,
         ScheduledExecutorService executor,
-        long fetchPeriodMs,
-        int eventBatchSize,
         HiveAuthenticator authenticator,
-        RetrySupport retrySupport
+        RetrySupport retrySupport,
+        long fetchPeriodMs,
+        int eventBatchSize
     ) {
         this.metaStoreClient = metaStoreClient;
         this.executor = executor;
@@ -95,7 +96,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
     }
 
     @Override
-    public BlockingQueue<ResourceDiffStreamRecord> pollRecordsAsync(long fromEventId) throws Exception {
+    public BlockingQueue<ResourceDiffStreamRecord> pollAsync(long fromEventId) throws Exception {
         if (pollStarted.compareAndSet(false, true)) {
             authenticator.login();
             lastEventId = fromEventId;
@@ -105,7 +106,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         return outputQueue;
     }
 
-    private void pollRecordsBatch() {
+    void pollRecordsBatch() {
         try {
             retrySupport.withRetries(
                 () -> authenticator.executeSecurely(this::pollRecordsBatchAction)
@@ -182,7 +183,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             createTableMessage.getTableObj().getSd().getLocation(),
             event.getEventId());
 
-        outputQueue.add(createEntityDiff);
+        outputQueue.put(createEntityDiff);
     }
 
     private void handleCreateDb(NotificationEvent event) throws Exception {
@@ -197,7 +198,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             createDatabaseMessage.getDatabaseObject().getLocationUri(),
             event.getEventId());
 
-        outputQueue.add(createEntityDiff);
+        outputQueue.put(createEntityDiff);
     }
 
     private void handleDropTable(NotificationEvent event) throws Exception {
@@ -217,7 +218,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             HiveEntityType.TABLE,
             event.getEventId());
 
-        outputQueue.add(dropEntityDiff);
+        outputQueue.put(dropEntityDiff);
     }
 
     private void handleDropDb(NotificationEvent event) throws Exception {
@@ -232,7 +233,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             HiveEntityType.DATABASE,
             event.getEventId());
 
-        outputQueue.add(dropEntityDiff);
+        outputQueue.put(dropEntityDiff);
     }
 
     private void handleAlterTable(NotificationEvent event) throws Exception {
@@ -264,7 +265,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
                 event.getEventId()
             );
 
-            outputQueue.add(resourceMappingDiff);
+            outputQueue.put(resourceMappingDiff);
         }
     }
 
@@ -290,7 +291,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
                 event.getEventId()
             );
 
-            outputQueue.add(resourceMappingDiff);
+            outputQueue.put(resourceMappingDiff);
         }
     }
 
@@ -320,7 +321,9 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
 
     @Override
     public void close() {
-        executor.shutdown();
+        if (executor != null) {
+            executor.shutdown();
+        }
 
         try {
             metaStoreClient.close();

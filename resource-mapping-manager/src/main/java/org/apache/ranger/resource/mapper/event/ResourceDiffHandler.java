@@ -19,8 +19,6 @@
 
 package org.apache.ranger.resource.mapper.event;
 
-import static org.apache.ranger.resource.mapper.hive.event.HiveMetastoreEventFetcher.INITIAL_EVENT_ID;
-
 import java.util.concurrent.BlockingQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,21 +27,23 @@ import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
 @Slf4j
 @RequiredArgsConstructor
-public class MetastoreEventHandler implements AutoCloseable {
-    private final ResourceDiffSource eventFetcher;
-    private final ResourceDiffApplier eventApplier;
-    private final ResourceMappingDiffDao entityDiffDao;
+public class ResourceDiffHandler implements AutoCloseable {
+    public static final long INITIAL_DIFF_ID = 0L;
+
+    private final ResourceDiffSource resourceDiffSource;
+    private final ResourceDiffCollector resourceDiffCollector;
+    private final ResourceMappingDiffDao diffDao;
 
     public void start() throws Exception {
-        long lastEventId = entityDiffDao.getLatestDiffId().orElse(INITIAL_EVENT_ID);
-        BlockingQueue<ResourceDiffStreamRecord> recordsQueue = eventFetcher.pollRecordsAsync(lastEventId);
-        eventApplier.applyRecordsFrom(recordsQueue);
+        long latestDiffId = diffDao.getLatestDiffId().orElse(INITIAL_DIFF_ID);
+        BlockingQueue<ResourceDiffStreamRecord> recordsDiffQueue = resourceDiffSource.pollAsync(latestDiffId);
+        resourceDiffCollector.collect(recordsDiffQueue);
     }
 
     @Override
     public void close() {
         try {
-            eventFetcher.close();
+            resourceDiffSource.close();
         } catch (Exception exception) {
             log.error("Error closing event fetcher", exception);
         }

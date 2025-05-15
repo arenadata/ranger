@@ -22,6 +22,6 @@ package org.apache.ranger.resource.mapper.event;
 import java.util.concurrent.BlockingQueue;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
-public interface ResourceDiffApplier {
-    void applyRecordsFrom(BlockingQueue<ResourceDiffStreamRecord> eventQueue) throws Exception;
+public interface ResourceDiffCollector {
+    void collect(BlockingQueue<ResourceDiffStreamRecord> diffQueue) throws Exception;
 }

@@ -11,7 +11,7 @@ public class VXResourceMappingDiff implements Serializable {
     private final VXResourceMapping newEntity;
     private final String entityType;
     private final String diffType;
-    private final long eventId;
+    private final long id;
     private final String sourceService;
     private final String targetService;
 
@@ -20,7 +20,7 @@ public class VXResourceMappingDiff implements Serializable {
         VXResourceMapping newEntity,
         String entityType,
         String diffType,
-        long eventId,
+        long id,
         String sourceService,
         String targetService
     ) {
@@ -28,7 +28,7 @@ public class VXResourceMappingDiff implements Serializable {
         this.newEntity = newEntity;
         this.entityType = entityType;
         this.diffType = diffType;
-        this.eventId = eventId;
+        this.id = id;
         this.sourceService = sourceService;
         this.targetService = targetService;
     }
@@ -57,7 +57,7 @@ public class VXResourceMappingDiff implements Serializable {
         return targetService;
     }
 
-    public long getEventId() {
-        return eventId;
+    public long getId() {
+        return id;
     }
 }

@@ -33,8 +33,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ResourceMappingMgr {
 
+    private final RangerDaoManager rangerDaoManager;
+
     @Autowired
-    RangerDaoManager rangerDaoManager;
+    public ResourceMappingMgr(RangerDaoManager rangerDaoManager) {
+        this.rangerDaoManager = rangerDaoManager;
+    }
 
     public VXResourceMappingDiffs getDiffsNewerThan(String sourceService, String targetService, long diffId) {
         List<XXResourceMappingDiff> diffs = rangerDaoManager.getXXResourceMappingDiff()

@@ -22,9 +22,11 @@ package org.apache.ranger.resource.mapper.model;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Builder
 @Data
+@RequiredArgsConstructor
 public class ResourceMappingDiff implements ResourceDiffStreamRecord {
     private final long id;
     @NonNull

@@ -21,22 +21,20 @@ package org.apache.ranger.resource.mapper.hive;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.messaging.MessageFactory;
-import org.apache.hadoop.io.retry.RetryPolicies;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.resource.mapper.config.ResourceMappingManagerConfig;
+import org.apache.ranger.resource.mapper.dao.DefaultResourceMappingDiffDao;
 import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDao;
-import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDaoImpl;
-import org.apache.ranger.resource.mapper.event.DbResourceDiffApplier;
-import org.apache.ranger.resource.mapper.event.MetastoreEventHandler;
+import org.apache.ranger.resource.mapper.event.DbResourceDiffCollector;
+import org.apache.ranger.resource.mapper.event.ResourceDiffHandler;
 import org.apache.ranger.resource.mapper.event.ResourceDiffSource;
 import org.apache.ranger.resource.mapper.event.retry.PolicyBasedRetrySupport;
 import org.apache.ranger.resource.mapper.event.retry.ResourceMapperRetryPolicy;
-import org.apache.ranger.resource.mapper.event.retry.RetryStrategy;
+import org.apache.ranger.resource.mapper.event.retry.RetryPolicyFactory;
 import org.apache.ranger.resource.mapper.event.retry.RetrySupport;
 import org.apache.ranger.resource.mapper.hive.auth.HiveAuthenticator;
 import org.apache.ranger.resource.mapper.hive.auth.KerberosHiveAuthenticator;
@@ -46,43 +44,47 @@ import org.apache.ranger.resource.mapper.hive.event.HiveMetastoreEventFetcher;
 @Slf4j
 public class HiveResourceMappingManager {
     public void run(HiveResourceMappingManagerConfig config) {
-        try (MetastoreEventHandler metastoreEventHandler = buildEventHandler(config);) {
-            metastoreEventHandler.start();
+        try (ResourceDiffHandler resourceDiffHandler = buildEventHandler(config)) {
+            resourceDiffHandler.start();
         } catch (Exception exception) {
             log.error("Error handling events from HMS", exception);
             System.exit(1);
         }
     }
 
-    private MetastoreEventHandler buildEventHandler(HiveResourceMappingManagerConfig config) throws Exception {
+    private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config) throws Exception {
         ResourceMappingDiffDao diffDao = buildEntityDao(config);
+        RetryPolicyFactory retryPolicyFactory = new RetryPolicyFactory();
 
-        return new MetastoreEventHandler(
-            buildEventFetcher(config),
-            new DbResourceDiffApplier(diffDao, buildEventApplierRetrySupport(config)),
+        return new ResourceDiffHandler(
+            buildEventFetcher(retryPolicyFactory, config),
+            new DbResourceDiffCollector(diffDao, buildEventApplierRetrySupport(retryPolicyFactory, config)),
             diffDao
         );
     }
 
-    private ResourceDiffSource buildEventFetcher(HiveResourceMappingManagerConfig config) throws Exception {
+    private ResourceDiffSource buildEventFetcher(RetryPolicyFactory retryPolicyFactory,
+                                                 HiveResourceMappingManagerConfig config) throws Exception {
         return HiveMetastoreEventFetcher.builder()
             .metaStoreClient(new HiveMetaStoreClient(config))
             .eventMessageDeserializer(MessageFactory.getDefaultInstance(config).getDeserializer())
             .executor(Executors.newSingleThreadScheduledExecutor())
             .fetchPeriodMs(config.getFetchPeriodMs())
             .eventBatchSize(config.getFetchBatchSize())
-            .retrySupport(buildHiveListenerRetrySupport(config))
+            .retrySupport(buildHiveListenerRetrySupport(retryPolicyFactory, config))
             .authenticator(buildHiveAuthenticator(config))
             .build();
     }
 
     private ResourceMappingDiffDao buildEntityDao(HiveResourceMappingManagerConfig config) {
         HikariDataSource hikariDataSource = new HikariDataSource(config.getDbConfig());
-        return new ResourceMappingDiffDaoImpl(hikariDataSource);
+        return new DefaultResourceMappingDiffDao(hikariDataSource);
     }
 
-    private RetrySupport buildHiveListenerRetrySupport(HiveResourceMappingManagerConfig config) {
-        ResourceMapperRetryPolicy retryPolicy = buildRetryPolicy(
+    private RetrySupport buildHiveListenerRetrySupport(
+        RetryPolicyFactory retryPolicyFactory,
+        HiveResourceMappingManagerConfig config) {
+        ResourceMapperRetryPolicy retryPolicy = retryPolicyFactory.provide(
             config.getHiveListenerRetryStrategy(),
             config.getHiveListenerMaxRetries(),
             config.getHiveListenerRetryIntervalMs()
@@ -90,8 +92,10 @@ public class HiveResourceMappingManager {
         return new PolicyBasedRetrySupport(retryPolicy, Thread::sleep);
     }
 
-    private RetrySupport buildEventApplierRetrySupport(ResourceMappingManagerConfig config) {
-        ResourceMapperRetryPolicy retryPolicy = buildRetryPolicy(
+    private RetrySupport buildEventApplierRetrySupport(
+        RetryPolicyFactory retryPolicyFactory,
+        ResourceMappingManagerConfig config) {
+        ResourceMapperRetryPolicy retryPolicy = retryPolicyFactory.provide(
             config.getEventApplierRetryStrategy(),
             config.getEventApplierMaxRetries(),
             config.getEventApplierRetryIntervalMs()
@@ -108,27 +112,5 @@ public class HiveResourceMappingManager {
         }
 
         return HiveAuthenticator.noOpAuthenticator();
-    }
-
-    private ResourceMapperRetryPolicy buildRetryPolicy(RetryStrategy retryStrategy,
-                                                       int maxRetries, long retryIntervalMs) {
-        switch (retryStrategy) {
-            case FIXED_SLEEP:
-                return ResourceMapperRetryPolicy.fromHadoopPolicy(
-                    RetryPolicies.retryUpToMaximumCountWithFixedSleep(
-                        maxRetries, retryIntervalMs, TimeUnit.MILLISECONDS
-                    )
-                );
-            case EXPONENTIAL:
-                return ResourceMapperRetryPolicy.fromHadoopPolicy(
-                    RetryPolicies.exponentialBackoffRetry(
-                        maxRetries, retryIntervalMs, TimeUnit.MILLISECONDS
-                    )
-                );
-            default:
-                return ResourceMapperRetryPolicy.fromHadoopPolicy(
-                    RetryPolicies.TRY_ONCE_THEN_FAIL
-                );
-        }
     }
 }
