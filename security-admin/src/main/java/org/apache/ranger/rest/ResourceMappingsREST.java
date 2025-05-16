@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Component
-@Path("/api/mappings")
+@Path("/resource-mappings")
 @Scope("request")
 public class ResourceMappingsREST {
     private static final Logger LOG = LoggerFactory.getLogger(ResourceMappingsREST.class);
