@@ -2165,4 +2165,21 @@
 	<named-query name="XXPolicy.findByZoneId">
 		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
 	</named-query>
+
+	<named-query name="XXMetastoreMappingDiff.getDiffsNewerThan">
+		<query>
+			select obj from XXResourceMappingDiff obj
+			where obj.id > :diffId
+			and obj.sourceService = :source_service
+			and obj.targetService = :targetService
+		</query>
+	</named-query>
+
+	<named-query name="XXMetastoreMappingDiff.getAllDiffs">
+		<query>
+			select obj from XXResourceMappingDiff obj
+			where obj.sourceService = :source_service
+			and obj.targetService = :targetService
+		</query>
+	</named-query>
 </entity-mappings>

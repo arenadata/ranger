@@ -1,0 +1,48 @@
+services:
+  some-postgres:
+    image: postgres:17.2-bookworm
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  metastore-standalone:
+    image: apache/hive:4.0.1
+    depends_on:
+      - some-postgres
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://some-postgres:5432/postgres
+        -Djavax.jdo.option.ConnectionUserName=admin
+        -Djavax.jdo.option.ConnectionPassword=admin
+        -Dhive.metastore.event.listeners=org.apache.hive.hcatalog.listener.DbNotificationListener
+        -Dhive.metastore.event.db.listener.timetolive=86400s
+    volumes:
+      - ~/.m2/repository/org/postgresql/postgresql/42.7.5/postgresql-42.7.5.jar:/opt/hive/lib/postgres.jar
+    ports:
+      - "9083:9083"
+
+  hiveserver2-standalone:
+    image: apache/hive:4.0.1
+    depends_on:
+      - metastore-standalone
+    environment:
+      SERVICE_NAME: hiveserver2
+      IS_RESUME: true
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://some-postgres:5432/postgres
+        -Djavax.jdo.option.ConnectionUserName=postgres
+        -Djavax.jdo.option.ConnectionPassword=example
+        -Dhive.metastore.uris=thrift://metastore-standalone:9083
+    volumes:
+      - ~/.m2/repository/org/postgresql/postgresql/42.7.5/postgresql-42.7.5.jar:/opt/hive/lib/postgres.jar
+    ports:
+      - "10000:10000"
+      - "10002:10002"
