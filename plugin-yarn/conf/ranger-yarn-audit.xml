@@ -106,8 +106,23 @@
 	<property>
 		<name>xasecure.audit.hdfs.config.local.archive.max.file.count</name>
 		<value>10</value>
-	</property>	
-	
+	</property>
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.retention.ms</name>
+		<value>-1</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.retention.bytes</name>
+		<value>-1</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.hdfs.config.destination.rotation.async</name>
+		<value>false</value>
+	</property>
+
 	<!-- Audit to HDFS on Azure Datastore (WASB) requires v3 style settings.  Comment the above and uncomment only the
 	following to audit to Azure Blob Datastore via hdfs' WASB schema.
 
