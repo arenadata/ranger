@@ -22,7 +22,15 @@
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.jersey.api.client.ClientResponse;
-
+import java.io.UnsupportedEncodingException;
+import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.NewCookie;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -32,18 +40,22 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.plugin.model.ResourceMappingDiffs;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.plugin.util.RangerPluginCapability;
+import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.plugin.util.URLEncoderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.NewCookie;
-import java.io.UnsupportedEncodingException;
-import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminRESTClient.class);
@@ -1001,6 +1013,57 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public ResourceMappingDiffs getResourceMappingDiffs(String sourceService, String targetService, Long diffId) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getResourceMappingDiffs({}, {}, {})", sourceService, targetService, diffId);
+		}
+
+		UserGroupInformation user = MiscUtil.getUGILoginUser();
+		Cookie sessionId = this.sessionId;
+
+		Map<String, String> queryParams = new HashMap<>();
+		if (diffId != null) {
+			queryParams.put(RangerRESTUtils.REST_PARAM_DIFF_ID, String.valueOf(diffId));
+		}
+		String relativeURL = String.format("/resource-mappings/%s/%s/diffs/new", sourceService, targetService);
+
+		final ClientResponse response;
+		if (isKerberosEnabled(user)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("getResourceMappingDiffs as user {}", user);
+			}
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+				try {
+					return restClient.get(relativeURL, queryParams, sessionId);
+				} catch (Exception e) {
+					LOG.error("Failed to get response", e);
+				}
+
+				return null;
+			});
+		} else {
+			response = restClient.get(relativeURL, queryParams, sessionId);
+		}
+
+		checkAndResetSessionCookie(response);
+
+		ResourceMappingDiffs diffs;
+		if (response != null && response.getStatus() == HttpServletResponse.SC_OK) {
+			diffs = JsonUtilsV2.readResponse(response, ResourceMappingDiffs.class);
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.error("Error getting resource mappings. Response={}", resp);
+			throw new Exception(resp.getMessage());
+		}
+
+		if(LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerAdminRESTClient.getResourceMappingDiffs({}, {}, {})", sourceService, targetService, diffId);
+		}
+
+		return diffs;
 	}
 
 	private void checkAndResetSessionCookie(ClientResponse response) {

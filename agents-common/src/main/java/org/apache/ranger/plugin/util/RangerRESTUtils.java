@@ -87,6 +87,8 @@ public class RangerRESTUtils {
 
 	public static final String REST_PARAM_CAPABILITIES   = "pluginCapabilities";
 
+	public static final String REST_PARAM_DIFF_ID   = "diffId";
+
 	public static String hostname;
 
 	static {

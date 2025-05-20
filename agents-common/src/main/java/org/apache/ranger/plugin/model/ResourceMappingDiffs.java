@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.view;
+package org.apache.ranger.plugin.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,14 +24,14 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VXResourceMappingDiffs implements Serializable {
-    private final List<VXResourceMappingDiff> diffs;
+public class ResourceMappingDiffs implements Serializable {
+    private final List<ResourceMappingDiff> diffs;
 
-    public VXResourceMappingDiffs(List<VXResourceMappingDiff> diffs) {
+    public ResourceMappingDiffs(List<ResourceMappingDiff> diffs) {
         this.diffs = diffs;
     }
 
-    public List<VXResourceMappingDiff> getDiffs() {
+    public List<ResourceMappingDiff> getDiffs() {
         return diffs;
     }
 }

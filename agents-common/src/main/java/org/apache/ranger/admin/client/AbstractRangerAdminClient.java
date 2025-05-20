@@ -24,6 +24,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,6 +119,11 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     @Override
     public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
+
+    @Override
+    public ResourceMappingDiffs getResourceMappingDiffs(String sourceService, String targetService, Long diffId) throws Exception {
         return null;
     }
 

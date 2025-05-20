@@ -1,0 +1,9 @@
+10
+{"path":"/key1","name":"table1","type":"TABLE"}
+{"path":"/usr/key7","name":"db2","type":"DATABASE"}
+{"path":"/root/key2","name":"table2","type":"TABLE"}
+{"path":"/root/another/key6","name":"table6","type":"TABLE"}
+{"path":"/root/dir","name":"db1","type":"DATABASE"}
+{"path":"/root/dir/subdir/key5","name":"table5","type":"TABLE"}
+{"path":"/root/dir/key3","name":"table3","type":"TABLE"}
+{"path":"/root/dir/key4","name":"table4","type":"TABLE"}

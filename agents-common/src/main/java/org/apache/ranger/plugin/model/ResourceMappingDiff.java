@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.view;
+package org.apache.ranger.plugin.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -23,18 +23,18 @@ import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VXResourceMappingDiff implements Serializable {
-    private final VXResourceMapping oldEntity;
-    private final VXResourceMapping newEntity;
+public class ResourceMappingDiff implements Serializable {
+    private final ResourceMapping oldEntity;
+    private final ResourceMapping newEntity;
     private final String entityType;
     private final String diffType;
     private final long id;
     private final String sourceService;
     private final String targetService;
 
-    public VXResourceMappingDiff(
-        VXResourceMapping oldEntity,
-        VXResourceMapping newEntity,
+    public ResourceMappingDiff(
+        ResourceMapping oldEntity,
+        ResourceMapping newEntity,
         String entityType,
         String diffType,
         long id,
@@ -50,11 +50,11 @@ public class VXResourceMappingDiff implements Serializable {
         this.targetService = targetService;
     }
 
-    public VXResourceMapping getOldEntity() {
+    public ResourceMapping getOldEntity() {
         return oldEntity;
     }
 
-    public VXResourceMapping getNewEntity() {
+    public ResourceMapping getNewEntity() {
         return newEntity;
     }
 

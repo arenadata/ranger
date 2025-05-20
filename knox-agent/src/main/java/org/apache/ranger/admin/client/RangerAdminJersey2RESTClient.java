@@ -127,7 +127,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		String url = configURLs.get(this.lastKnownActiveUrlIndex);
 		_isSSL = isSsl(url);
 		LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", url, _sslConfigFileName, _serviceName, _supportsPolicyDeltas, _supportsTagDeltas, configURLs));
-		
+
 		_client = getClient();
 		_client.property(ClientProperties.CONNECT_TIMEOUT, _restClientConnTimeOutMs);
 		_client.property(ClientProperties.READ_TIMEOUT, _restClientReadTimeOutMs);
@@ -198,7 +198,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		Response response = get(queryParams, relativeURL);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
-		
+
 		switch(httpResponseCode) {
 		case -1:
 			LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
@@ -234,7 +234,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		Response response = get(queryParams, relativeURL);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
-		
+
 		switch(httpResponseCode) {
 		case -1:
 			LOG.warn("Unexpected: Null response from policy server while granting access! Returning null!");
@@ -388,7 +388,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 			.registerTypeAdapter(Date.class, new GsonUnixDateDeserializer())
 			.create();
 	}
-	
+
 	Client getClient() {
 		Client result = _client;
 		if(result == null) {
@@ -404,7 +404,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	}
 
 	Client buildClient() {
-		
+
 		if (_isSSL) {
 			if (_sslContext == null) {
 				RangerSslHelper sslHelper = new RangerSslHelper(_sslConfigFileName);
@@ -416,7 +416,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 						return session.getPeerHost().equals(urlHostName);
 					}
 				};
-			}				
+			}
 			_client = ClientBuilder.newBuilder()
 					.sslContext(_sslContext)
 					.hostnameVerifier(_hv)
@@ -426,7 +426,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		if(_client == null) {
 			_client = ClientBuilder.newClient();
 		}
-		
+
 		return _client;
 	}
 

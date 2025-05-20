@@ -22,11 +22,10 @@ package org.apache.ranger.biz;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.ResourceMapping;
 import org.apache.ranger.entity.XXResourceMappingDiff;
-import org.apache.ranger.view.VXResourceMapping;
-import org.apache.ranger.view.VXResourceMappingDiff;
-import org.apache.ranger.view.VXResourceMappingDiffs;
+import org.apache.ranger.plugin.model.ResourceMapping;
+import org.apache.ranger.plugin.model.ResourceMappingDiff;
+import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,27 +39,27 @@ public class ResourceMappingMgr {
         this.rangerDaoManager = rangerDaoManager;
     }
 
-    public VXResourceMappingDiffs getDiffsNewerThan(String sourceService, String targetService, long diffId) {
+    public ResourceMappingDiffs getDiffsNewerThan(String sourceService, String targetService, long diffId) {
         List<XXResourceMappingDiff> diffs = rangerDaoManager.getXXResourceMappingDiff()
             .getDiffsNewerThan(sourceService, targetService, diffId);
         return toDto(diffs);
     }
 
-    public VXResourceMappingDiffs getAllDiffs(String sourceService, String targetService) {
+    public ResourceMappingDiffs getAllDiffs(String sourceService, String targetService) {
         List<XXResourceMappingDiff> diffs = rangerDaoManager.getXXResourceMappingDiff()
             .getAllDiffs(sourceService, targetService);
         return toDto(diffs);
     }
 
-    private VXResourceMappingDiffs toDto(List<XXResourceMappingDiff> diffs) {
-        List<VXResourceMappingDiff> diffDtos = diffs.stream()
+    private ResourceMappingDiffs toDto(List<XXResourceMappingDiff> diffs) {
+        List<ResourceMappingDiff> diffDtos = diffs.stream()
             .map(this::toDto)
             .collect(Collectors.toList());
-        return new VXResourceMappingDiffs(diffDtos);
+        return new ResourceMappingDiffs(diffDtos);
     }
 
-    private VXResourceMappingDiff toDto(XXResourceMappingDiff diff) {
-        return new VXResourceMappingDiff(
+    private ResourceMappingDiff toDto(XXResourceMappingDiff diff) {
+        return new ResourceMappingDiff(
             toDto(diff.getOldEntity()),
             toDto(diff.getNewEntity()),
             diff.getEntityType(),
@@ -71,8 +70,8 @@ public class ResourceMappingMgr {
         );
     }
 
-    private VXResourceMapping toDto(ResourceMapping mapping) {
-        return mapping == null ? null : new VXResourceMapping(
+    private ResourceMapping toDto(org.apache.ranger.entity.ResourceMapping mapping) {
+        return mapping == null ? null : new ResourceMapping(
             mapping.getName(),
             mapping.getLocation()
         );
