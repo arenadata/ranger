@@ -23,59 +23,26 @@
         <version>2.6.0</version>
     </parent>
 
-    <artifactId>ranger-hive-chained-plugin-base</artifactId>
+    <artifactId>ranger-hive-chained-plugin-hdfs</artifactId>
     <packaging>jar</packaging>
-    <name>Hive Chained Security Plugin Base</name>
+    <name>Hive HDFS Chained Security Plugin</name>
 
     <properties>
-        <lombok.version>1.18.32</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-plugin</artifactId>
+            <artifactId>ranger-hdfs-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-        <!-- Test -->
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-hive-chained-plugin-base</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>${maven.pmd.plugin.version}</version>
-                <configuration>
-                    <includeTests>false</includeTests>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
 </project>

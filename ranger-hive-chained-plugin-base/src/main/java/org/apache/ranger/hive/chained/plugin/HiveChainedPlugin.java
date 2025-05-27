@@ -25,8 +25,10 @@ import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_PERSIST_INTERVAL_POSTFIX;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_DEFAULT;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_POSTFIX;
+import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.ANY_ACCESS;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -104,17 +106,32 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
     protected List<RangerAccessRequest> toChainedRequests(RangerAccessRequest request) {
         return Optional.ofNullable(request)
             .map(this::getPathFromRequest)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .flatMap(resourceMappingsStore::get)
             .map(entity -> toAccessRequests(entity, request))
             .orElseGet(Collections::emptyList);
     }
 
-    protected abstract String getPathFromRequest(RangerAccessRequest request);
+    protected List<HiveAccessType> getAccessMappings(String... mappings) {
+        return Arrays.stream(mappings)
+            .map(this::toAccessType)
+            .collect(Collectors.toList());
+    }
 
-    protected abstract List<HiveAccessType> getHiveAccessTypes(RangerAccessRequest request);
+    protected HiveAccessType toAccessType(String rawAccessType) {
+        return rawAccessType.equals(ANY_ACCESS)
+            // Hive plugin uses "USE" access type as synonym for "_any"
+            ? HiveAccessType.USE
+            : HiveAccessType.valueOf(rawAccessType);
+    }
+
+    protected abstract Optional<String> getPathFromRequest(RangerAccessRequest request);
+
+    protected abstract List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request);
 
     private List<RangerAccessRequest> toAccessRequests(HiveEntity entity, RangerAccessRequest srcRequest) {
-        return getHiveAccessTypes(srcRequest)
+        return getHiveAccessTypes(entity, srcRequest)
             .stream()
             .map(accessType -> new RangerHiveAccessRequest(
                 toHiveResource(entity),
