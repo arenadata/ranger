@@ -28,7 +28,7 @@ import javax.ws.rs.QueryParam;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.ResourceMappingMgr;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.view.VXResourceMappingDiffs;
+import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,9 +53,9 @@ public class ResourceMappingsREST {
     @GET
     @Path("/{sourceService}/{targetService}/diffs/new")
     @Produces({"application/json"})
-    public VXResourceMappingDiffs getDiffs(@PathParam("sourceService") String sourceService,
-                                           @PathParam("targetService") String targetService,
-                                           @QueryParam("fromDiffId") Long diffId) {
+    public ResourceMappingDiffs getDiffs(@PathParam("sourceService") String sourceService,
+                                         @PathParam("targetService") String targetService,
+                                         @QueryParam("fromDiffId") Long diffId) {
         if (StringUtils.isBlank(sourceService)) {
             throw restErrorUtil.createRESTException("sourceService parameter is required");
         }

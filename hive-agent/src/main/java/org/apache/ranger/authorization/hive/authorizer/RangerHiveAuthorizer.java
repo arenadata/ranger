@@ -3280,8 +3280,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 }
 
-enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
-enum HiveAccessType { NONE, CREATE, ALTER, DROP, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN, RWSTORAGE };
 
 class HiveObj {
 	String databaseName;
