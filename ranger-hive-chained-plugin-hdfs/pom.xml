@@ -32,7 +32,6 @@
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hdfs-plugin</artifactId>

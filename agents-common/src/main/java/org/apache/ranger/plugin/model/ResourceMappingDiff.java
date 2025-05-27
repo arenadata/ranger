@@ -17,8 +17,10 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -32,13 +34,21 @@ public class ResourceMappingDiff implements Serializable {
     private final String sourceService;
     private final String targetService;
 
+    @JsonCreator
     public ResourceMappingDiff(
+        @JsonProperty(value = "oldEntity")
         ResourceMapping oldEntity,
+        @JsonProperty(value = "newEntity")
         ResourceMapping newEntity,
+        @JsonProperty(value = "entityType")
         String entityType,
+        @JsonProperty(value = "diffType")
         String diffType,
+        @JsonProperty(value = "id")
         long id,
+        @JsonProperty(value = "sourceService")
         String sourceService,
+        @JsonProperty(value = "targetService")
         String targetService
     ) {
         this.oldEntity = oldEntity;

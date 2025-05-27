@@ -192,6 +192,8 @@ call dbo.removeForeignKeysAndTable('x_portal_user')
 GO
 call dbo.removeForeignKeysAndTable('x_db_version_h')
 GO
+call dbo.removeForeignKeysAndTable('x_resource_mapping_diff')
+GO
 
 create table dbo.x_db_version_h(
 id bigint identity not null primary key,
@@ -1333,6 +1335,21 @@ priv_type int DEFAULT NULL,
  )
 GO
 
+CREATE TABLE dbo.x_resource_mapping_diff
+(
+    id             bigint        NOT NULL,
+    old_name       varchar(1024) NOT NULL,
+    old_location   varchar(2048) NOT NULL,
+    new_name       varchar(1024),
+    new_location   varchar(2048),
+    entity_type    varchar(255)  NOT NULL,
+    diff_type      varchar(255)  NOT NULL,
+    source_service varchar(255)  NOT NULL,
+    target_service varchar(255)  NOT NULL,
+    CONSTRAINT x_resource_mapping_diff_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
+
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user(id)
 GO
 ALTER TABLE dbo.x_asset ADD CONSTRAINT x_asset_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
@@ -2298,6 +2315,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('073',CURRENT_TIMESTAMP,'Ranger 2.5.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',CURRENT_TIMESTAMP,'Ranger 2.6.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

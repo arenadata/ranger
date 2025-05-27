@@ -91,6 +91,7 @@ DROP TABLE IF EXISTS xa_access_audit CASCADE;
 DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
+DROP TABLE IF EXISTS x_resource_mapping_diff;
 
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
@@ -1670,6 +1671,21 @@ CONSTRAINT x_rms_mapping_provider_UK_name UNIQUE(name)
 );
 commit;
 
+CREATE TABLE x_resource_mapping_diff
+(
+    id             BIGINT        NOT NULL,
+    old_name       varchar(1024) NOT NULL,
+    old_location   varchar(2048) NOT NULL,
+    new_name       varchar(1024),
+    new_location   varchar(2048),
+    entity_type    varchar(255)  NOT NULL,
+    diff_type      varchar(255)  NOT NULL,
+    source_service varchar(255)  NOT NULL,
+    target_service varchar(255)  NOT NULL,
+    PRIMARY KEY (id)
+);
+commit;
+
 CREATE VIEW vx_principal as
   (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION
   (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION
@@ -1925,6 +1941,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('072',current_timestamp,'Ranger 2.5.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('073',current_timestamp,'Ranger 2.5.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',current_timestamp,'Ranger 2.6.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',current_timestamp,'Ranger 2.6.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

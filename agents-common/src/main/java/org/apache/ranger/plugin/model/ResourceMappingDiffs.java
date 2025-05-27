@@ -17,8 +17,10 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.List;
 
@@ -27,7 +29,10 @@ import java.util.List;
 public class ResourceMappingDiffs implements Serializable {
     private final List<ResourceMappingDiff> diffs;
 
-    public ResourceMappingDiffs(List<ResourceMappingDiff> diffs) {
+    @JsonCreator
+    public ResourceMappingDiffs(
+        @JsonProperty(value = "diffs")
+        List<ResourceMappingDiff> diffs) {
         this.diffs = diffs;
     }
 

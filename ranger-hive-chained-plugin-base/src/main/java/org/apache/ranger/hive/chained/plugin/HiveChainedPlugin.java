@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
@@ -49,6 +50,7 @@ import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.service.ResourceMappingChainedPlugin;
 
+@Slf4j
 public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
     public static final String HIVE_SERVICE_TYPE = "hive";
 
@@ -74,12 +76,12 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
         RangerAdminClient adminClient = Optional.ofNullable(pluginContext.getAdminClient())
             .orElseGet(() -> pluginContext.createAdminClient(rootPlugin.getConfig()));
 
-        this.resourceMappingFetcher = new HiveMappingFetcher(
+        this.resourceMappingFetcher = newMappingFetcher(
             adminClient,
             resourceMappingsStore,
             refreshInterval,
             mappingsPersistInterval,
-            serviceName
+            rootPlugin.getServiceType()
         );
     }
 
@@ -104,11 +106,23 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
 
     @Override
     protected List<RangerAccessRequest> toChainedRequests(RangerAccessRequest request) {
-        return Optional.ofNullable(request)
+        Optional<String> maybePath = Optional.ofNullable(request)
             .map(this::getPathFromRequest)
             .filter(Optional::isPresent)
-            .map(Optional::get)
-            .flatMap(resourceMappingsStore::get)
+            .map(Optional::get);
+
+        if (!maybePath.isPresent()) {
+            log.warn("Error extracting path from request {}", request);
+            return Collections.emptyList();
+        }
+
+        Optional<HiveEntity> maybeHiveEntity = maybePath.flatMap(resourceMappingsStore::get);
+        if (!maybeHiveEntity.isPresent()) {
+            log.debug("No Hive resource mapping found for path {}", maybePath.get());
+            return Collections.emptyList();
+        }
+
+        return maybeHiveEntity
             .map(entity -> toAccessRequests(entity, request))
             .orElseGet(Collections::emptyList);
     }
@@ -130,6 +144,21 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
 
     protected abstract List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request);
 
+    protected HiveMappingFetcher newMappingFetcher(
+        RangerAdminClient adminClient,
+        HiveResourceMappingStore mappingStore,
+        long refreshInterval,
+        long mappingsPersistInterval,
+        String targetService) {
+        return new HiveMappingFetcher(
+            adminClient,
+            mappingStore,
+            refreshInterval,
+            mappingsPersistInterval,
+            targetService
+        );
+    }
+
     private List<RangerAccessRequest> toAccessRequests(HiveEntity entity, RangerAccessRequest srcRequest) {
         return getHiveAccessTypes(entity, srcRequest)
             .stream()
@@ -138,7 +167,7 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
                 srcRequest.getUser(),
                 srcRequest.getUserGroups(),
                 srcRequest.getUserRoles(),
-                (String) null,
+                entity.toString(),
                 accessType,
                 null,
                 null

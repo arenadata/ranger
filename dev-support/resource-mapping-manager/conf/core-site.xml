@@ -14,34 +14,15 @@
   limitations under the License. See accompanying LICENSE file.
 -->
 
+<!-- Put site-specific property overrides in this file. -->
+
 <configuration>
-  <property>
-    <name>ranger.rmm.db.driver.classname</name>
-    <value>org.postgresql.Driver</value>
-  </property>
 
-  <property>
-    <name>ranger.rmm.db.jdbc.url</name>
-    <value>jdbc:postgresql://localhost:5432/testdb</value>
-  </property>
+  <configuration>
+    <property>
+      <name>fs.defaultFS</name>
+      <value>hdfs://ranger-hadoop:9000</value>
+    </property>
+  </configuration>
 
-  <property>
-    <name>ranger.rmm.db.username</name>
-    <value>admin</value>
-  </property>
-
-  <property>
-    <name>ranger.rmm.db.password</name>
-    <value>admin</value>
-  </property>
-
-  <property>
-    <name>ranger.rmm.hms.fetch.period.ms</name>
-    <value>5000</value>
-  </property>
-
-  <property>
-    <name>hive.metastore.uris</name>
-    <value>thrift://localhost:9083</value>
-  </property>
 </configuration>

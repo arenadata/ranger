@@ -33,16 +33,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
+import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
 import org.apache.ranger.hive.chained.mapping.HiveEntity;
+import org.apache.ranger.hive.chained.mapping.HiveMappingFetcher;
+import org.apache.ranger.hive.chained.mapping.HiveResourceMappingStore;
 import org.apache.ranger.hive.chained.plugin.HiveChainedPlugin;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+@Slf4j
 public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
     public static final String READ_ACCESS_TYPE = "read";
     public static final String WRITE_ACCESS_TYPE = "write";
@@ -50,7 +55,7 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
 
     private final Map<HiveObjectType, AccessMappings> accessTypeMappings;
 
-    protected HdfsHiveChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) throws IOException {
+    public HdfsHiveChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) throws IOException {
         super(rootPlugin, serviceName);
 
         this.accessTypeMappings = buildAccessTypeMappings(rootPlugin.getConfig());
@@ -58,16 +63,38 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
 
     @Override
     protected Optional<String> getPathFromRequest(RangerAccessRequest request) {
-        return Optional.ofNullable(request.getResource())
+        Optional<String> maybePath = Optional.ofNullable(request.getResource())
             .map(resource -> resource.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH))
             .map(Object::toString);
+
+        if (!maybePath.isPresent()) {
+            log.warn("Can't extract path from HDFS access request: {}", request);
+        }
+        return maybePath;
     }
 
     @Override
     protected List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request) {
-        return Optional.ofNullable(accessTypeMappings.get(entity.getType()))
+        List<HiveAccessType> accessTypes = Optional.ofNullable(accessTypeMappings.get(entity.getType()))
             .map(mappings -> mappings.getHiveAccessTypes(request))
             .orElseGet(Collections::emptyList);
+
+        if (accessTypes.isEmpty()) {
+            log.warn("No access type mapping found for request: {}", request);
+        }
+        return accessTypes;
+    }
+
+    @Override
+    protected HiveMappingFetcher newMappingFetcher(RangerAdminClient adminClient, HiveResourceMappingStore mappingStore,
+                                                   long refreshInterval, long mappingsPersistInterval,
+                                                   String targetService) {
+        return new HdfsHiveMappingFetcher(
+            adminClient,
+            mappingStore,
+            refreshInterval,
+            mappingsPersistInterval,
+            targetService);
     }
 
     private Map<HiveObjectType, AccessMappings> buildAccessTypeMappings(RangerPluginConfig config) {
@@ -89,6 +116,7 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
             getAccessMappings(config, HiveObjectType.TABLE, EXECUTE_ACCESS_TYPE, TABLE_EXECUTE_ACCESS_MAPPINGS_DEFAULT)
         );
 
+        log.debug("Hive DB access type mappings : {}", mappings);
         return new AccessMappings(mappings);
     }
 
@@ -104,6 +132,7 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
             getAccessMappings(config, HiveObjectType.DATABASE, EXECUTE_ACCESS_TYPE, DB_EXECUTE_ACCESS_MAPPINGS_DEFAULT)
         );
 
+        log.debug("Hive table access type mappings : {}", mappings);
         return new AccessMappings(mappings);
     }
 
@@ -126,7 +155,8 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
         }
 
         public List<HiveAccessType> getHiveAccessTypes(RangerAccessRequest request) {
-            return accessTypeMappings.getOrDefault(request.getAction(), Collections.emptyList());
+            log.debug("Trying to get access type mappings for {}", request);
+            return accessTypeMappings.getOrDefault(request.getAccessType(), Collections.emptyList());
         }
     }
 }

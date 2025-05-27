@@ -1028,7 +1028,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		if (diffId != null) {
 			queryParams.put(RangerRESTUtils.REST_PARAM_DIFF_ID, String.valueOf(diffId));
 		}
-		String relativeURL = String.format("/resource-mappings/%s/%s/diffs/new", sourceService, targetService);
+		String relativeURL = String.format("/service/resource-mappings/%s/%s/diffs/new", sourceService, targetService);
 
 		final ClientResponse response;
 		if (isKerberosEnabled(user)) {

@@ -123,6 +123,8 @@
         <outputDirectory>ext</outputDirectory>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
       </binaries>
     </moduleSet>
   </moduleSets>

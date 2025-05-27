@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import org.apache.ranger.authorization.hadoop.config.RangerChainedPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -72,6 +73,13 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
 
         return reduceAccessResults(
             request, plugin.isAccessAllowed(chainedRequests)
+        );
+    }
+
+    @Override
+    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
+        return new RangerBasePlugin(
+            new RangerChainedPluginConfig(serviceType, serviceName, appId, rootPlugin.getConfig())
         );
     }
 

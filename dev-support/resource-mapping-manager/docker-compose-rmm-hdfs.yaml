@@ -1,0 +1,116 @@
+services:
+  resource-mapping-manager:
+    build:
+      context: ../
+      dockerfile: ./resource-mapping-manager/Dockerfile.resource-mapping-manager
+      args:
+        - RANGER_VERSION=${RANGER_VERSION:-2.6.0}
+        - RANGER_ADMIN_JAVA_VERSION=8
+    depends_on:
+      rmm-hive-server2:
+        condition: service_healthy
+    container_name: resource-mapping-manager
+    env_file:
+      - .env
+    environment:
+      - RANGER_VERSION
+      - RANGER_ADMIN_JAVA_VERSION
+    networks:
+      - ranger
+    volumes:
+      - ./conf/ranger-rmm-site.xml:/opt/ranger/rmm/conf/ranger-rmm-site.xml
+      - ./conf/logback.xml:/opt/ranger/rmm/conf/logback.xml
+      - ./logs:/var/log/ranger/resource-mapping-manager
+
+  ranger-hadoop:
+    build:
+      context: ../
+      dockerfile: ./resource-mapping-manager/Dockerfile.ranger-hadoop-chained-hive
+      args:
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
+        - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}
+        - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}
+    image: ranger-hadoop-chained
+    container_name: ranger-hadoop
+    hostname: ranger-hadoop.example.com
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    networks:
+      - ranger
+    ports:
+      - "9000:9000"
+      - "8088:8088"
+    healthcheck:
+      test: "hdfs dfs -ls /hbase"
+      interval: 1m30s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+    environment:
+      - HADOOP_VERSION
+      - HDFS_PLUGIN_VERSION
+      - YARN_PLUGIN_VERSION
+      - HIVE_PLUGIN_VERSION
+    volumes:
+      - ./conf/ranger-hdfs-security.xml:/opt/hadoop/etc/hadoop/ranger-hdfs-security.xml
+
+  rmm-hive-metastore:
+    image: apache/hive:4.0.1
+    container_name: rmm-hive-metastore
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://ranger-db/hive
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=rangerR0cks!
+        -Dhive.metastore.event.listeners=org.apache.hive.hcatalog.listener.DbNotificationListener
+        -Dhive.metastore.event.db.listener.timetolive=86400s
+        -Dhive.metastore.warehouse.dir=hdfs://ranger-hadoop:9000/user/hive/warehouse
+    volumes:
+      - ../ranger-docker/downloads/postgresql-42.2.16.jre7.jar:/opt/hive/lib/postgres.jar
+    ports:
+      - "9083:9083"
+    networks:
+      - ranger
+
+  rmm-hive-server2:
+    image: apache/hive:4.0.1
+    container_name: rmm-hive-server2
+    depends_on:
+      rmm-hive-metastore:
+        condition: service_started
+      ranger-hadoop:
+        condition: service_healthy
+    environment:
+      SERVICE_NAME: hiveserver2
+      HIVE_CUSTOM_CONF_DIR: /hive_custom_conf
+      IS_RESUME: true
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://ranger-db/hive
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=rangerR0cks!
+        -Dhive.metastore.uris=thrift://rmm-hive-metastore:9083
+        -Dhive.metastore.warehouse.dir=hdfs://ranger-hadoop:9000/user/hive/warehouse
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "beeline -u 'jdbc:hive2://localhost:10000/'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    networks:
+      - ranger
+
+networks:
+  ranger:
+    name: rangernw
+    external: true

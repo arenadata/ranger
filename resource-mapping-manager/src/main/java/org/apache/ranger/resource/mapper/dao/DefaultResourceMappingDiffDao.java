@@ -46,7 +46,7 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     @Override
     public void insert(ResourceMappingDiff entityDiff) {
         jdbcTemplate.update(
-            "INSERT INTO x_metastore_mapping_diff VALUES (" +
+            "INSERT INTO x_resource_mapping_diff VALUES (" +
                 ":id, " +
                 ":old_name, " +
                 ":old_location, " +
@@ -62,7 +62,7 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     @Override
     public Optional<Long> getLatestDiffId() {
         Long result = jdbcTemplate.getJdbcOperations().queryForObject(
-            "SELECT MAX(id) FROM x_metastore_mapping_diff",
+            "SELECT MAX(id) FROM x_resource_mapping_diff",
             Long.class);
         return Optional.ofNullable(result);
     }

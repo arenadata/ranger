@@ -13,9 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-IF (OBJECT_ID('x_metastore_mapping_diff') IS NOT NULL)
+IF (OBJECT_ID('x_resource_mapping_diff') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_metastore_mapping_diff]
+    DROP TABLE [dbo].[x_resource_mapping_diff]
 END
 GO
 
@@ -24,7 +24,7 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 GO
 
-CREATE TABLE [dbo].[x_metastore_mapping_diff]
+CREATE TABLE [dbo].[x_resource_mapping_diff]
 (
     [id] [bigint]       NOT NULL,
     [old_name] [varchar](1024) NOT NULL,
