@@ -847,6 +847,7 @@
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
+                <module>ranger-hive-chained-plugin-ozone</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
@@ -902,6 +903,7 @@
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
+                <module>ranger-hive-chained-plugin-ozone</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
                 <module>resource-mapping-manager</module>
@@ -988,6 +990,7 @@
                 <module>plugin-ozone</module>
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
+                <module>ranger-hive-chained-plugin-ozone</module>
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
@@ -1184,6 +1187,7 @@
                 <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
+                <module>ranger-hive-chained-plugin-ozone</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>

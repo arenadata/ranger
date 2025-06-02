@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -140,9 +141,20 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
             : HiveAccessType.valueOf(rawAccessType);
     }
 
+    protected abstract Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType);
+
     protected abstract Optional<String> getPathFromRequest(RangerAccessRequest request);
 
-    protected abstract List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request);
+    protected List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request) {
+        List<HiveAccessType> accessTypes = getAccessTypeMappings(entity.getType())
+            .map(mappings -> mappings.getHiveAccessTypes(request))
+            .orElseGet(Collections::emptyList);
+
+        if (accessTypes.isEmpty()) {
+            log.warn("No access type mapping found for request: {}", request);
+        }
+        return accessTypes;
+    }
 
     protected HiveMappingFetcher newMappingFetcher(
         RangerAdminClient adminClient,
@@ -193,5 +205,18 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
             nameSegments.get(1),
             nameSegments.get(2)
         );
+    }
+
+    protected static class AccessMappings {
+        private final Map<String, List<HiveAccessType>> accessTypeMappings;
+
+        public AccessMappings(Map<String, List<HiveAccessType>> accessTypeMappings) {
+            this.accessTypeMappings = accessTypeMappings;
+        }
+
+        public List<HiveAccessType> getHiveAccessTypes(RangerAccessRequest request) {
+            log.debug("Trying to get access type mappings for {}", request);
+            return accessTypeMappings.getOrDefault(request.getAccessType(), Collections.emptyList());
+        }
     }
 }
