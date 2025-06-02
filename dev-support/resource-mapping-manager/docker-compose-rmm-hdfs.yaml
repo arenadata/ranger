@@ -103,7 +103,7 @@ services:
       timeout: 10s
       retries: 3
     volumes:
-      - ./conf/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./conf/core-site-hdfs.xml:/opt/hadoop/etc/hadoop/core-site.xml
     ports:
       - "10000:10000"
       - "10002:10002"
