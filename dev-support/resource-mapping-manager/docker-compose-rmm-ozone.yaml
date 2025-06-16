@@ -62,6 +62,7 @@ services:
     volumes:
       - ../ranger-docker/downloads/ozone-${OZONE_VERSION}:/opt/hadoop
       - ./conf/ranger-ozone-security.xml:/etc/ozone-config/ranger-ozone-security.xml
+      - ./conf/ranger-hive-audit.xml:/etc/ozone-config/ranger-hive-audit.xml
       - ../ranger-docker/config/ozone:/etc/ozone-config/
     networks:
       - ranger

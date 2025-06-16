@@ -29,5 +29,6 @@ chmod +x /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh
 
 mkdir -p /opt/hadoop/ranger-ozone-plugin/conf/
 cp /etc/ozone-config/ranger-ozone-security.xml /opt/hadoop/ranger-ozone-plugin/conf/ranger-ozone-security.xml
+cp /etc/ozone-config/ranger-hive-audit.xml /opt/hadoop/ranger-ozone-plugin/conf/ranger-hive-audit.xml
 
 /opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && /opt/hadoop/bin/ozone om

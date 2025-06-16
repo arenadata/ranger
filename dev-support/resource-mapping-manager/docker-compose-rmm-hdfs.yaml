@@ -56,6 +56,7 @@ services:
       - HIVE_PLUGIN_VERSION
     volumes:
       - ./conf/ranger-hdfs-security.xml:/opt/hadoop/etc/hadoop/ranger-hdfs-security.xml
+      - ./conf/ranger-hive-audit.xml:/opt/hadoop/etc/hadoop/ranger-hive-audit.xml
 
   rmm-hive-metastore:
     image: apache/hive:4.0.1
