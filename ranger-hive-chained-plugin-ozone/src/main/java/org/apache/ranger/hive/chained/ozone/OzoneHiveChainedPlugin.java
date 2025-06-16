@@ -202,9 +202,9 @@ public class OzoneHiveChainedPlugin extends HiveChainedPlugin {
                                                    HiveObjectType objectType,
                                                    String accessType,
                                                    String... defaultMappings) {
-        String configKey = String.format(ACCESS_MAPPINGS_KEY_TEMPLATE,
-            objectType.toString().toLowerCase(),
-            accessType);
+        String configKey = config.getPropertyPrefix() +
+            String.format(ACCESS_MAPPINGS_KEY_TEMPLATE,
+                objectType.toString().toLowerCase(), accessType);
         String[] mappings = config.getStrings(configKey, defaultMappings);
         return getAccessMappings(mappings);
     }

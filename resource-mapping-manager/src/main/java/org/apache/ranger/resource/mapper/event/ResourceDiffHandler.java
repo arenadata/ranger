@@ -35,7 +35,9 @@ public class ResourceDiffHandler implements AutoCloseable {
     private final ResourceMappingDiffDao diffDao;
 
     public void start() throws Exception {
-        long latestDiffId = diffDao.getLatestDiffId().orElse(INITIAL_DIFF_ID);
+        long latestDiffId = diffDao.getLatestDiffId(
+            resourceDiffSource.getServiceName()
+        ).orElse(INITIAL_DIFF_ID);
         BlockingQueue<ResourceDiffStreamRecord> recordsDiffQueue = resourceDiffSource.pollAsync(latestDiffId);
         resourceDiffCollector.collect(recordsDiffQueue);
     }
