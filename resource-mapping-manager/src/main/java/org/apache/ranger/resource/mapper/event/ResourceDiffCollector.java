@@ -24,4 +24,6 @@ import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
 public interface ResourceDiffCollector {
     void collect(BlockingQueue<ResourceDiffStreamRecord> diffQueue) throws Exception;
+
+    void handle(ResourceDiffStreamRecord record) throws Exception;
 }

@@ -36,4 +36,7 @@ public class ConfigurationKeys {
 
     public static final String HMS_MAX_RETRIES = "ranger.rmm.hms.retry.max";
     public static final int HMS_MAX_RETRIES_DEFAULT = 10;
+
+    public static final String HMS_FULL_SYNC = "ranger.rmm.hms.sync.full";
+    public static final boolean HMS_FULL_SYNC_DEFAULT = false;
 }

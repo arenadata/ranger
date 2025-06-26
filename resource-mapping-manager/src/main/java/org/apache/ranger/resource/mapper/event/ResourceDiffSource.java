@@ -23,6 +23,8 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
 public interface ResourceDiffSource extends AutoCloseable {
+    BlockingQueue<ResourceDiffStreamRecord> pollAllAsync() throws Exception;
+
     BlockingQueue<ResourceDiffStreamRecord> pollAsync(long fromEventId) throws Exception;
 
     String getServiceName();

@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package org.apache.ranger.resource.mapper.hive.event;
+package org.apache.ranger.resource.mapper.hive.event.fetch;
 
-import static org.apache.ranger.resource.mapper.hive.event.HiveMetastoreEventFetcher.SUPPORTED_TABLE_TYPES;
+import static org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreEventFetcher.SUPPORTED_TABLE_TYPES;
 import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.DEFAULT_LOCATION_SCHEME;
 import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newAlterDbEvent;
@@ -134,7 +134,7 @@ class HiveMetastoreEventFetcherTest {
         assertEquals(expectedRecords, fetchedEvents);
 
         assertEquals(Collections.singletonList(0L), eventsHolder.requestedOffsetIds);
-        assertEquals(11L, eventFetcher.getLastEventId());
+        assertEquals(11L, eventFetcher.getLastHandledEventId());
     }
 
     @Test
@@ -158,7 +158,7 @@ class HiveMetastoreEventFetcherTest {
         assertEquals(SUPPORTED_TABLE_TYPES_COUNT * SUPPORTED_TABLE_OPERATIONS_COUNT, supportedRecords.size());
 
         assertEquals(Collections.singletonList(0L), eventsHolder.requestedOffsetIds);
-        assertEquals(403L, eventFetcher.getLastEventId());
+        assertEquals(403L, eventFetcher.getLastHandledEventId());
     }
 
     private List<ResourceDiffStreamRecord> getFetchedEvents() {

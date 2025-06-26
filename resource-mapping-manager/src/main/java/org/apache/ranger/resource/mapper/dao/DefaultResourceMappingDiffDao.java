@@ -26,9 +26,13 @@ import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
-    private static final String ID_FIELD = "id";
+    private static final String EXTERNAL_ID_FIELD = "external_id";
     private static final String OLD_NAME_FIELD = "old_name";
     private static final String OLD_LOCATION_FIELD = "old_location";
     private static final String NEW_NAME_FIELD = "new_name";
@@ -39,16 +43,34 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     private static final String TARGET_SERVICE_FIELD = "target_service";
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final TransactionTemplate transactionTemplate;
 
     public DefaultResourceMappingDiffDao(DataSource dataSource) {
         this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        this.transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
     }
 
     @Override
-    public void insert(ResourceMappingDiff entityDiff) {
+    public void deleteDiffsFor(ResourceMapping mapping) {
+        jdbcTemplate.update("DELETE FROM x_resource_mapping_diff " +
+                "WHERE old_name = :old_name " +
+                "AND old_location = :old_location",
+            toMapParamSource(mapping));
+    }
+
+    @Override
+    public void deleteAllDiffs() {
+        jdbcTemplate.getJdbcOperations()
+            .update("DELETE FROM x_resource_mapping_diff");
+    }
+
+    @Override
+    public void insertDiff(ResourceMappingDiff entityDiff) {
         jdbcTemplate.update(
-            "INSERT INTO x_resource_mapping_diff VALUES (" +
-                ":id, " +
+            "INSERT INTO x_resource_mapping_diff" +
+                "(external_id, old_name, old_location, new_name, new_location, entity_type, diff_type, source_service, target_service)" +
+                " VALUES (" +
+                ":external_id, " +
                 ":old_name, " +
                 ":old_location, " +
                 ":new_name, " +
@@ -61,15 +83,20 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     }
 
     @Override
-    public Optional<Long> getLatestDiffId(String sourceServiceName) {
+    public Optional<Long> getLatestExternalDiffId(String sourceServiceName) {
         Long result = jdbcTemplate.queryForObject(
-            "SELECT MAX(id) FROM x_resource_mapping_diff " +
+            "SELECT MAX(external_id) FROM x_resource_mapping_diff " +
                 "WHERE source_service = :sourceServiceName",
             ImmutableMap.of("sourceServiceName", sourceServiceName),
             Long.class
         );
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public <T> T execute(TransactionCallback<T> action) throws TransactionException {
+        return transactionTemplate.execute(action);
     }
 
     private MapSqlParameterSource toMapParamSource(ResourceMappingDiff entityDiff) {
@@ -86,9 +113,17 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
 
         source.addValue(ENTITY_TYPE_FIELD, entityDiff.getEntityType());
         source.addValue(DIFF_TYPE_FIELD, entityDiff.getDiffType());
-        source.addValue(ID_FIELD, entityDiff.getId());
+        source.addValue(EXTERNAL_ID_FIELD, entityDiff.getId());
         source.addValue(SOURCE_SERVICE_FIELD, entityDiff.getSourceService());
         source.addValue(TARGET_SERVICE_FIELD, entityDiff.getTargetService());
+        return source;
+    }
+
+    private MapSqlParameterSource toMapParamSource(ResourceMapping resourceMapping) {
+        MapSqlParameterSource source = new MapSqlParameterSource();
+
+        source.addValue(OLD_NAME_FIELD, resourceMapping.getName());
+        source.addValue(OLD_LOCATION_FIELD, resourceMapping.getLocation());
         return source;
     }
 }
