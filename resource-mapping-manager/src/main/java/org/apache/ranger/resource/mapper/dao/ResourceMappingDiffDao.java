@@ -20,10 +20,16 @@
 package org.apache.ranger.resource.mapper.dao;
 
 import java.util.Optional;
+import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
+import org.springframework.transaction.support.TransactionOperations;
 
-public interface ResourceMappingDiffDao {
-    void insert(ResourceMappingDiff entityDiff);
+public interface ResourceMappingDiffDao extends TransactionOperations {
+    void deleteDiffsFor(ResourceMapping mapping);
 
-    Optional<Long> getLatestDiffId(String sourceServiceName);
+    void deleteAllDiffs() throws Exception;
+
+    void insertDiff(ResourceMappingDiff entityDiff);
+
+    Optional<Long> getLatestExternalDiffId(String sourceServiceName);
 }

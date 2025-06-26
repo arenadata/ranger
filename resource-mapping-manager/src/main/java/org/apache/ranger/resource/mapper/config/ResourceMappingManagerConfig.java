@@ -53,6 +53,8 @@ public class ResourceMappingManagerConfig extends Configuration {
     public ResourceMappingManagerConfig() {
         addResource(DEFAULT_CONFIG_FILE);
         addResource(CONFIG_FILE);
+
+        loadSystemProperties();
     }
 
     public HikariConfig getDbConfig() {
@@ -100,5 +102,14 @@ public class ResourceMappingManagerConfig extends Configuration {
 
     public String getKerberosKeytabPath() {
         return get(RMM_KRB_KEYTAB_PATH);
+    }
+
+    private void loadSystemProperties() {
+        for (String propertyName : getProps().stringPropertyNames()) {
+            String systemPropertyValue = System.getProperty(propertyName);
+            if (systemPropertyValue != null) {
+                set(propertyName, systemPropertyValue);
+            }
+        }
     }
 }

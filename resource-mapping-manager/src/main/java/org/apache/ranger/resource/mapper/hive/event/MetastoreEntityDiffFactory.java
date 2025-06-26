@@ -98,6 +98,7 @@ public class MetastoreEntityDiffFactory {
 
     private static String schemeToService(String scheme) {
         switch (scheme) {
+            case DEFAULT_LOCATION_SCHEME:
             case HDFS_LOCATION_SCHEME:
                 return HDFS_SERVICE;
             case OFS_LOCATION_SCHEME:

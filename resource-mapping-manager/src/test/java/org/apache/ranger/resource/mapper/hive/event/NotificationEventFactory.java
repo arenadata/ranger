@@ -176,7 +176,6 @@ public class NotificationEventFactory {
         return table;
     }
 
-
     private static Database buildDb(EntityName entityName, String location) {
         Database db = new Database();
         db.setCatalogName(entityName.catalogName);

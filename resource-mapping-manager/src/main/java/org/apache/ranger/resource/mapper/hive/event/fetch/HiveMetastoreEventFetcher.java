@@ -17,7 +17,9 @@
  * under the License.
  */
 
-package org.apache.ranger.resource.mapper.hive.event;
+package org.apache.ranger.resource.mapper.hive.event.fetch;
+
+import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 
 import java.util.List;
 import java.util.Set;
@@ -42,20 +44,18 @@ import org.apache.hadoop.hive.metastore.messaging.DropDatabaseMessage;
 import org.apache.hadoop.hive.metastore.messaging.DropTableMessage;
 import org.apache.hadoop.hive.metastore.messaging.MessageDeserializer;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
-import org.apache.ranger.resource.mapper.event.ResourceDiffSource;
-import org.apache.ranger.resource.mapper.event.retry.RetryException;
 import org.apache.ranger.resource.mapper.event.retry.RetrySupport;
 import org.apache.ranger.resource.mapper.hive.auth.HiveAuthenticator;
+import org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory;
 import org.apache.ranger.resource.mapper.hive.model.HiveEntityType;
 import org.apache.ranger.resource.mapper.hive.model.HiveEventType;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
-import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
-
 @Slf4j
-public class HiveMetastoreEventFetcher implements ResourceDiffSource {
+public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
+    public static final long INITIAL_DIFF_ID = 0L;
     public static final Set<String> SUPPORTED_TABLE_TYPES = Sets.newHashSet(
         TableType.EXTERNAL_TABLE.name(),
         TableType.MANAGED_TABLE.name()
@@ -72,11 +72,16 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
     @Getter
     private final BlockingQueue<ResourceDiffStreamRecord> outputQueue;
     private final AtomicBoolean pollStarted;
+    private final AtomicBoolean pollFinished;
 
     @Getter
-    private volatile long lastEventId;
+    private volatile long lastHandledEventId;
+    private final Long endEventId;
 
-    @lombok.Builder(builderClassName = "Builder")
+    @lombok.Builder(
+        builderClassName = "Builder",
+        toBuilder = true
+    )
     public HiveMetastoreEventFetcher(
         IMetaStoreClient metaStoreClient,
         MessageDeserializer eventMessageDeserializer,
@@ -84,7 +89,8 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         HiveAuthenticator authenticator,
         RetrySupport retrySupport,
         long fetchPeriodMs,
-        int eventBatchSize
+        int eventBatchSize,
+        Long endEventId
     ) {
         this.metaStoreClient = metaStoreClient;
         this.executor = executor;
@@ -94,14 +100,21 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         this.outputQueue = new ArrayBlockingQueue<>(eventBatchSize);
         this.retrySupport = retrySupport;
         this.pollStarted = new AtomicBoolean(false);
+        this.pollFinished = new AtomicBoolean(false);
         this.authenticator = authenticator;
+        this.endEventId = endEventId;
+    }
+
+    @Override
+    public BlockingQueue<ResourceDiffStreamRecord> pollAllAsync() throws Exception {
+        return pollAsync(INITIAL_DIFF_ID);
     }
 
     @Override
     public BlockingQueue<ResourceDiffStreamRecord> pollAsync(long fromEventId) throws Exception {
         if (pollStarted.compareAndSet(false, true)) {
             authenticator.login();
-            lastEventId = fromEventId;
+            lastHandledEventId = fromEventId;
             executor.scheduleAtFixedRate(this::pollRecordsBatch,
                 0L, fetchPeriodMs, TimeUnit.MILLISECONDS);
         }
@@ -118,8 +131,12 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             retrySupport.withRetries(
                 () -> authenticator.executeSecurely(this::pollRecordsBatchAction)
             );
-        } catch (RetryException retryException) {
-            log.error("Exiting HiveMetastoreEventFetcher due to error", retryException);
+
+            if (pollFinished.get()) {
+                close();
+            }
+        } catch (Exception exception) {
+            log.error("Exiting HiveMetastoreEventFetcher due to error", exception);
             close();
         }
     }
@@ -127,7 +144,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
     private void pollRecordsBatchAction() {
         try {
             List<NotificationEvent> events = metaStoreClient.getNextNotification(
-                lastEventId,
+                lastHandledEventId,
                 eventBatchSize,
                 this::isSupportedEvent
             ).getEvents();
@@ -137,7 +154,15 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
                 return;
             }
 
-            events.forEach(this::handle);
+            for (NotificationEvent event : events) {
+                if (endEventId != null && event.getEventId() > endEventId) {
+                    log.info("Stopping polling on event {}", event);
+                    pollFinished.set(true);
+                    return;
+                }
+
+                handle(event);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error polling records batch from Hive Metastore", e);
         }
@@ -167,7 +192,7 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
             }
 
             // it's guaranteed that events are sorted by eventId in the batch
-            lastEventId = event.getEventId();
+            lastHandledEventId = event.getEventId();
         } catch (Exception e) {
             log.error("Error handling hive event", e);
         }
@@ -306,14 +331,6 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         return HiveEventType.isSupported(event.getEventType());
     }
 
-    private boolean isSupportedTable(String tableName, String tableType) {
-        boolean isSupportedTableType = SUPPORTED_TABLE_TYPES.contains(tableType);
-        if (!isSupportedTableType) {
-            log.info("Skipping unsupported table {} of type: {}", tableName, tableType);
-        }
-        return isSupportedTableType;
-    }
-
     private String fullTableName(NotificationEvent event) {
         return fullName(event.getCatName(), event.getDbName(), event.getTableName());
     }
@@ -322,8 +339,8 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
         return fullName(event.getCatName(), event.getDbName());
     }
 
-    private String fullName(String... nameParts) {
-        return String.join(".", nameParts);
+    public HiveMetastoreEventFetcher toFiniteFetcher(long endEventId) {
+        return toBuilder().endEventId(endEventId).build();
     }
 
     @Override

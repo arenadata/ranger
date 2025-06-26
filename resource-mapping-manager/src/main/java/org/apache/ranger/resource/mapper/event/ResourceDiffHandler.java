@@ -19,6 +19,7 @@
 
 package org.apache.ranger.resource.mapper.event;
 
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,17 +29,33 @@ import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 @Slf4j
 @RequiredArgsConstructor
 public class ResourceDiffHandler implements AutoCloseable {
-    public static final long INITIAL_DIFF_ID = 0L;
-
     private final ResourceDiffSource resourceDiffSource;
     private final ResourceDiffCollector resourceDiffCollector;
     private final ResourceMappingDiffDao diffDao;
 
-    public void start() throws Exception {
-        long latestDiffId = diffDao.getLatestDiffId(
+    public void start(boolean fullSync) throws Exception {
+        Optional<Long> latestDiffId = diffDao.getLatestExternalDiffId(
             resourceDiffSource.getServiceName()
-        ).orElse(INITIAL_DIFF_ID);
-        BlockingQueue<ResourceDiffStreamRecord> recordsDiffQueue = resourceDiffSource.pollAsync(latestDiffId);
+        );
+
+        BlockingQueue<ResourceDiffStreamRecord> recordsDiffQueue;
+        if (fullSync) {
+            log.info("Running full resync of resource diffs");
+            // if the full resync is required then restart fetcher from scratch
+            diffDao.deleteAllDiffs();
+            recordsDiffQueue = resourceDiffSource.pollAllAsync();
+        } else if (latestDiffId.isPresent()) {
+            log.info("Start fetching resource diffs from id {}", latestDiffId.get());
+            // start from the last valid handled diff id
+            recordsDiffQueue = resourceDiffSource.pollAsync(latestDiffId.get());
+        } else {
+            log.info("No last handled resource diff id is found. " +
+                "Fetching resource diffs from scratch");
+            // if there is no already handled diff id
+            // and no restart is required then start from scratch
+            recordsDiffQueue = resourceDiffSource.pollAllAsync();
+        }
+
         resourceDiffCollector.collect(recordsDiffQueue);
     }
 
