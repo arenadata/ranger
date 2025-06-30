@@ -272,7 +272,7 @@ public class RangerPluginConfig extends RangerConfiguration {
         return serviceAdmins.contains(userName);
     }
 
-    private void addResourcesForServiceType(String serviceType) {
+    protected void addResourcesForServiceType(String serviceType) {
         String auditCfg    = "ranger-" + serviceType + "-audit.xml";
         String securityCfg = "ranger-" + serviceType + "-security.xml";
         String sslCfg 	   = "ranger-" + serviceType + "-policymgr-ssl.xml";

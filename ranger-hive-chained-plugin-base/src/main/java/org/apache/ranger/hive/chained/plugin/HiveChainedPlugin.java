@@ -46,6 +46,7 @@ import org.apache.ranger.hive.chained.mapping.HiveResourceMappingStore;
 import org.apache.ranger.hive.chained.mapping.TrieHiveResourceMappingStore;
 import org.apache.ranger.plugin.mapping.ResourceMappingFetcher;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -138,7 +139,7 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
         return rawAccessType.equals(ANY_ACCESS)
             // Hive plugin uses "USE" access type as synonym for "_any"
             ? HiveAccessType.USE
-            : HiveAccessType.valueOf(rawAccessType);
+            : HiveAccessType.valueOf(rawAccessType.toUpperCase());
     }
 
     protected abstract Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType);
@@ -179,12 +180,21 @@ public abstract class HiveChainedPlugin extends ResourceMappingChainedPlugin {
                 srcRequest.getUser(),
                 srcRequest.getUserGroups(),
                 srcRequest.getUserRoles(),
-                entity.toString(),
+                getActionDescription(srcRequest, accessType),
                 accessType,
                 null,
                 null
             ))
             .collect(Collectors.toList());
+    }
+
+    private String getActionDescription(RangerAccessRequest srcRequest, HiveAccessType hiveAccessType) {
+        return String.format("%s (%s) -> %s",
+            srcRequest.getAccessType(),
+            Optional.ofNullable(srcRequest.getResource())
+                .map(RangerAccessResource::getAsString)
+                .orElse(""),
+            hiveAccessType);
     }
 
     private RangerHiveResource toHiveResource(HiveEntity entity) {

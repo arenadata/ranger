@@ -75,7 +75,13 @@ beeline_shell() {
   docker compose -f "$COMPOSE_FILE" exec -it rmm-hive-server2 $BEELINE_CMD
 }
 
+build_images() {
+  export RANGER_DB_TYPE=postgres
+  docker compose -f ../ranger-docker/docker-compose.ranger.yml -f ../ranger-docker/docker-compose.ranger-postgres.yml -f ../ranger-docker/docker-compose.ranger-hadoop.yml -f ../ranger-docker/docker-compose.ranger-ozone.yml -f ../ranger-docker/docker-compose.ranger-hive.yml -f "$COMPOSE_FILE" build
+}
+
 case "$COMMAND" in
+  build) build_images ;;
   start) start_cluster ;;
   stop) stop_cluster ;;
   beeline) beeline_shell ;;

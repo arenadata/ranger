@@ -65,6 +65,10 @@ public class HiveResourceMappingManager {
 
     private ResourceDiffSource buildEventFetcher(RetryPolicyFactory retryPolicyFactory,
                                                  HiveResourceMappingManagerConfig config) throws Exception {
+        HiveAuthenticator hiveAuthenticator = buildHiveAuthenticator(config);
+        // login is needed for HiveMetaStoreClient
+        hiveAuthenticator.login();
+
         return HiveMetastoreEventFetcher.builder()
             .metaStoreClient(new HiveMetaStoreClient(config))
             .eventMessageDeserializer(MessageFactory.getDefaultInstance(config).getDeserializer())
@@ -72,7 +76,7 @@ public class HiveResourceMappingManager {
             .fetchPeriodMs(config.getFetchPeriodMs())
             .eventBatchSize(config.getFetchBatchSize())
             .retrySupport(buildHiveListenerRetrySupport(retryPolicyFactory, config))
-            .authenticator(buildHiveAuthenticator(config))
+            .authenticator(hiveAuthenticator)
             .build();
     }
 
@@ -107,7 +111,8 @@ public class HiveResourceMappingManager {
         if (SecurityUtil.getAuthenticationMethod(config) == UserGroupInformation.AuthenticationMethod.KERBEROS) {
             return new KerberosHiveAuthenticator(
                 config.getKerberosPrincipal(),
-                config.getKerberosKeytabPath()
+                config.getKerberosKeytabPath(),
+                config
             );
         }
 

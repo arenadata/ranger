@@ -22,8 +22,9 @@ env DOCKER_MAVEN_BUILD=1 RANGER_REBUILD=1 ./ranger_in_docker up
 ```shell
 cd ./dev-support/resource-mapping-manager
 ```
-3. Run the following script to start Resource Mapping Manager and HDFS with enabled Ranger Hive Chained Plugin
+3. Run the following scripts to build and start Resource Mapping Manager and HDFS with enabled Ranger Hive Chained Plugin
 ```shell
+./bin/rmm-cluster.sh build --service=hdfs
 ./bin/rmm-cluster.sh start --service=hdfs
 ```
 4. Create some Hive DB and table
@@ -79,8 +80,9 @@ cd  ./dev-support/ranger-docker/
 ```shell
 cd ../resource-mapping-manager
 ```
-3. Run the following script to start Resource Mapping Manager and HDFS with enabled Ranger Hive Chained Plugin
+3. Run the following scripts to build and start Resource Mapping Manager and HDFS with enabled Ranger Hive Chained Plugin
 ```shell
+./bin/rmm-cluster.sh build --service=ozone
 ./bin/rmm-cluster.sh start --service=ozone
 ```
 4. Create some Hive DB and table
