@@ -283,7 +283,7 @@ call spdroptable('xa_access_audit');
 call spdroptable('x_portal_user_role');
 call spdroptable('x_portal_user');
 call spdroptable('x_db_version_h');
-
+call spdroptable('x_resource_mapping_diff');
 
 -- create tables
 create table X_DB_VERSION_H  (
@@ -1903,6 +1903,22 @@ PRIMARY KEY (id),
 CONSTRAINT x_rms_map_provider_UK_name UNIQUE(name)
 );
 
+CREATE TABLE x_resource_mapping_diff
+(
+    id             NUMBER(20) NOT NULL,
+    old_name       varchar(1024) NOT NULL,
+    old_location   varchar(2048) NOT NULL,
+    new_name       varchar(1024),
+    new_location   varchar(2048),
+    entity_type    varchar(255)  NOT NULL,
+    diff_type      varchar(255)  NOT NULL,
+    source_service varchar(255)  NOT NULL,
+    target_service varchar(255)  NOT NULL,
+    PRIMARY KEY (id)
+);
+
+commit;
+
 CREATE VIEW vx_principal as
   (SELECT u.user_name  AS principal_name, 0 AS principal_type, u.status AS status, u.is_visible AS is_visible, u.other_attributes AS other_attributes, u.create_time AS create_time, u.update_time AS update_time, u.added_by_id AS added_by_id, u.upd_by_id AS upd_by_id FROM x_user u)  UNION ALL
   (SELECT g.group_name AS principal_name, 1 AS principal_type, g.status AS status, g.is_visible AS is_visible, g.other_attributes AS other_attributes, g.create_time AS create_time, g.update_time AS update_time, g.added_by_id AS added_by_id, g.upd_by_id AS upd_by_id FROM x_group g) UNION ALL
@@ -1998,6 +2014,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '072',sys_extract_utc(systimestamp),'Ranger 2.5.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '073',sys_extract_utc(systimestamp),'Ranger 2.5.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '074',sys_extract_utc(systimestamp),'Ranger 2.5.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '075',sys_extract_utc(systimestamp),'Ranger 2.6.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

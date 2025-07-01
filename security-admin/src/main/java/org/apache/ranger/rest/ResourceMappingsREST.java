@@ -35,8 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+@Path("resource-mappings")
 @Component
-@Path("/resource-mappings")
 @Scope("request")
 public class ResourceMappingsREST {
     private static final Logger LOG = LoggerFactory.getLogger(ResourceMappingsREST.class);
@@ -55,7 +55,7 @@ public class ResourceMappingsREST {
     @Produces({"application/json"})
     public ResourceMappingDiffs getDiffs(@PathParam("sourceService") String sourceService,
                                          @PathParam("targetService") String targetService,
-                                         @QueryParam("fromDiffId") Long diffId) {
+                                         @QueryParam("diffId") Long diffId) {
         if (StringUtils.isBlank(sourceService)) {
             throw restErrorUtil.createRESTException("sourceService parameter is required");
         }

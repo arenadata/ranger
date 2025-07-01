@@ -1,0 +1,158 @@
+services:
+  resource-mapping-manager:
+    build:
+      context: ../
+      dockerfile: ./resource-mapping-manager/Dockerfile.resource-mapping-manager
+      args:
+        - RANGER_VERSION=${RANGER_VERSION:-2.6.0}
+        - RANGER_ADMIN_JAVA_VERSION=8
+    depends_on:
+      rmm-hive-server2:
+        condition: service_healthy
+    container_name: resource-mapping-manager
+    env_file:
+      - .env
+    environment:
+      - RANGER_VERSION
+      - RANGER_ADMIN_JAVA_VERSION
+    networks:
+      - ranger
+    volumes:
+      - ./conf/ranger-rmm-site.xml:/opt/ranger/rmm/conf/ranger-rmm-site.xml
+      - ./conf/logback.xml:/opt/ranger/rmm/conf/logback.xml
+      - ./logs:/var/log/ranger/resource-mapping-manager
+
+  ozone-datanode:
+    image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
+    container_name: ozone-datanode
+    depends_on:
+      - ozone-om
+    volumes:
+      - ../ranger-docker/downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+      - ./shared-ozone:/opt/hadoop
+    networks:
+      - ranger
+    ports:
+      - 9864
+    command: ["/opt/hadoop/bin/ozone","datanode"]
+    env_file:
+      - ./conf/ozone.env
+    environment:
+      OZONE_OPTS:
+
+  ozone-om:
+    build:
+      context: ..
+      dockerfile: ./resource-mapping-manager/Dockerfile.ranger-ozone-chained-hive
+      args:
+        - OZONE_RUNNER_IMAGE=${OZONE_RUNNER_IMAGE}
+        - OZONE_RUNNER_VERSION=${OZONE_RUNNER_VERSION}
+        - OZONE_HOME=/opt/hadoop
+        - OZONE_PLUGIN_VERSION=${OZONE_PLUGIN_VERSION}
+        - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}
+        - OZONE_VERSION=${OZONE_VERSION}
+    image: ranger-ozone-chained:latest
+    container_name: ozone-om
+    hostname: om
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9874/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ../ranger-docker/downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+      - ./conf/ranger-ozone-security.xml:/etc/ozone-config/ranger-ozone-security.xml
+      - ./conf/ranger-hive-audit.xml:/etc/ozone-config/ranger-hive-audit.xml
+      - ../ranger-docker/config/ozone:/etc/ozone-config/
+    networks:
+      - ranger
+    ports:
+      - 9874:9874
+      - 9862:9862
+    environment:
+      ENSURE_OM_INITIALIZED: /data/metadata/om/current/VERSION
+      OZONE_OPTS: -Dcom.sun.net.ssl.checkRevocation=false
+      OZONE_HOME: /opt/hadoop
+    env_file:
+      - ./conf/ozone.env
+    command: ["/etc/ozone/entrypoint.sh"]
+
+  ozone-scm:
+    image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
+    container_name: ozone-scm
+    hostname: scm
+    depends_on:
+      - ozone-om
+    volumes:
+      - ../ranger-docker/downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+    networks:
+      - ranger
+    ports:
+      - 9876:9876
+      - 9860:9860
+    env_file:
+      - ./conf/ozone.env
+    environment:
+      ENSURE_SCM_INITIALIZED: /data/metadata/scm/current/VERSION
+      OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
+      OZONE_OPTS:
+    command: ["/opt/hadoop/bin/ozone","scm"]
+
+  rmm-hive-metastore:
+    image: apache/hive:4.0.1
+    container_name: rmm-hive-metastore
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://ranger-db/hive
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=rangerR0cks!
+        -Dhive.metastore.event.listeners=org.apache.hive.hcatalog.listener.DbNotificationListener
+        -Dhive.metastore.event.db.listener.timetolive=86400s
+        -Dhive.metastore.warehouse.dir=ofs://om/vol1/bucket1/warehouse/
+    volumes:
+      - ../ranger-docker/downloads/postgresql-42.2.16.jre7.jar:/opt/hive/lib/postgres.jar
+      - ../ranger-docker/downloads/ozone-${OZONE_VERSION}/share/ozone/lib/ozone-filesystem-hadoop3-${OZONE_VERSION}.jar:/opt/hadoop/share/hadoop/hdfs/ofs.jar
+    ports:
+      - "9083:9083"
+    networks:
+      - ranger
+
+  rmm-hive-server2:
+    image: apache/hive:4.0.1
+    container_name: rmm-hive-server2
+    depends_on:
+      rmm-hive-metastore:
+        condition: service_started
+      ozone-om:
+        condition: service_healthy
+    environment:
+      SERVICE_NAME: hiveserver2
+      IS_RESUME: true
+      SERVICE_OPTS: >-
+        -Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver
+        -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://ranger-db/hive
+        -Djavax.jdo.option.ConnectionUserName=hive
+        -Djavax.jdo.option.ConnectionPassword=rangerR0cks!
+        -Dhive.metastore.uris=thrift://rmm-hive-metastore:9083
+        -Dhive.metastore.warehouse.dir=ofs://om/vol1/bucket1/warehouse/
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "beeline -u 'jdbc:hive2://localhost:10000/'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./conf/core-site-ozone.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../ranger-docker/downloads/ozone-${OZONE_VERSION}/share/ozone/lib/ozone-filesystem-hadoop3-${OZONE_VERSION}.jar:/opt/hadoop/share/hadoop/hdfs/ofs.jar
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    networks:
+      - ranger
+
+networks:
+  ranger:
+    name: rangernw
+    external: true

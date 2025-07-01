@@ -13,10 +13,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-call dbo.removeForeignKeysAndTable('x_metastore_mapping_diff')
+call dbo.removeForeignKeysAndTable('x_resource_mapping_diff')
 GO
 
-CREATE TABLE dbo.x_metastore_mapping_diff
+CREATE TABLE dbo.x_resource_mapping_diff
 (
     id             bigint        NOT NULL,
     old_name       varchar(1024) NOT NULL,
@@ -27,6 +27,6 @@ CREATE TABLE dbo.x_metastore_mapping_diff
     diff_type      varchar(255)  NOT NULL,
     source_service varchar(255)  NOT NULL,
     target_service varchar(255)  NOT NULL,
-    CONSTRAINT x_metastore_mapping_diff_PK_id PRIMARY KEY CLUSTERED(id)
+    CONSTRAINT x_resource_mapping_diff_PK_id PRIMARY KEY CLUSTERED(id)
 ) GO
 EXIT

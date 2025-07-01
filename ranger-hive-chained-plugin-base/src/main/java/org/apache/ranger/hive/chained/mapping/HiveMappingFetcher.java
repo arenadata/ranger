@@ -83,12 +83,16 @@ public class HiveMappingFetcher extends BaseResourceMappingFetcher {
         log.error("Failed to commit resource mapping changes", error);
     }
 
+    protected ResourceMapping transformMapping(ResourceMapping mapping) {
+        return mapping;
+    }
+
     private void handleCreateEntity(ResourceMappingDiff diff) {
         if (diff.getOldEntity() == null) {
             throw new IllegalArgumentException("Wrong diff for create event: " + diff);
         }
 
-        putEntity(diff.getOldEntity(), diff.getEntityType());
+        putEntity(transformMapping(diff.getOldEntity()), diff.getEntityType());
     }
 
     private void handleUpdateEntity(ResourceMappingDiff diff) {
@@ -96,15 +100,18 @@ public class HiveMappingFetcher extends BaseResourceMappingFetcher {
             throw new IllegalArgumentException("Wrong diff for update event: " + diff);
         }
 
-        if (Objects.equals(diff.getOldEntity().getLocation(), diff.getNewEntity().getLocation())) {
-            putEntity(diff.getNewEntity(), diff.getEntityType());
+        ResourceMapping oldEntity = transformMapping(diff.getOldEntity());
+        ResourceMapping newEntity = transformMapping(diff.getNewEntity());
+
+        if (Objects.equals(oldEntity.getLocation(), newEntity.getLocation())) {
+            putEntity(newEntity, diff.getEntityType());
             return;
         }
 
         mappingStore.move(
-            diff.getOldEntity().getLocation(),
-            diff.getNewEntity().getLocation(),
-            toHiveEntity(diff.getNewEntity(), diff.getEntityType())
+            oldEntity.getLocation(),
+            newEntity.getLocation(),
+            toHiveEntity(newEntity, diff.getEntityType())
         );
     }
 
@@ -113,7 +120,7 @@ public class HiveMappingFetcher extends BaseResourceMappingFetcher {
             throw new IllegalArgumentException("Wrong diff for delete event: " + diff);
         }
 
-        mappingStore.remove(diff.getOldEntity().getLocation());
+        mappingStore.remove(transformMapping(diff.getOldEntity()).getLocation());
     }
 
     private void putEntity(ResourceMapping mapping, String entityType) {

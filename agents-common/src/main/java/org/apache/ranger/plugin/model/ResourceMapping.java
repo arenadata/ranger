@@ -17,8 +17,10 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,7 +29,12 @@ public class ResourceMapping implements Serializable {
     private final String name;
     private final String location;
 
-    public ResourceMapping(String name, String location) {
+    @JsonCreator
+    public ResourceMapping(
+        @JsonProperty(value = "name")
+        String name,
+        @JsonProperty(value = "location")
+        String location) {
         this.name = name;
         this.location = location;
     }

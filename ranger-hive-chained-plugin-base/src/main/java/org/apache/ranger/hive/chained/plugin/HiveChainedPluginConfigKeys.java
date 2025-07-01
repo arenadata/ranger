@@ -20,12 +20,12 @@
 package org.apache.ranger.hive.chained.plugin;
 
 public class HiveChainedPluginConfigKeys {
-    public static final String MAPPINGS_FILE_LOCATION_POSTFIX = ".chained.plugin.hive.mappings.file.location";
+    public static final String MAPPINGS_FILE_LOCATION_POSTFIX = ".hive.resource.mappings.file.location";
     public static final String MAPPINGS_FILE_LOCATION_DEFAULT = "/opt/ranger/hive-resource-mappings";
 
-    public static final String MAPPINGS_REFRESH_INTERVAL_POSTFIX = ".chained.plugin.hive.mappings.refresh.interval.ms";
+    public static final String MAPPINGS_REFRESH_INTERVAL_POSTFIX = ".hive.resource.mappings.refresh.interval.ms";
     public static final long MAPPINGS_REFRESH_INTERVAL_DEFAULT = 30000L;
 
-    public static final String MAPPINGS_PERSIST_INTERVAL_POSTFIX = ".chained.plugin.hive.mappings.file.flush.interval.ms";
+    public static final String MAPPINGS_PERSIST_INTERVAL_POSTFIX = ".hive.resource.mappings.file.flush.interval.ms";
     public static final long MAPPINGS_PERSIST_INTERVAL_DEFAULT = 60000L;
 }

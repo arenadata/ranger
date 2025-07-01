@@ -24,9 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import org.apache.ranger.authorization.hadoop.config.RangerChainedPluginConfig;
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
 public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     protected ResourceMappingChainedPlugin(RangerBasePlugin rootPlugin,
@@ -39,7 +42,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request) {
         List<RangerAccessResult> results = toChainedRequests(request)
             .stream()
-            .map(req -> plugin.evalRowFilterPolicies(req, null))
+            .map(req -> plugin.evalRowFilterPolicies(req, auditHandler()))
             .collect(Collectors.toList());
         return reduceAccessResults(request, this::handleRowFilterResult, results);
     }
@@ -48,7 +51,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
         List<RangerAccessResult> results = toChainedRequests(request)
             .stream()
-            .map(req -> plugin.evalDataMaskPolicies(req, null))
+            .map(req -> plugin.evalDataMaskPolicies(req, auditHandler()))
             .collect(Collectors.toList());
         return reduceAccessResults(request, this::handleDataMaskResult, results);
     }
@@ -60,18 +63,25 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
 
-        return plugin.isAccessAllowed(mappedRequests);
+        return plugin.isAccessAllowed(mappedRequests, auditHandler());
     }
 
     @Override
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
         List<RangerAccessRequest> chainedRequests = toChainedRequests(request);
         if (chainedRequests.size() == 1) {
-            return plugin.isAccessAllowed(chainedRequests.get(0));
+            return plugin.isAccessAllowed(chainedRequests.get(0), auditHandler());
         }
 
         return reduceAccessResults(
-            request, plugin.isAccessAllowed(chainedRequests)
+            request, plugin.isAccessAllowed(chainedRequests, auditHandler())
+        );
+    }
+
+    @Override
+    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
+        return new RangerBasePlugin(
+            new RangerChainedPluginConfig(serviceType, serviceName, appId, rootPlugin.getConfig())
         );
     }
 
@@ -126,5 +136,9 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
             resultHandler.accept(allowedResult, accessResult);
         }
         return allowedResult;
+    }
+
+    protected RangerAccessResultProcessor auditHandler() {
+        return new RangerDefaultAuditHandler(plugin.getConfig());
     }
 }

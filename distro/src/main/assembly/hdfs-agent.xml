@@ -112,6 +112,21 @@
         </includes>
       </binaries>
     </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.apache.ranger:ranger-hive-chained-plugin-hdfs</include>
+        <include>org.apache.ranger:ranger-hive-chained-plugin-base</include>
+      </includes>
+      <binaries>
+        <outputDirectory>ext</outputDirectory>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+      </binaries>
+    </moduleSet>
   </moduleSets>
 
   <fileSets>

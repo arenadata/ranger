@@ -2170,7 +2170,7 @@
 		<query>
 			select obj from XXResourceMappingDiff obj
 			where obj.id > :diffId
-			and obj.sourceService = :source_service
+			and obj.sourceService = :sourceService
 			and obj.targetService = :targetService
 		</query>
 	</named-query>
@@ -2178,7 +2178,7 @@
 	<named-query name="XXMetastoreMappingDiff.getAllDiffs">
 		<query>
 			select obj from XXResourceMappingDiff obj
-			where obj.sourceService = :source_service
+			where obj.sourceService = :sourceService
 			and obj.targetService = :targetService
 		</query>
 	</named-query>

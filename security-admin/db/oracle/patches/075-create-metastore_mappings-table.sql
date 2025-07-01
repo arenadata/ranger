@@ -13,9 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-call spdroptable('x_metastore_mapping_diff');
+call spdroptable('x_resource_mapping_diff');
 
-CREATE TABLE x_metastore_mapping_diff
+CREATE TABLE x_resource_mapping_diff
 (
     id             NUMBER(20) NOT NULL,
     old_name       varchar(1024) NOT NULL,

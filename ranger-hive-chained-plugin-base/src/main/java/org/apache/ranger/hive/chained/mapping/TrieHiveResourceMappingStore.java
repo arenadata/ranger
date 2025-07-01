@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.hive.chained.mapping.persist.FileSystemMappingsPersistentStore;
 import org.apache.ranger.hive.chained.mapping.persist.HiveMappings;
 import org.apache.ranger.hive.chained.mapping.persist.TriePersistentStore;
@@ -31,6 +32,7 @@ import org.apache.ranger.hive.chained.trie.SynchronizedTrie;
 import org.apache.ranger.hive.chained.trie.Trie;
 import org.apache.ranger.hive.chained.trie.TrieVisitor;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TrieHiveResourceMappingStore implements HiveResourceMappingStore {
 
@@ -59,6 +61,7 @@ public class TrieHiveResourceMappingStore implements HiveResourceMappingStore {
     @Override
     public Optional<HiveEntity> get(String path) {
         List<HiveEntity> prefixValues = pathPrefixes.getPrefixValues(pathToTrieKey(path));
+        log.debug("Got trie prefixes [{}] for path {}", prefixValues, path);
         return Optional.of(prefixValues)
             .filter(entities -> !entities.isEmpty())
             .map(entities -> entities.get(entities.size() - 1));
@@ -66,16 +69,19 @@ public class TrieHiveResourceMappingStore implements HiveResourceMappingStore {
 
     @Override
     public void put(String path, HiveEntity value) {
+        log.debug("Put trie entry {} with path {}", value, path);
         pathPrefixes.put(pathToTrieKey(path), value);
     }
 
     @Override
     public void remove(String path) {
+        log.debug("Remove trie entry with path {}", path);
         pathPrefixes.remove(pathToTrieKey(path));
     }
 
     @Override
     public void move(String oldPath, String newPath, HiveEntity newValue) {
+        log.debug("Move trie entry from path {} to path {} with new value {}", oldPath, newPath, newValue);
         pathPrefixes.move(pathToTrieKey(oldPath), pathToTrieKey(newPath), newValue);
     }
 
@@ -85,6 +91,7 @@ public class TrieHiveResourceMappingStore implements HiveResourceMappingStore {
             return;
         }
 
+        log.debug("Commiting trie with commitId {}", commitId);
         try (TrieVisitor<String, HiveEntity> visitor = persistentStore.getTrieWriter(commitId)) {
             pathPrefixes.accept(visitor);
         }

@@ -942,7 +942,10 @@ IF (OBJECT_ID('x_db_version_h') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_db_version_h]
 END
-
+IF (OBJECT_ID('x_resource_mapping_diff') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_resource_mapping_diff]
+END
 
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
@@ -4060,6 +4063,30 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 GO
 
+CREATE TABLE [dbo].[x_resource_mapping_diff]
+(
+    [id] [bigint]       NOT NULL,
+    [old_name] [varchar](1024) NOT NULL,
+    [old_location] [varchar](2048) NOT NULL,
+    [new_name] [varchar](1024),
+    [new_location] [varchar](2048),
+    [entity_type] [varchar](255)  NOT NULL,
+    [diff_type] [varchar](255)  NOT NULL,
+    [source_service] [varchar](255)  NOT NULL,
+    [target_service] [varchar](255)  NOT NULL,
+    PRIMARY KEY CLUSTERED
+(
+[id] ASC
+) WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    );
+GO
+
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
+GO
+
 CREATE TABLE [dbo].[x_rms_mapping_provider](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
         [change_timestamp] [datetime2] DEFAULT NULL NULL,
@@ -4158,6 +4185,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('072',CURRENT_TIMESTAMP,'Ranger 2.5.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('073',CURRENT_TIMESTAMP,'Ranger 2.5.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',CURRENT_TIMESTAMP,'Ranger 2.6.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',CURRENT_TIMESTAMP,'Ranger 2.6.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
