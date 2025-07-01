@@ -21,6 +21,7 @@ package org.apache.ranger.resource.mapper.dao;
 
 import java.util.Optional;
 import javax.sql.DataSource;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -60,10 +61,14 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     }
 
     @Override
-    public Optional<Long> getLatestDiffId() {
-        Long result = jdbcTemplate.getJdbcOperations().queryForObject(
-            "SELECT MAX(id) FROM x_resource_mapping_diff",
-            Long.class);
+    public Optional<Long> getLatestDiffId(String sourceServiceName) {
+        Long result = jdbcTemplate.queryForObject(
+            "SELECT MAX(id) FROM x_resource_mapping_diff " +
+                "WHERE source_service = :sourceServiceName",
+            ImmutableMap.of("sourceServiceName", sourceServiceName),
+            Long.class
+        );
+
         return Optional.ofNullable(result);
     }
 

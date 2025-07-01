@@ -25,5 +25,5 @@ import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 public interface ResourceMappingDiffDao {
     void insert(ResourceMappingDiff entityDiff);
 
-    Optional<Long> getLatestDiffId();
+    Optional<Long> getLatestDiffId(String sourceServiceName);
 }

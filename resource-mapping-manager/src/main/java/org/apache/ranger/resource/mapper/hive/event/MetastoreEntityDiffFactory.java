@@ -21,14 +21,20 @@ package org.apache.ranger.resource.mapper.hive.event;
 
 import java.net.URI;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType;
 import org.apache.ranger.resource.mapper.hive.model.HiveEntityType;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
+@Slf4j
 public class MetastoreEntityDiffFactory {
     public static final String HIVE_SERVICE = "hive";
     public static final String DEFAULT_LOCATION_SCHEME = "file";
+    public static final String HDFS_LOCATION_SCHEME = "hdfs";
+    public static final String HDFS_SERVICE = "hdfs";
+    public static final String OFS_LOCATION_SCHEME = "ofs";
+    public static final String OZONE_SERVICE = "ozone";
 
     public static ResourceMappingDiff createEntity(
         String name,
@@ -86,6 +92,18 @@ public class MetastoreEntityDiffFactory {
         return Optional.ofNullable(location)
             .map(URI::create)
             .map(URI::getScheme)
+            .map(MetastoreEntityDiffFactory::schemeToService)
             .orElse(DEFAULT_LOCATION_SCHEME);
+    }
+
+    private static String schemeToService(String scheme) {
+        switch (scheme) {
+            case HDFS_LOCATION_SCHEME:
+                return HDFS_SERVICE;
+            case OFS_LOCATION_SCHEME:
+                return OZONE_SERVICE;
+            default:
+                throw new IllegalArgumentException("Unknown location scheme " + scheme);
+        }
     }
 }

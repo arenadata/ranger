@@ -40,7 +40,6 @@ import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
-import org.apache.ranger.hive.chained.mapping.HiveEntity;
 import org.apache.ranger.hive.chained.mapping.HiveMappingFetcher;
 import org.apache.ranger.hive.chained.mapping.HiveResourceMappingStore;
 import org.apache.ranger.hive.chained.plugin.HiveChainedPlugin;
@@ -62,6 +61,11 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
     }
 
     @Override
+    protected Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType) {
+        return Optional.ofNullable(accessTypeMappings.get(hiveObjectType));
+    }
+
+    @Override
     protected Optional<String> getPathFromRequest(RangerAccessRequest request) {
         Optional<String> maybePath = Optional.ofNullable(request.getResource())
             .map(resource -> resource.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH))
@@ -71,18 +75,6 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
             log.warn("Can't extract path from HDFS access request: {}", request);
         }
         return maybePath;
-    }
-
-    @Override
-    protected List<HiveAccessType> getHiveAccessTypes(HiveEntity entity, RangerAccessRequest request) {
-        List<HiveAccessType> accessTypes = Optional.ofNullable(accessTypeMappings.get(entity.getType()))
-            .map(mappings -> mappings.getHiveAccessTypes(request))
-            .orElseGet(Collections::emptyList);
-
-        if (accessTypes.isEmpty()) {
-            log.warn("No access type mapping found for request: {}", request);
-        }
-        return accessTypes;
     }
 
     @Override
@@ -140,23 +132,10 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
                                                    HiveObjectType objectType,
                                                    String accessType,
                                                    String... defaultMappings) {
-        String configKey = String.format(ACCESS_MAPPINGS_KEY_TEMPLATE,
-            objectType.toString().toLowerCase(),
-            accessType);
+        String configKey = config.getPropertyPrefix() +
+            String.format(ACCESS_MAPPINGS_KEY_TEMPLATE,
+                objectType.toString().toLowerCase(), accessType);
         String[] mappings = config.getStrings(configKey, defaultMappings);
         return getAccessMappings(mappings);
-    }
-
-    private static class AccessMappings {
-        private final Map<String, List<HiveAccessType>> accessTypeMappings;
-
-        private AccessMappings(Map<String, List<HiveAccessType>> accessTypeMappings) {
-            this.accessTypeMappings = accessTypeMappings;
-        }
-
-        public List<HiveAccessType> getHiveAccessTypes(RangerAccessRequest request) {
-            log.debug("Trying to get access type mappings for {}", request);
-            return accessTypeMappings.getOrDefault(request.getAccessType(), Collections.emptyList());
-        }
     }
 }

@@ -33,6 +33,8 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
     public RangerChainedPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
         super(serviceType, serviceName, appId, sourcePluginConfig);
 
+        addResourcesForServiceType(serviceType);
+
         // Copy all of properties from sourcePluginConfig except chained properties but with converted propertyPrefix
         copyProperties(sourcePluginConfig, sourcePluginConfig.getPropertyPrefix());
 

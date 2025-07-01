@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.security.PrivilegedAction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
 @Slf4j
@@ -30,9 +31,11 @@ import org.apache.hadoop.security.UserGroupInformation;
 public class KerberosHiveAuthenticator implements HiveAuthenticator {
     private final String principal;
     private final String keytabPath;
+    private final Configuration configuration;
 
     @Override
     public void login() throws Exception {
+        UserGroupInformation.setConfiguration(configuration);
         UserGroupInformation.loginUserFromKeytab(principal, keytabPath);
     }
 

@@ -52,6 +52,8 @@ import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
+import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
+
 @Slf4j
 public class HiveMetastoreEventFetcher implements ResourceDiffSource {
     public static final Set<String> SUPPORTED_TABLE_TYPES = Sets.newHashSet(
@@ -104,6 +106,11 @@ public class HiveMetastoreEventFetcher implements ResourceDiffSource {
                 0L, fetchPeriodMs, TimeUnit.MILLISECONDS);
         }
         return outputQueue;
+    }
+
+    @Override
+    public String getServiceName() {
+        return HIVE_SERVICE;
     }
 
     void pollRecordsBatch() {
