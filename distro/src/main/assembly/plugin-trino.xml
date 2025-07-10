@@ -28,6 +28,7 @@
             <includes>
                 <include>org.apache.ranger:ranger-plugins-audit</include>
                 <include>org.apache.ranger:ranger-plugins-cred</include>
+                <include>org.apache.ranger:ranger-hive-plugin</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
                 <include>org.apache.ranger:ranger-trino-plugin</include>
             </includes>
@@ -81,6 +82,7 @@
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.ranger:ranger-plugins-cred</include>
+                    <include>org.apache.ranger:ranger-hive-plugin</include>
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
@@ -143,6 +145,19 @@
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                 </includes>
+            </binaries>
+        </moduleSet>
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes>
+                <include>org.apache.ranger:ranger-hive-chained-plugin-trino</include>
+            </includes>
+            <binaries>
+                <outputDirectory>ext</outputDirectory>
+                <includeDependencies>false</includeDependencies>
+                <unpack>false</unpack>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
             </binaries>
         </moduleSet>
     </moduleSets>
