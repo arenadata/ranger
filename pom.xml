@@ -848,6 +848,7 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
+                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
@@ -1118,6 +1119,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>plugin-trino</module>
+                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
             </modules>
@@ -1188,6 +1190,7 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
+                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
