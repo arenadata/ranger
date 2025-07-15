@@ -19,6 +19,7 @@
 
 package org.apache.ranger.resource.mapper.hive.event.fetch;
 
+import static lombok.AccessLevel.PROTECTED;
 import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 
 import java.util.List;
@@ -76,6 +77,7 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
 
     @Getter
     private volatile long lastHandledEventId;
+    @Getter(PROTECTED)
     private final Long endEventId;
 
     @lombok.Builder(

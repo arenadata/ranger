@@ -31,6 +31,16 @@ import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
+/**
+ * Entity to handle Hive metastore events happened after
+ * the start and before the end of the fetching of all HMS entities.
+ * We can't repeatedly save the same events in db due to some corner cases,
+ * e.g. when we fetch the tables A and C from HMS and the event id before fetching entities is 1.
+ * If the following events occurred between getting the start last event id and fetching entities,
+ * then we will lose mapping for table A: DELETE A, RENAME B to A.
+ * That's why we need some kind of materialized in-memory buffer,
+ * that will handle such cases before modifying the resource mapping diff table.
+ */
 @Slf4j
 public class DbHiveIntermediateEventsResolver implements HiveIntermediateEventsResolver {
 
@@ -48,6 +58,10 @@ public class DbHiveIntermediateEventsResolver implements HiveIntermediateEventsR
     public void handle(ResourceDiffStreamRecord record) {
         if (record.isLastRecord()) {
             return;
+        }
+
+        if (!(record instanceof ResourceMappingDiff)) {
+            throw new IllegalArgumentException("Unexpected record type: " + record.getClass().getName());
         }
 
         ResourceMappingDiff diff = (ResourceMappingDiff) record;
@@ -69,12 +83,12 @@ public class DbHiveIntermediateEventsResolver implements HiveIntermediateEventsR
 
     private void flushAction() {
         for (ResourceMapping resourceMapping : entitiesToDelete) {
-            log.info("Conflict resolving: deleting mapping {}", resourceMapping);
+            log.info("Intermediate Hive event resolving: deleting mapping {}", resourceMapping);
             resourceMappingDiffDao.deleteDiffsFor(resourceMapping);
         }
 
         for (ResourceMappingDiff diff : entitiesToCreate.values()) {
-            log.info("Conflict resolving: inserting mapping {}", diff.getOldEntity());
+            log.info("Intermediate Hive event resolving: inserting mapping {}", diff.getOldEntity());
             resourceMappingDiffDao.insertDiff(diff);
         }
     }
@@ -98,6 +112,7 @@ public class DbHiveIntermediateEventsResolver implements HiveIntermediateEventsR
     }
 
     private void handleDelete(ResourceMappingDiff diff) {
+        entitiesToCreate.remove(diff.getOldEntity());
         entitiesToDelete.add(diff.getOldEntity());
     }
 }

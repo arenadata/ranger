@@ -21,7 +21,6 @@ package org.apache.ranger.resource.mapper.event;
 
 import java.util.concurrent.BlockingQueue;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ranger.resource.mapper.event.retry.RetryException;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
 @Slf4j
@@ -35,7 +34,7 @@ public abstract class BaseResourceDiffCollector implements ResourceDiffCollector
             try {
                 event = diffQueue.take();
                 handle(event);
-            } catch (RetryException exception) {
+            } catch (Exception exception) {
                 log.error("Error handling event", exception);
                 throw exception;
             }

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.resource.mapper.hive.event.fetch;
 
-import static org.apache.ranger.resource.mapper.hive.model.HiveChangeStateStreamRecord.stateChangeRecord;
+import static org.apache.ranger.resource.mapper.hive.model.NewHiveSourceStateRecord.newStateRecord;
 import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 import static org.apache.ranger.resource.mapper.hive.model.HiveDiffSourceState.EVENTS_STARTED;
 import static org.apache.ranger.resource.mapper.hive.model.HiveDiffSourceState.INTERMEDIATE_EVENTS_FINISHED;
@@ -83,7 +83,7 @@ public class CompositeHiveMetastoreFetcher extends BaseHiveMetastoreFetcher {
         if (pollStarted.compareAndSet(false, true)) {
             log.info("Start simple hive metastore event fetcher");
             authenticator.login();
-            executor.submit(() -> singlePhaseFetch(fromEventId));
+            executor.submit(() -> fetchMetastoreEventsDirectly(fromEventId));
         }
 
         return outputQueue;
@@ -109,9 +109,9 @@ public class CompositeHiveMetastoreFetcher extends BaseHiveMetastoreFetcher {
         outputQueue.add(ResourceDiffStreamRecord.endOfStreamRecord());
     }
 
-    private void singlePhaseFetch(long fromEventId) {
+    void fetchMetastoreEventsDirectly(long fromEventId) {
         try {
-            outputQueue.add(stateChangeRecord(EVENTS_STARTED));
+            outputQueue.add(newStateRecord(EVENTS_STARTED));
 
             log.info("Start fetching Hive events using event fetcher from id {}", fromEventId);
             pollRecords(eventFetcher, fromEventId);
@@ -123,30 +123,30 @@ public class CompositeHiveMetastoreFetcher extends BaseHiveMetastoreFetcher {
         }
     }
 
-    private void multiPhaseFetch() {
+    void multiPhaseFetch() {
         try {
             // 1. Snapshot phase
             log.info("Start fetching Hive entities using snapshot fetcher");
-            outputQueue.add(stateChangeRecord(SNAPSHOT_STARTED));
+            outputQueue.add(newStateRecord(SNAPSHOT_STARTED));
 
             long eventIdBeforeSnapshot = metaStoreClient.getCurrentNotificationEventId().getEventId();
             pollRecords(snapshotFetcher, eventIdBeforeSnapshot);
             long eventIdAfterSnapshot = metaStoreClient.getCurrentNotificationEventId().getEventId();
 
-            outputQueue.add(stateChangeRecord(SNAPSHOT_FINISHED));
+            outputQueue.add(newStateRecord(SNAPSHOT_FINISHED));
             log.info("Hive entities initial fetch successfully finished");
 
             // 2. Optional intermediate events phase
-            if (eventIdAfterSnapshot != eventIdBeforeSnapshot) {
+            if (eventIdBeforeSnapshot != eventIdAfterSnapshot) {
                 log.info("Start resolving missed Hive entity diffs using conflict resolver:" +
-                    " events from {} to {}", eventIdAfterSnapshot, eventIdBeforeSnapshot);
-                resolveUnhandledEvents(eventIdAfterSnapshot, eventIdBeforeSnapshot);
+                    " events from {} to {}", eventIdBeforeSnapshot, eventIdAfterSnapshot);
+                resolveUnhandledEvents(eventIdBeforeSnapshot, eventIdAfterSnapshot);
             }
 
             // 3. Hive metastore events phase
             log.info("Start fetching Hive entity diffs using event fetcher from id {}", eventIdAfterSnapshot);
 
-            outputQueue.add(stateChangeRecord(EVENTS_STARTED));
+            outputQueue.add(newStateRecord(EVENTS_STARTED));
             pollRecords(eventFetcher, eventIdAfterSnapshot);
         } catch (Exception retryException) {
             log.error("Exiting HiveMetastoreEventFetcher due to error", retryException);
@@ -158,12 +158,12 @@ public class CompositeHiveMetastoreFetcher extends BaseHiveMetastoreFetcher {
 
     private void resolveUnhandledEvents(long eventIdBeforeSnapshot,
                                         long eventIdAfterSnapshot) throws Exception {
-        outputQueue.add(stateChangeRecord(INTERMEDIATE_EVENTS_STARTED));
+        outputQueue.add(newStateRecord(INTERMEDIATE_EVENTS_STARTED));
 
         HiveMetastoreEventFetcher unhandledEventsFetcher = eventFetcher.toFiniteFetcher(eventIdAfterSnapshot);
         pollRecords(unhandledEventsFetcher, eventIdBeforeSnapshot);
 
-        outputQueue.add(stateChangeRecord(INTERMEDIATE_EVENTS_FINISHED));
+        outputQueue.add(newStateRecord(INTERMEDIATE_EVENTS_FINISHED));
     }
 
     private void pollRecords(
