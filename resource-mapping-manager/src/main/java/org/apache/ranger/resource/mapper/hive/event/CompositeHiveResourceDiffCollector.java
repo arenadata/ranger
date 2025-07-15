@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.resource.mapper.event.BaseResourceDiffCollector;
 import org.apache.ranger.resource.mapper.event.ResourceDiffCollector;
-import org.apache.ranger.resource.mapper.event.retry.RetryException;
 import org.apache.ranger.resource.mapper.event.retry.RetrySupport;
-import org.apache.ranger.resource.mapper.hive.model.HiveChangeStateStreamRecord;
+import org.apache.ranger.resource.mapper.hive.model.NewHiveSourceStateRecord;
 import org.apache.ranger.resource.mapper.hive.model.HiveDiffSourceState;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -44,15 +43,15 @@ public class CompositeHiveResourceDiffCollector extends BaseResourceDiffCollecto
     public void handle(ResourceDiffStreamRecord record) throws Exception {
         try {
             retrySupport.withRetries(() -> handleAction(record));
-        } catch (RetryException e) {
+        } catch (Exception e) {
             recordsHandler.fail();
             throw e;
         }
     }
 
     private void handleAction(ResourceDiffStreamRecord record) throws Exception {
-        if (record instanceof HiveChangeStateStreamRecord) {
-            HiveDiffSourceState newState = ((HiveChangeStateStreamRecord) record).getNewState();
+        if (record instanceof NewHiveSourceStateRecord) {
+            HiveDiffSourceState newState = ((NewHiveSourceStateRecord) record).getNewState();
             recordsHandler = recordsHandler.nextHandler(newState);
             return;
         }
@@ -83,7 +82,7 @@ public class CompositeHiveResourceDiffCollector extends BaseResourceDiffCollecto
             }
 
             if (newState == EVENTS_STARTED) {
-                return new EventsHandler();
+                return new MetastoreEventsHandler();
             }
 
             throw new IllegalStateException("Unexpected state: " + newState);
@@ -111,7 +110,7 @@ public class CompositeHiveResourceDiffCollector extends BaseResourceDiffCollecto
 
             if (newState == EVENTS_STARTED) {
                 transactionManager.commit(transactionStatus);
-                return new EventsHandler();
+                return new MetastoreEventsHandler();
             }
 
             return this;
@@ -140,7 +139,7 @@ public class CompositeHiveResourceDiffCollector extends BaseResourceDiffCollecto
 
             intermediateEventsResolver.flush();
             transactionManager.commit(transactionStatus);
-            return new EventsHandler();
+            return new MetastoreEventsHandler();
         }
 
         @Override
@@ -149,7 +148,7 @@ public class CompositeHiveResourceDiffCollector extends BaseResourceDiffCollecto
         }
     }
 
-    class EventsHandler implements RecordsHandler {
+    class MetastoreEventsHandler implements RecordsHandler {
         @Override
         public void handle(ResourceDiffStreamRecord record) throws Exception {
             delegate.handle(record);
