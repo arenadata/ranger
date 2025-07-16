@@ -168,6 +168,7 @@ DROP SEQUENCE IF EXISTS X_RMS_SERVICE_RESOURCE_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_NOTIFICATION_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_RESOURCE_MAPPING_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_MAPPING_PROVIDER_SEQ;
+DROP SEQUENCE IF EXISTS x_resource_mapping_diff_seq;
 
 create table x_db_version_h(
 id	SERIAL primary key,
@@ -1671,9 +1672,12 @@ CONSTRAINT x_rms_mapping_provider_UK_name UNIQUE(name)
 );
 commit;
 
+CREATE SEQUENCE x_resource_mapping_diff_seq;
+
 CREATE TABLE x_resource_mapping_diff
 (
-    id             BIGINT        NOT NULL,
+    id             BIGINT        DEFAULT nextval('x_resource_mapping_diff_seq'::regclass),
+    external_id    BIGINT        NOT NULL,
     old_name       varchar(1024) NOT NULL,
     old_location   varchar(2048) NOT NULL,
     new_name       varchar(1024),

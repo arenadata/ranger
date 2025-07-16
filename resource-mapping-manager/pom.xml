@@ -99,11 +99,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.5</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-util</artifactId>
             <version>${project.version}</version>
@@ -120,7 +115,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
+            <artifactId>spring-jdbc</artifactId>
             <version>${springframework.version}</version>
             <exclusions>
                 <exclusion>
@@ -131,7 +126,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
+            <artifactId>spring-tx</artifactId>
             <version>${springframework.version}</version>
             <exclusions>
                 <exclusion>
