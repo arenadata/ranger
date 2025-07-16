@@ -37,13 +37,8 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-plugin</artifactId>
+            <artifactId>ranger-hive-chained-plugin-base</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
     </dependencies>
 

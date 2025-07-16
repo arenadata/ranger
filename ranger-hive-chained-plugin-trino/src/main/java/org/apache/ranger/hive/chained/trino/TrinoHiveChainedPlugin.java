@@ -23,13 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
-import org.apache.ranger.authorization.hive.authorizer.RangerHiveAccessRequest;
 import org.apache.ranger.authorization.hive.authorizer.RangerHiveResource;
+import org.apache.ranger.hive.chained.plugin.BaseHiveChainedPlugin;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.service.ResourceMappingChainedPlugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,18 +39,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Locale.ENGLISH;
 import static org.apache.ranger.hive.chained.trino.ConfigMappings.ACCESS_MAPPINGS_KEY_TEMPLATE;
 import static org.apache.ranger.hive.chained.trino.ConfigMappings.COLUMN_ACCESS_MAPPING_DEFAULT;
 import static org.apache.ranger.hive.chained.trino.ConfigMappings.DATABASE_ACCESS_MAPPING_DEFAULT;
 import static org.apache.ranger.hive.chained.trino.ConfigMappings.TABLE_ACCESS_MAPPING_DEFAULT;
-import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.ANY_ACCESS;
 
 @Slf4j
 public class TrinoHiveChainedPlugin
-        extends ResourceMappingChainedPlugin
+        extends BaseHiveChainedPlugin
 {
     private static final String HIVE_SERVICE_TYPE = "hive";
     private static final String TABLE_RESOURCE = "table";
@@ -109,61 +106,22 @@ public class TrinoHiveChainedPlugin
 
     private Optional<RangerHiveResource> createHiveResource(List<String> objects)
     {
-        Optional<RangerHiveResource> hiveResource = Optional.empty();
+        RangerHiveResource hiveResource = null;
         if (objects.size() == 1) {
-            hiveResource = Optional.of(new RangerHiveResource(HiveObjectType.DATABASE, objects.get(0)));
+            hiveResource = new RangerHiveResource(HiveObjectType.DATABASE, objects.get(0));
         }
         else if (objects.size() == 2) {
-            hiveResource = Optional.of(new RangerHiveResource(HiveObjectType.TABLE, objects.get(0), objects.get(1)));
+            hiveResource = new RangerHiveResource(HiveObjectType.TABLE, objects.get(0), objects.get(1));
         }
         else if (objects.size() == 3) {
-            hiveResource = Optional.of(
-                    new RangerHiveResource(HiveObjectType.COLUMN, objects.get(0), objects.get(1), objects.get(2)));
+            hiveResource =
+                    new RangerHiveResource(HiveObjectType.COLUMN, objects.get(0), objects.get(1), objects.get(2));
         }
-        return hiveResource;
+        return Optional.ofNullable(hiveResource);
     }
 
-    private List<RangerAccessRequest> toHiveAccessRequests(RangerHiveResource hiveResource,
-            RangerAccessRequest srcRequest)
-    {
-        return getHiveAccessTypes(hiveResource, srcRequest)
-                .stream()
-                .map(accessType -> new RangerHiveAccessRequest(
-                        hiveResource,
-                        srcRequest.getUser(),
-                        srcRequest.getUserGroups(),
-                        srcRequest.getUserRoles(),
-                        getActionDescription(srcRequest, accessType),
-                        accessType,
-                        null,
-                        null
-                ))
-                .collect(Collectors.toList());
-    }
-
-    private List<HiveAccessType> getHiveAccessTypes(RangerHiveResource hiveResource, RangerAccessRequest request)
-    {
-        List<HiveAccessType> accessTypes = getAccessTypeMappings(hiveResource.getObjectType())
-                .map(mappings -> mappings.getHiveAccessTypes(request))
-                .orElseGet(Collections::emptyList);
-
-        if (accessTypes.isEmpty()) {
-            log.warn("No access type mapping found for request: {}", request);
-        }
-        return accessTypes;
-    }
-
-    private String getActionDescription(RangerAccessRequest srcRequest, HiveAccessType hiveAccessType)
-    {
-        return String.format("%s (%s) -> %s",
-                srcRequest.getAccessType(),
-                Optional.ofNullable(srcRequest.getResource())
-                        .map(RangerAccessResource::getAsString)
-                        .orElse(""),
-                hiveAccessType);
-    }
-
-    private Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType)
+    @Override
+    protected Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType)
     {
         return Optional.ofNullable(accessTypeMappings.get(hiveObjectType));
     }
@@ -211,36 +169,5 @@ public class TrinoHiveChainedPlugin
                         objectType.toString().toLowerCase(), accessType);
         String[] mappings = config.getStrings(configKey, defaultMappings);
         return getAccessMappings(mappings);
-    }
-
-    private List<HiveAccessType> getAccessMappings(String... mappings)
-    {
-        return Arrays.stream(mappings)
-                .map(this::toAccessType)
-                .collect(Collectors.toList());
-    }
-
-    private HiveAccessType toAccessType(String rawAccessType)
-    {
-        return rawAccessType.equals(ANY_ACCESS)
-                // Hive plugin uses "USE" access type as synonym for "_any"
-                ? HiveAccessType.USE
-                : HiveAccessType.valueOf(rawAccessType.toUpperCase());
-    }
-
-    private static class AccessMappings
-    {
-        private final Map<String, List<HiveAccessType>> accessTypeMappings;
-
-        public AccessMappings(Map<String, List<HiveAccessType>> accessTypeMappings)
-        {
-            this.accessTypeMappings = accessTypeMappings;
-        }
-
-        public List<HiveAccessType> getHiveAccessTypes(RangerAccessRequest request)
-        {
-            log.debug("Trying to get access type mappings for {}", request);
-            return accessTypeMappings.getOrDefault(request.getAccessType(), Collections.emptyList());
-        }
     }
 }
