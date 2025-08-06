@@ -216,12 +216,12 @@
         <tomcat.embed.version>9.0.98</tomcat.embed.version>
 
         <!-- trino plugin deps -->
-        <trino.airlift.version>0.192</trino.airlift.version>
+        <trino.airlift.version>293</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
-        <trino.guice.version>5.1.0</trino.guice.version>
+        <trino.guice.version>7.0.0</trino.guice.version>
         <trino.re2j.version>1.1</trino.re2j.version>
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
-        <trino.version>451</trino.version>
+        <trino.version>468</trino.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.8.4</zookeeper.version>
     </properties>
