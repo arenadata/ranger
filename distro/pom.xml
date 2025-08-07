@@ -146,6 +146,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-hive-chained-plugin-trino</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-hive-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -467,6 +473,8 @@
                                         <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
                                         <descriptor>src/main/assembly/admin-web.xml</descriptor>
                                         <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
@@ -481,8 +489,6 @@
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
-                                        <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                         <descriptor>src/main/assembly/resource-mapping-manager.xml</descriptor>
                                     </descriptors>
@@ -1082,6 +1088,8 @@
                                         <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
                                         <descriptor>src/main/assembly/admin-web.xml</descriptor>
                                         <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>

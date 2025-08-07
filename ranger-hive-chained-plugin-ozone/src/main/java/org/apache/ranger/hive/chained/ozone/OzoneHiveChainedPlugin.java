@@ -155,7 +155,7 @@ public class OzoneHiveChainedPlugin extends HiveChainedPlugin {
                 TABLE_WRITE_ACL_ACCESS_MAPPINGS_DEFAULT)
         );
 
-        log.debug("Hive DB access type mappings : {}", mappings);
+        log.debug("Hive table access type mappings : {}", mappings);
         return new AccessMappings(mappings);
     }
 
@@ -194,7 +194,7 @@ public class OzoneHiveChainedPlugin extends HiveChainedPlugin {
                 DB_WRITE_ACL_ACCESS_MAPPINGS_DEFAULT)
         );
 
-        log.debug("Hive table access type mappings : {}", mappings);
+        log.debug("Hive DB access type mappings : {}", mappings);
         return new AccessMappings(mappings);
     }
 
