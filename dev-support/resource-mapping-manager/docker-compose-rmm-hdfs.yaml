@@ -43,6 +43,7 @@ services:
     ports:
       - "9000:9000"
       - "8088:8088"
+      - "5005:5005"
     healthcheck:
       test: "hdfs dfs -ls /hbase"
       interval: 1m30s
@@ -57,6 +58,7 @@ services:
     volumes:
       - ./conf/ranger-hdfs-security.xml:/opt/hadoop/etc/hadoop/ranger-hdfs-security.xml
       - ./conf/ranger-hive-audit.xml:/opt/hadoop/etc/hadoop/ranger-hive-audit.xml
+      - ./conf/hadoop-env.sh:/opt/hadoop/etc/hadoop/hadoop-env.sh
 
   rmm-hive-metastore:
     image: apache/hive:4.0.1

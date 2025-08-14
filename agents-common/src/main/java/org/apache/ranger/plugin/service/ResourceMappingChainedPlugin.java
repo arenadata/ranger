@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.ranger.authorization.hadoop.config.RangerChainedPluginConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -32,10 +33,17 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
 public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
+    private static final String WITH_HIGH_PRIORITY_RESULT_CONF_SUFFIX =
+        ".chained.plugin.result.priority.high";
+    private static final boolean WITH_HIGH_PRIORITY_RESULT_CONF_DEFAULT = true;
+
+    private final int resultPolicyPriority;
+
     protected ResourceMappingChainedPlugin(RangerBasePlugin rootPlugin,
                                            String serviceType,
                                            String serviceName) {
         super(rootPlugin, serviceType, serviceName);
+        this.resultPolicyPriority = getPolicyPriority(rootPlugin.getConfig());
     }
 
     @Override
@@ -70,7 +78,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
         List<RangerAccessRequest> chainedRequests = toChainedRequests(request);
         if (chainedRequests.size() == 1) {
-            return plugin.isAccessAllowed(chainedRequests.get(0), auditHandler());
+            return withPriority(plugin.isAccessAllowed(chainedRequests.get(0), auditHandler()));
         }
 
         return reduceAccessResults(
@@ -98,7 +106,8 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     protected RangerAccessResult reduceAccessResults(RangerAccessRequest request,
                                                      Collection<RangerAccessResult> results) {
 
-        return reduceAccessResults(request, (acc, req) -> {}, results);
+        return reduceAccessResults(request, (acc, req) -> {
+        }, results);
     }
 
     protected void handleRowFilterResult(RangerAccessResult finalResult, RangerAccessResult partialResult) {
@@ -126,6 +135,9 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     protected RangerAccessResult reduceAccessResults(RangerAccessRequest request,
                                                      BiConsumer<RangerAccessResult, RangerAccessResult> resultHandler,
                                                      Collection<RangerAccessResult> results) {
+        if (results.size() == 1) {
+            return withPriority(results.iterator().next());
+        }
 
         RangerAccessResult allowedResult = getAllowedResult(request);
         for (RangerAccessResult accessResult : results) {
@@ -135,10 +147,28 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
 
             resultHandler.accept(allowedResult, accessResult);
         }
-        return allowedResult;
+
+        // override priority only if mapping is present
+        return results.isEmpty()
+            ? allowedResult
+            : withPriority(allowedResult);
     }
 
     protected RangerAccessResultProcessor auditHandler() {
         return new RangerDefaultAuditHandler(plugin.getConfig());
+    }
+
+    private RangerAccessResult withPriority(RangerAccessResult result) {
+        result.setPolicyPriority(resultPolicyPriority);
+        return result;
+    }
+
+    private int getPolicyPriority(RangerPluginConfig config) {
+        boolean withHighResultPriority = config.getBoolean(
+            config.getPropertyPrefix() + WITH_HIGH_PRIORITY_RESULT_CONF_SUFFIX,
+                WITH_HIGH_PRIORITY_RESULT_CONF_DEFAULT);
+        return withHighResultPriority
+            ? RangerPolicy.POLICY_PRIORITY_OVERRIDE
+            : RangerPolicy.POLICY_PRIORITY_NORMAL;
     }
 }
