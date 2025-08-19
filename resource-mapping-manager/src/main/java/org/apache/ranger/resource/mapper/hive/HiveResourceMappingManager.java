@@ -21,8 +21,10 @@ package org.apache.ranger.resource.mapper.hive;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.concurrent.Executors;
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.messaging.MessageFactory;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -30,6 +32,7 @@ import org.apache.ranger.resource.mapper.config.ResourceMappingManagerConfig;
 import org.apache.ranger.resource.mapper.dao.DefaultResourceMappingDiffDao;
 import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDao;
 import org.apache.ranger.resource.mapper.event.DbResourceDiffCollector;
+import org.apache.ranger.resource.mapper.event.ResourceDiffCollector;
 import org.apache.ranger.resource.mapper.event.ResourceDiffHandler;
 import org.apache.ranger.resource.mapper.event.ResourceDiffSource;
 import org.apache.ranger.resource.mapper.event.retry.PolicyBasedRetrySupport;
@@ -39,28 +42,49 @@ import org.apache.ranger.resource.mapper.event.retry.RetrySupport;
 import org.apache.ranger.resource.mapper.hive.auth.HiveAuthenticator;
 import org.apache.ranger.resource.mapper.hive.auth.KerberosHiveAuthenticator;
 import org.apache.ranger.resource.mapper.hive.config.HiveResourceMappingManagerConfig;
-import org.apache.ranger.resource.mapper.hive.event.HiveMetastoreEventFetcher;
+import org.apache.ranger.resource.mapper.hive.event.CompositeHiveResourceDiffCollector;
+import org.apache.ranger.resource.mapper.hive.event.DbHiveIntermediateEventsResolver;
+import org.apache.ranger.resource.mapper.hive.event.fetch.CompositeHiveMetastoreFetcher;
+import org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreEventFetcher;
+import org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreSnapshotFetcher;
+import org.springframework.jdbc.support.JdbcTransactionManager;
 
 @Slf4j
 public class HiveResourceMappingManager {
     public void run(HiveResourceMappingManagerConfig config) {
-        try (ResourceDiffHandler resourceDiffHandler = buildEventHandler(config)) {
-            resourceDiffHandler.start();
+        try (HikariDataSource dataSource = new HikariDataSource(config.getDbConfig());
+             ResourceDiffHandler resourceDiffHandler = buildEventHandler(config, dataSource)) {
+            resourceDiffHandler.start(config.isFullMetastoreSync());
         } catch (Exception exception) {
             log.error("Error handling events from HMS", exception);
             System.exit(1);
         }
     }
 
-    private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config) throws Exception {
-        ResourceMappingDiffDao diffDao = buildEntityDao(config);
+    private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config, DataSource dataSource)
+        throws Exception {
+        ResourceMappingDiffDao diffDao = new DefaultResourceMappingDiffDao(dataSource);
         RetryPolicyFactory retryPolicyFactory = new RetryPolicyFactory();
 
         return new ResourceDiffHandler(
             buildEventFetcher(retryPolicyFactory, config),
-            new DbResourceDiffCollector(diffDao, buildEventApplierRetrySupport(retryPolicyFactory, config)),
+            buildResourceDiffCollector(retryPolicyFactory, config, diffDao, dataSource),
             diffDao
         );
+    }
+
+    private ResourceDiffCollector buildResourceDiffCollector(RetryPolicyFactory retryPolicyFactory,
+                                                             HiveResourceMappingManagerConfig config,
+                                                             ResourceMappingDiffDao diffDao,
+                                                             DataSource dataSource) {
+        RetrySupport retrySupport = buildEventApplierRetrySupport(retryPolicyFactory, config);
+
+        return CompositeHiveResourceDiffCollector.builder()
+            .delegate(new DbResourceDiffCollector(diffDao, retrySupport))
+            .intermediateEventsResolver(new DbHiveIntermediateEventsResolver(diffDao))
+            .transactionManager(new JdbcTransactionManager(dataSource))
+            .retrySupport(retrySupport)
+            .build();
     }
 
     private ResourceDiffSource buildEventFetcher(RetryPolicyFactory retryPolicyFactory,
@@ -69,20 +93,55 @@ public class HiveResourceMappingManager {
         // login is needed for HiveMetaStoreClient
         hiveAuthenticator.login();
 
-        return HiveMetastoreEventFetcher.builder()
-            .metaStoreClient(new HiveMetaStoreClient(config))
-            .eventMessageDeserializer(MessageFactory.getDefaultInstance(config).getDeserializer())
-            .executor(Executors.newSingleThreadScheduledExecutor())
-            .fetchPeriodMs(config.getFetchPeriodMs())
-            .eventBatchSize(config.getFetchBatchSize())
-            .retrySupport(buildHiveListenerRetrySupport(retryPolicyFactory, config))
+        HiveMetaStoreClient hiveMetaStoreClient = new HiveMetaStoreClient(config);
+        RetrySupport retrySupport = buildHiveListenerRetrySupport(retryPolicyFactory, config);
+
+        HiveMetastoreSnapshotFetcher snapshotFetcher =
+            buildSnapshotEventFetcher(hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
+
+        HiveMetastoreEventFetcher eventFetcher = buildHiveMetastoreEventFetcher(
+            hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
+
+        return CompositeHiveMetastoreFetcher.builder()
+            .metaStoreClient(hiveMetaStoreClient)
+            .snapshotFetcher(snapshotFetcher)
+            .eventFetcher(eventFetcher)
+            .executor(Executors.newSingleThreadExecutor())
             .authenticator(hiveAuthenticator)
+            .eventBatchSize(config.getFetchBatchSize())
             .build();
     }
 
-    private ResourceMappingDiffDao buildEntityDao(HiveResourceMappingManagerConfig config) {
-        HikariDataSource hikariDataSource = new HikariDataSource(config.getDbConfig());
-        return new DefaultResourceMappingDiffDao(hikariDataSource);
+    private HiveMetastoreEventFetcher buildHiveMetastoreEventFetcher(
+        IMetaStoreClient metaStoreClient,
+        RetrySupport retrySupport,
+        HiveAuthenticator hiveAuthenticator,
+        HiveResourceMappingManagerConfig config
+    ) {
+        return HiveMetastoreEventFetcher.builder()
+            .metaStoreClient(metaStoreClient)
+            .eventMessageDeserializer(MessageFactory.getDefaultInstance(config).getDeserializer())
+            .executor(Executors.newSingleThreadScheduledExecutor())
+            .authenticator(hiveAuthenticator)
+            .retrySupport(retrySupport)
+            .fetchPeriodMs(config.getFetchPeriodMs())
+            .eventBatchSize(config.getFetchBatchSize())
+            .build();
+    }
+
+    private HiveMetastoreSnapshotFetcher buildSnapshotEventFetcher(
+        IMetaStoreClient metaStoreClient,
+        RetrySupport retrySupport,
+        HiveAuthenticator hiveAuthenticator,
+        HiveResourceMappingManagerConfig config) {
+
+        return HiveMetastoreSnapshotFetcher.builder()
+            .metaStoreClient(metaStoreClient)
+            .executor(Executors.newSingleThreadExecutor())
+            .authenticator(hiveAuthenticator)
+            .retrySupport(retrySupport)
+            .eventBatchSize(config.getFetchBatchSize())
+            .build();
     }
 
     private RetrySupport buildHiveListenerRetrySupport(

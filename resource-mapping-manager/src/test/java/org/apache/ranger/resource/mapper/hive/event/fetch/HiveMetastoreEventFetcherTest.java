@@ -17,20 +17,19 @@
  * under the License.
  */
 
-package org.apache.ranger.resource.mapper.hive.event;
+package org.apache.ranger.resource.mapper.hive.event.fetch;
 
-import static org.apache.ranger.resource.mapper.hive.event.HiveMetastoreEventFetcher.SUPPORTED_TABLE_TYPES;
-import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.DEFAULT_LOCATION_SCHEME;
-import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newAlterDbEvent;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newAlterTableEvent;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newCreateDbEvent;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newCreateTableEvent;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newDropDbEvent;
 import static org.apache.ranger.resource.mapper.hive.event.NotificationEventFactory.newDropTableEvent;
+import static org.apache.ranger.resource.mapper.hive.event.ResourceMappingDiffFactory.diff;
+import static org.apache.ranger.resource.mapper.hive.event.ResourceMappingDiffFactory.updateDiff;
+import static org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreEventFetcher.SUPPORTED_TABLE_TYPES;
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType.CREATE;
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType.DELETE;
-import static org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType.UPDATE;
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityType.DATABASE;
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityType.TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,8 +59,6 @@ import org.apache.hadoop.hive.metastore.messaging.json.JSONMessageDeserializer;
 import org.apache.ranger.resource.mapper.event.retry.PolicyBasedRetrySupport;
 import org.apache.ranger.resource.mapper.event.retry.RetryPolicyFactory;
 import org.apache.ranger.resource.mapper.hive.auth.HiveAuthenticator;
-import org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType;
-import org.apache.ranger.resource.mapper.hive.model.HiveEntityType;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
@@ -134,7 +131,7 @@ class HiveMetastoreEventFetcherTest {
         assertEquals(expectedRecords, fetchedEvents);
 
         assertEquals(Collections.singletonList(0L), eventsHolder.requestedOffsetIds);
-        assertEquals(11L, eventFetcher.getLastEventId());
+        assertEquals(11L, eventFetcher.getLastHandledEventId());
     }
 
     @Test
@@ -158,7 +155,7 @@ class HiveMetastoreEventFetcherTest {
         assertEquals(SUPPORTED_TABLE_TYPES_COUNT * SUPPORTED_TABLE_OPERATIONS_COUNT, supportedRecords.size());
 
         assertEquals(Collections.singletonList(0L), eventsHolder.requestedOffsetIds);
-        assertEquals(403L, eventFetcher.getLastEventId());
+        assertEquals(403L, eventFetcher.getLastHandledEventId());
     }
 
     private List<ResourceDiffStreamRecord> getFetchedEvents() {
@@ -176,41 +173,6 @@ class HiveMetastoreEventFetcherTest {
                 new ResourceMapping(name + "_new", "some_location_new")),
             newDropTableEvent(startId + 2, name, tableType, "some_location")
         );
-    }
-
-    private ResourceMappingDiff diff(
-        long id,
-        HiveEntityType entityType,
-        HiveEntityDiffType diffType,
-        String name,
-        String location
-    ) {
-        return diffBuilder(id, entityType, diffType)
-            .oldEntity(new ResourceMapping(name, location))
-            .build();
-    }
-
-    private ResourceMappingDiff updateDiff(
-        long id,
-        HiveEntityType entityType,
-        ResourceMapping oldMapping,
-        ResourceMapping newMapping
-    ) {
-        return diffBuilder(id, entityType, UPDATE)
-            .oldEntity(oldMapping)
-            .newEntity(newMapping)
-            .build();
-    }
-
-    private ResourceMappingDiff.ResourceMappingDiffBuilder diffBuilder(
-        long id, HiveEntityType entityType, HiveEntityDiffType diffType) {
-        return ResourceMappingDiff.builder()
-            .id(id)
-            .sourceService(HIVE_SERVICE)
-            .targetService(DEFAULT_LOCATION_SCHEME)
-            .entityType(entityType.toString())
-            .diffType(diffType.toString());
-
     }
 
     private NotificationEventResponse getEvents(MetastoreEventsHolder metastoreEventsHolder,

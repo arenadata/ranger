@@ -13,11 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+call spdropsequence('X_RESOURCE_MAPPING_DIFF_SEQ');
+
+CREATE SEQUENCE X_RESOURCE_MAPPING_DIFF_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
 call spdroptable('x_resource_mapping_diff');
 
 CREATE TABLE x_resource_mapping_diff
 (
     id             NUMBER(20) NOT NULL,
+    external_id    NUMBER(20) NOT NULL,
     old_name       varchar(1024) NOT NULL,
     old_location   varchar(2048) NOT NULL,
     new_name       varchar(1024),

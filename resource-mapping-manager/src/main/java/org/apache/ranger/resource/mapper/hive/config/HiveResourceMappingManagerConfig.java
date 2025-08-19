@@ -23,6 +23,8 @@ import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HM
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FETCH_BATCH_SIZE_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FETCH_PERIOD_MS;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FETCH_PERIOD_MS_DEFAULT;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FULL_SYNC;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FULL_SYNC_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_MAX_RETRIES;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_MAX_RETRIES_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_INTERVAL_MS;
@@ -58,5 +60,9 @@ public class HiveResourceMappingManagerConfig extends ResourceMappingManagerConf
 
     public int getHiveListenerMaxRetries() {
         return getInt(HMS_MAX_RETRIES, HMS_MAX_RETRIES_DEFAULT);
+    }
+
+    public boolean isFullMetastoreSync() {
+        return getBoolean(HMS_FULL_SYNC, HMS_FULL_SYNC_DEFAULT);
     }
 }

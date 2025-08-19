@@ -17,19 +17,12 @@
  * under the License.
  */
 
-package org.apache.ranger.resource.mapper.dao;
+package org.apache.ranger.resource.mapper.hive.event;
 
-import java.util.Optional;
-import org.apache.ranger.resource.mapper.model.ResourceMapping;
-import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
-import org.springframework.transaction.support.TransactionOperations;
+import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 
-public interface ResourceMappingDiffDao extends TransactionOperations {
-    void deleteDiffsFor(ResourceMapping mapping);
+public interface HiveIntermediateEventsResolver {
+    void handle(ResourceDiffStreamRecord record);
 
-    void deleteAllDiffs() throws Exception;
-
-    void insertDiff(ResourceMappingDiff entityDiff);
-
-    Optional<Long> getLatestExternalDiffId(String sourceServiceName);
+    void flush();
 }

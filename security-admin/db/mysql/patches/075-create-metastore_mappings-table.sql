@@ -17,7 +17,8 @@ DROP TABLE IF EXISTS `x_resource_mapping_diff`;
 
 CREATE TABLE `x_resource_mapping_diff`
 (
-    `id`             bigint(20) NOT NULL,
+    `id`             bigint(20) NOT NULL AUTO_INCREMENT,
+    `external_id`    bigint(20) NOT NULL,
     `old_name`       varchar(1024) NOT NULL,
     `old_location`   varchar(2048) NOT NULL,
     `new_name`       varchar(1024),

@@ -19,29 +19,25 @@
 
 package org.apache.ranger.resource.mapper.event;
 
-import lombok.RequiredArgsConstructor;
+import java.util.concurrent.BlockingQueue;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDao;
-import org.apache.ranger.resource.mapper.event.retry.RetrySupport;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
-import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 
 @Slf4j
-@RequiredArgsConstructor
-public class DbResourceDiffCollector extends BaseResourceDiffCollector {
-    private final ResourceMappingDiffDao resourceMappingDiffDao;
-    private final RetrySupport retrySupport;
+public abstract class BaseResourceDiffCollector implements ResourceDiffCollector {
 
     @Override
-    public void handle(ResourceDiffStreamRecord record) throws Exception {
-        retrySupport.withRetries(() -> handleEventAction(record));
-    }
+    public void collect(BlockingQueue<ResourceDiffStreamRecord> diffQueue) throws Exception {
+        ResourceDiffStreamRecord event = null;
 
-    private void handleEventAction(ResourceDiffStreamRecord event) {
-        if (event instanceof ResourceMappingDiff) {
-            resourceMappingDiffDao.insertDiff((ResourceMappingDiff) event);
-        } else {
-            log.warn("Unsupported event type: {}", event.getClass().getName());
+        while (event == null || !event.isLastRecord()) {
+            try {
+                event = diffQueue.take();
+                handle(event);
+            } catch (Exception exception) {
+                log.error("Error handling event", exception);
+                throw exception;
+            }
         }
     }
 }
