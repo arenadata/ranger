@@ -95,19 +95,17 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
 
     protected abstract List<RangerAccessRequest> toChainedRequests(RangerAccessRequest request);
 
-    protected RangerAccessResult getAllowedResult(RangerAccessRequest request) {
+    protected RangerAccessResult getBaseUndeterminedResult(RangerAccessRequest request) {
         RangerAccessResult rangerAccessResult =
-            new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, serviceName, null, request);
-        rangerAccessResult.setIsAccessDetermined(true);
-        rangerAccessResult.setIsAllowed(true);
+            new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, serviceName, plugin.getServiceDef(), request);
+        rangerAccessResult.setIsAccessDetermined(false);
         return rangerAccessResult;
     }
 
     protected RangerAccessResult reduceAccessResults(RangerAccessRequest request,
                                                      Collection<RangerAccessResult> results) {
 
-        return reduceAccessResults(request, (acc, req) -> {
-        }, results);
+        return reduceAccessResults(request, (acc, req) -> {}, results);
     }
 
     protected void handleRowFilterResult(RangerAccessResult finalResult, RangerAccessResult partialResult) {
@@ -135,23 +133,32 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     protected RangerAccessResult reduceAccessResults(RangerAccessRequest request,
                                                      BiConsumer<RangerAccessResult, RangerAccessResult> resultHandler,
                                                      Collection<RangerAccessResult> results) {
+        // use a single result as a return value without any reduction
         if (results.size() == 1) {
             return withPriority(results.iterator().next());
         }
 
-        RangerAccessResult allowedResult = getAllowedResult(request);
+        RangerAccessResult result = getBaseUndeterminedResult(request);
+        // return an undetermined result in case if no mapping is found
+        // to not unintentionally trigger the override of the base plugin result
+        if (results.isEmpty()) {
+            return result;
+        }
+
+        // set access determined if we have at least one result and start reduction
+        result.setIsAccessDetermined(true);
+        result.setIsAllowed(true);
         for (RangerAccessResult accessResult : results) {
             if (accessResult.getIsAccessDetermined() && !accessResult.getIsAllowed()) {
                 return accessResult;
             }
 
-            resultHandler.accept(allowedResult, accessResult);
+            resultHandler.accept(result, accessResult);
         }
 
-        // override priority only if mapping is present
-        return results.isEmpty()
-            ? allowedResult
-            : withPriority(allowedResult);
+        // here we can safely override priority,
+        // because we have at least one allowing result
+        return withPriority(result);
     }
 
     protected RangerAccessResultProcessor auditHandler() {
