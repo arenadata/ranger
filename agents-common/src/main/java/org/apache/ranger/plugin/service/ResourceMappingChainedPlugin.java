@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import org.apache.ranger.authorization.hadoop.config.RangerChainedPluginConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -32,10 +33,17 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 
 public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
+    private static final String WITH_HIGH_PRIORITY_RESULT_CONF_SUFFIX =
+        ".chained.plugin.result.priority.high";
+    private static final boolean WITH_HIGH_PRIORITY_RESULT_CONF_DEFAULT = true;
+
+    private final int resultPolicyPriority;
+
     protected ResourceMappingChainedPlugin(RangerBasePlugin rootPlugin,
                                            String serviceType,
                                            String serviceName) {
         super(rootPlugin, serviceType, serviceName);
+        this.resultPolicyPriority = getPolicyPriority(rootPlugin.getConfig());
     }
 
     @Override
@@ -70,7 +78,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
         List<RangerAccessRequest> chainedRequests = toChainedRequests(request);
         if (chainedRequests.size() == 1) {
-            return plugin.isAccessAllowed(chainedRequests.get(0), auditHandler());
+            return withPriority(plugin.isAccessAllowed(chainedRequests.get(0), auditHandler()));
         }
 
         return reduceAccessResults(
@@ -87,11 +95,10 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
 
     protected abstract List<RangerAccessRequest> toChainedRequests(RangerAccessRequest request);
 
-    protected RangerAccessResult getAllowedResult(RangerAccessRequest request) {
+    protected RangerAccessResult getBaseUndeterminedResult(RangerAccessRequest request) {
         RangerAccessResult rangerAccessResult =
-            new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, serviceName, null, request);
-        rangerAccessResult.setIsAccessDetermined(true);
-        rangerAccessResult.setIsAllowed(true);
+            new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, serviceName, plugin.getServiceDef(), request);
+        rangerAccessResult.setIsAccessDetermined(false);
         return rangerAccessResult;
     }
 
@@ -126,19 +133,49 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
     protected RangerAccessResult reduceAccessResults(RangerAccessRequest request,
                                                      BiConsumer<RangerAccessResult, RangerAccessResult> resultHandler,
                                                      Collection<RangerAccessResult> results) {
+        // use a single result as a return value without any reduction
+        if (results.size() == 1) {
+            return withPriority(results.iterator().next());
+        }
 
-        RangerAccessResult allowedResult = getAllowedResult(request);
+        RangerAccessResult result = getBaseUndeterminedResult(request);
+        // return an undetermined result in case if no mapping is found
+        // to not unintentionally trigger the override of the base plugin result
+        if (results.isEmpty()) {
+            return result;
+        }
+
+        // set access determined if we have at least one result and start reduction
+        result.setIsAccessDetermined(true);
+        result.setIsAllowed(true);
         for (RangerAccessResult accessResult : results) {
             if (accessResult.getIsAccessDetermined() && !accessResult.getIsAllowed()) {
                 return accessResult;
             }
 
-            resultHandler.accept(allowedResult, accessResult);
+            resultHandler.accept(result, accessResult);
         }
-        return allowedResult;
+
+        // here we can safely override priority,
+        // because we have at least one allowing result
+        return withPriority(result);
     }
 
     protected RangerAccessResultProcessor auditHandler() {
         return new RangerDefaultAuditHandler(plugin.getConfig());
+    }
+
+    private RangerAccessResult withPriority(RangerAccessResult result) {
+        result.setPolicyPriority(resultPolicyPriority);
+        return result;
+    }
+
+    private int getPolicyPriority(RangerPluginConfig config) {
+        boolean withHighResultPriority = config.getBoolean(
+            config.getPropertyPrefix() + WITH_HIGH_PRIORITY_RESULT_CONF_SUFFIX,
+                WITH_HIGH_PRIORITY_RESULT_CONF_DEFAULT);
+        return withHighResultPriority
+            ? RangerPolicy.POLICY_PRIORITY_OVERRIDE
+            : RangerPolicy.POLICY_PRIORITY_NORMAL;
     }
 }
