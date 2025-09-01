@@ -148,7 +148,7 @@ public class HiveResourceMgr {
 					} else if ( columnName != null
 									&& !columnName.isEmpty()) {
 							// get  ColumnList for given Input
-								columnName += "%";
+								columnName += "*";
 								finalColName = columnName;
 								finalDbName = databaseName;
 								finalTableName = tableName;
