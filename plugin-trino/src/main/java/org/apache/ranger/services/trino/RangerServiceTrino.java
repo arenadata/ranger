@@ -45,34 +45,13 @@ public class RangerServiceTrino
             LOG.debug("==> RangerServiceTrino.getDefaultRangerPolicies()");
         }
 
-        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
-        for (RangerPolicy defaultPolicy : ret) {
-            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-                List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
-                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-
-                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
-                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-                policyItemForLookupUser.setAccesses(accessListForLookupUser);
-                policyItemForLookupUser.setDelegateAdmin(false);
-
-                List<RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
-
-                if (policyItems == null || policyItems.isEmpty()) {
-                    policyItems = new ArrayList<>();
-                }
-
-                policyItems.add(policyItemForLookupUser);
-
-                defaultPolicy.setPolicyItems(policyItems);
-            }
-        }
+        // leave this method for possible modifications
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceTrino.getDefaultRangerPolicies()");
         }
 
-        return ret;
+        return super.getDefaultRangerPolicies();
     }
 
     @Override
