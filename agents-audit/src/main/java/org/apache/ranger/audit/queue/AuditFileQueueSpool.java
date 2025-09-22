@@ -110,6 +110,8 @@ public class AuditFileQueueSpool implements Runnable {
     boolean isDestDown 	= false;
     boolean isSpoolingSuccessful = true;
 
+    Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions("644");
+
     public AuditFileQueueSpool(AuditHandler consumerProvider) {
         this.consumerProvider = consumerProvider;
     }
@@ -142,7 +144,7 @@ public class AuditFileQueueSpool implements Runnable {
             String spoolDirPerms = StringUtils.defaultIfEmpty(StringUtils.trim(
                             MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS)),
                     "755");
-            Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
+            filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
             Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
             logFileNameFormat = MiscUtil.getStringProperty(props,
                     basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
@@ -515,6 +517,13 @@ public class AuditFileQueueSpool implements Runnable {
             fileName = newFileName;
             logger.info("Creating new file. queueName="
                     + FILE_QUEUE_PROVIDER_NAME + ", fileName=" + fileName);
+            boolean created = outLogFile.createNewFile();
+            if (created)
+                try {
+                    AuditFileUtil.setPermissions(outLogFile, filePermissions);
+                } catch (Exception e) {
+                    logger.debug("Failed to set permissions on {}", outLogFile, e);
+                }
             // Open the file
             logWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
                     outLogFile),"UTF-8")));
