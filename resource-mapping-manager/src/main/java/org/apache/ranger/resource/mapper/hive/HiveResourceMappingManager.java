@@ -21,6 +21,7 @@ package org.apache.ranger.resource.mapper.hive;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.LockSupport;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -55,14 +56,17 @@ public class HiveResourceMappingManager {
         try (HikariDataSource dataSource = new HikariDataSource(config.getDbConfig());
              ResourceDiffHandler resourceDiffHandler = buildEventHandler(config, dataSource)) {
             resourceDiffHandler.start(config.isFullMetastoreSync());
+        } catch (HiveStartUpException exception) {
+            log.warn("Failed to start event fetching from HMS", exception);
+            // todo add dynamic Hive config loading mechanism instead of parking
+            LockSupport.park();
         } catch (Exception exception) {
             log.error("Error handling events from HMS", exception);
             System.exit(1);
         }
     }
 
-    private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config, DataSource dataSource)
-        throws Exception {
+    private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config, DataSource dataSource) {
         ResourceMappingDiffDao diffDao = new DefaultResourceMappingDiffDao(dataSource);
         RetryPolicyFactory retryPolicyFactory = new RetryPolicyFactory();
 
@@ -88,28 +92,32 @@ public class HiveResourceMappingManager {
     }
 
     private ResourceDiffSource buildEventFetcher(RetryPolicyFactory retryPolicyFactory,
-                                                 HiveResourceMappingManagerConfig config) throws Exception {
-        HiveAuthenticator hiveAuthenticator = buildHiveAuthenticator(config);
-        // login is needed for HiveMetaStoreClient
-        hiveAuthenticator.login();
+                                                 HiveResourceMappingManagerConfig config) {
+        try {
+            HiveAuthenticator hiveAuthenticator = buildHiveAuthenticator(config);
+            // login is needed for HiveMetaStoreClient
+            hiveAuthenticator.login();
 
-        HiveMetaStoreClient hiveMetaStoreClient = new HiveMetaStoreClient(config);
-        RetrySupport retrySupport = buildHiveListenerRetrySupport(retryPolicyFactory, config);
+            HiveMetaStoreClient hiveMetaStoreClient = new HiveMetaStoreClient(config);
+            RetrySupport retrySupport = buildHiveListenerRetrySupport(retryPolicyFactory, config);
 
-        HiveMetastoreSnapshotFetcher snapshotFetcher =
-            buildSnapshotEventFetcher(hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
+            HiveMetastoreSnapshotFetcher snapshotFetcher =
+                buildSnapshotEventFetcher(hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
 
-        HiveMetastoreEventFetcher eventFetcher = buildHiveMetastoreEventFetcher(
-            hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
+            HiveMetastoreEventFetcher eventFetcher = buildHiveMetastoreEventFetcher(
+                hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
 
-        return CompositeHiveMetastoreFetcher.builder()
-            .metaStoreClient(hiveMetaStoreClient)
-            .snapshotFetcher(snapshotFetcher)
-            .eventFetcher(eventFetcher)
-            .executor(Executors.newSingleThreadExecutor())
-            .authenticator(hiveAuthenticator)
-            .eventBatchSize(config.getFetchBatchSize())
-            .build();
+            return CompositeHiveMetastoreFetcher.builder()
+                .metaStoreClient(hiveMetaStoreClient)
+                .snapshotFetcher(snapshotFetcher)
+                .eventFetcher(eventFetcher)
+                .executor(Executors.newSingleThreadExecutor())
+                .authenticator(hiveAuthenticator)
+                .eventBatchSize(config.getFetchBatchSize())
+                .build();
+        } catch (Exception e) {
+            throw new HiveStartUpException(e);
+        }
     }
 
     private HiveMetastoreEventFetcher buildHiveMetastoreEventFetcher(
