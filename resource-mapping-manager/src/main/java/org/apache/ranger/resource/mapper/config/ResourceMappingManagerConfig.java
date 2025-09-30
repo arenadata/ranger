@@ -43,6 +43,7 @@ import static org.apache.ranger.resource.mapper.config.ConfigurationKeys.RMM_KRB
 import static org.apache.ranger.resource.mapper.config.ConfigurationKeys.RMM_KRB_PRINCIPAL;
 
 import com.zaxxer.hikari.HikariConfig;
+import java.util.Optional;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.resource.mapper.event.retry.RetryStrategy;
 
@@ -60,10 +61,10 @@ public class ResourceMappingManagerConfig extends Configuration {
     public HikariConfig getDbConfig() {
         HikariConfig configuration = new HikariConfig();
 
-        configuration.setDriverClassName(get(DB_DRIVER_CLASSNAME));
-        configuration.setJdbcUrl(get(DB_JDBC_URL));
-        configuration.setUsername(get(DB_USERNAME));
-        configuration.setPassword(get(DB_PASSWORD));
+        configuration.setDriverClassName(getOrThrow(DB_DRIVER_CLASSNAME));
+        configuration.setJdbcUrl(getOrThrow(DB_JDBC_URL));
+        configuration.setUsername(getOrThrow(DB_USERNAME));
+        configuration.setPassword(getOrThrow(DB_PASSWORD));
 
         configuration.setMaximumPoolSize(
             getInt(DB_POOL_MAX_SIZE, DB_POOL_MAX_SIZE_DEFAULT)
@@ -111,5 +112,11 @@ public class ResourceMappingManagerConfig extends Configuration {
                 set(propertyName, systemPropertyValue);
             }
         }
+    }
+
+    private String getOrThrow(String propertyName) {
+        return Optional.ofNullable(get(propertyName))
+            .orElseThrow(() ->
+                new IllegalArgumentException("Missing required option: " + propertyName));
     }
 }
