@@ -1114,5 +1114,25 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>linux-pam</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+                <file>
+                    <exists>/usr/include/security/pam_appl.h</exists>
+                </file>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.ranger</groupId>
+                    <artifactId>pamCredValidator</artifactId>
+                    <version>${project.version}</version>
+                    <type>uexe</type>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 </project>
