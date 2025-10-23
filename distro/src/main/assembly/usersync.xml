@@ -53,6 +53,7 @@
 							<include>org.apache.commons:commons-csv</include>
 							<include>org.apache.ranger:credentialbuilder</include>
 							<include>org.apache.ranger:ranger-util</include>
+							<include>org.apache.ranger:ranger-plugins-cred</include>
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 							<include>commons-codec:commons-codec</include>
@@ -83,7 +84,7 @@
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
 							<include>org.slf4j:log4j-over-slf4j:jar:${${slf4j.version}}</include>
 							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                            <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+							<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>
