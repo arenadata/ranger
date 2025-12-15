@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ranger</groupId>
+        <groupId>io.arenadata.ranger</groupId>
         <artifactId>ranger</artifactId>
         <version>2.6.0</version>
         <relativePath>..</relativePath>
@@ -125,22 +125,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-audit</artifactId>
-            <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-common</artifactId>
-            <version>${project.version}</version>
-            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
-       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
- -->
-        </dependency>
         <!-- The Jetty dependency is required as Knox is not using Jetty 9.3, which gets imported via Hadoop 3.0.0 -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -152,6 +136,24 @@
             <artifactId>jersey-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-plugins-audit</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
+       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
+ -->
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
+       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
+ -->
+        </dependency>
+        <dependency>
             <groupId>ch.qos.reload4j</groupId>
             <artifactId>reload4j</artifactId>
             <version>${reload4j.version}</version>
@@ -161,6 +163,12 @@
             <groupId>com.mycila.xmltool</groupId>
             <artifactId>xmltool</artifactId>
             <version>3.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-knox-plugin-shim</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -277,12 +285,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-knox-plugin-shim</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>

@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apache.ranger</groupId>
+        <groupId>io.arenadata.ranger</groupId>
         <artifactId>ranger</artifactId>
         <version>2.6.0</version>
         <relativePath>..</relativePath>
@@ -78,32 +78,7 @@
             <version>${trino.airlift.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.trino</groupId>
-            <artifactId>trino-jdbc</artifactId>
-            <version>${trino.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.trino</groupId>
-            <artifactId>trino-spi</artifactId>
-            <version>${trino.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons.compress.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons.lang3.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>${httpcomponents.httpcore.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>ranger-plugins-audit</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -214,7 +189,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -223,6 +198,31 @@
                     <artifactId>javax.servlet-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-jdbc</artifactId>
+            <version>${trino.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-spi</artifactId>
+            <version>${trino.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons.compress.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcomponents.httpcore.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.zookeeper</groupId>

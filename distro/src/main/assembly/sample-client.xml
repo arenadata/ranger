@@ -26,10 +26,10 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:sample-client</include>
-                <include>org.apache.ranger:ranger-intg</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
+                <include>io.arenadata.ranger:sample-client</include>
+                <include>io.arenadata.ranger:ranger-intg</include>
+                <include>io.arenadata.ranger:ranger-plugins-common</include>
+                <include>io.arenadata.ranger:ranger-plugins-cred</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
@@ -62,7 +62,7 @@
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-                    <include>org.apache.ranger:ranger-plugins-audit</include>
+                    <include>io.arenadata.ranger:ranger-plugins-audit</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>

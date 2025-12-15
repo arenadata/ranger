@@ -27,7 +27,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-kms</include>
+                <include>io.arenadata.ranger:ranger-kms</include>
             </includes>
             <binaries>
                 <outputDirectory>ews/webapp/WEB-INF/classes</outputDirectory>
@@ -186,7 +186,7 @@
                     <include>com.squareup.okhttp:logging-interceptor</include>
                     <include>com.squareup.okhttp:okhttp</include>
                     <!-- ranger common metrics module-->
-                            <include>org.apache.ranger:ranger-metrics</include>
+                            <include>io.arenadata.ranger:ranger-metrics</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -196,7 +196,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:embeddedwebserver</include>
+                <include>io.arenadata.ranger:embeddedwebserver</include>
             </includes>
             <binaries>
                 <outputDirectory>ews/lib</outputDirectory>
@@ -214,11 +214,11 @@
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-                    <include>org.apache.ranger:ranger-plugins-common</include>
+                    <include>io.arenadata.ranger:ranger-plugins-common</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
-                    <include>org.apache.ranger:credentialbuilder</include>
+                    <include>io.arenadata.ranger:credentialbuilder</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-lang3</include>
                     <include>org.apache.commons:commons-configuration2</include>
@@ -245,7 +245,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:jisql</include>
+                <include>io.arenadata.ranger:jisql</include>
             </includes>
             <binaries>
                 <outputDirectory>jisql/lib</outputDirectory>
@@ -263,10 +263,10 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-util</include>
-                <include>org.apache.ranger:ranger-kms-plugin-shim</include>
-                <include>org.apache.ranger:ranger-plugin-classloader</include>
-                <include>org.apache.ranger:credentialbuilder</include>
+                <include>io.arenadata.ranger:ranger-util</include>
+                <include>io.arenadata.ranger:ranger-kms-plugin-shim</include>
+                <include>io.arenadata.ranger:ranger-plugin-classloader</include>
+                <include>io.arenadata.ranger:credentialbuilder</include>
             </includes>
             <binaries>
                 <outputDirectory>ews/webapp/WEB-INF/lib</outputDirectory>
@@ -280,10 +280,10 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-kms-plugin</include>
+                <include>io.arenadata.ranger:ranger-plugins-audit</include>
+                <include>io.arenadata.ranger:ranger-plugins-cred</include>
+                <include>io.arenadata.ranger:ranger-plugins-common</include>
+                <include>io.arenadata.ranger:ranger-kms-plugin</include>
             </includes>
             <binaries>
                 <outputDirectory>ews/webapp/WEB-INF/lib/ranger-kms-plugin-impl</outputDirectory>
@@ -358,8 +358,8 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-installer</include>
-                <include>org.apache.ranger:credentialbuilder</include>
+                <include>io.arenadata.ranger:ranger-plugins-installer</include>
+                <include>io.arenadata.ranger:credentialbuilder</include>
             </includes>
             <binaries>
                 <outputDirectory>install/lib</outputDirectory>
@@ -372,7 +372,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:credentialbuilder</include>
+                <include>io.arenadata.ranger:credentialbuilder</include>
             </includes>
             <binaries>
                 <outputDirectory>cred/lib</outputDirectory>

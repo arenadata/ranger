@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ranger</groupId>
+        <groupId>io.arenadata.ranger</groupId>
         <artifactId>ranger</artifactId>
         <version>2.6.0</version>
         <relativePath>..</relativePath>
@@ -99,6 +99,36 @@
             <version>${commons.lang.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>credentialbuilder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-common-ha</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-plugins-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-plugins-cred</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ugsync-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
             <version>${commons.configuration.version}</version>
@@ -155,36 +185,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
             <version>${log4j2.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>credentialbuilder</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-common-ha</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-cred</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ugsync-util</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>

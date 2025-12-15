@@ -26,8 +26,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-hdfs-plugin-shim</include>
-        <include>org.apache.ranger:ranger-plugin-classloader</include>
+        <include>io.arenadata.ranger:ranger-hdfs-plugin-shim</include>
+        <include>io.arenadata.ranger:ranger-plugin-classloader</include>
       </includes>
       <binaries>
         <outputDirectory>lib</outputDirectory>
@@ -41,8 +41,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-installer</include>
-        <include>org.apache.ranger:credentialbuilder</include>
+        <include>io.arenadata.ranger:ranger-plugins-installer</include>
+        <include>io.arenadata.ranger:credentialbuilder</include>
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
@@ -70,10 +70,10 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-audit</include>
-        <include>org.apache.ranger:ranger-plugins-cred</include>
-        <include>org.apache.ranger:ranger-plugins-common</include>
-        <include>org.apache.ranger:ranger-hdfs-plugin</include>
+        <include>io.arenadata.ranger:ranger-plugins-audit</include>
+        <include>io.arenadata.ranger:ranger-plugins-cred</include>
+        <include>io.arenadata.ranger:ranger-plugins-common</include>
+        <include>io.arenadata.ranger:ranger-hdfs-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>lib/ranger-hdfs-plugin-impl</outputDirectory>
@@ -116,8 +116,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-hive-chained-plugin-hdfs</include>
-        <include>org.apache.ranger:ranger-hive-chained-plugin-base</include>
+        <include>io.arenadata.ranger:ranger-hive-chained-plugin-hdfs</include>
+        <include>io.arenadata.ranger:ranger-hive-chained-plugin-base</include>
       </includes>
       <binaries>
         <outputDirectory>ext</outputDirectory>

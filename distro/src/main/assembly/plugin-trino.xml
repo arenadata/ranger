@@ -26,11 +26,11 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
-                <include>org.apache.ranger:ranger-plugins-cred</include>
-                <include>org.apache.ranger:ranger-hive-chained-plugin-base</include>
-                <include>org.apache.ranger:ranger-plugins-common</include>
-                <include>org.apache.ranger:ranger-trino-plugin</include>
+                <include>io.arenadata.ranger:ranger-plugins-audit</include>
+                <include>io.arenadata.ranger:ranger-plugins-cred</include>
+                <include>io.arenadata.ranger:ranger-hive-chained-plugin-base</include>
+                <include>io.arenadata.ranger:ranger-plugins-common</include>
+                <include>io.arenadata.ranger:ranger-trino-plugin</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
@@ -81,9 +81,9 @@
                     <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>org.apache.ranger:ranger-plugins-cred</include>
-                    <include>org.apache.ranger:ranger-hive-chained-plugin-base</include>
-                    <include>org.apache.ranger:credentialbuilder</include>
+                    <include>io.arenadata.ranger:ranger-plugins-cred</include>
+                    <include>io.arenadata.ranger:ranger-hive-chained-plugin-base</include>
+                    <include>io.arenadata.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>com.sun.jersey:jersey-bundle</include>
@@ -122,8 +122,8 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-installer</include>
-                <include>org.apache.ranger:credentialbuilder</include>
+                <include>io.arenadata.ranger:ranger-plugins-installer</include>
+                <include>io.arenadata.ranger:credentialbuilder</include>
             </includes>
             <binaries>
                 <outputDirectory>install/lib</outputDirectory>
@@ -150,7 +150,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-hive-chained-plugin-trino</include>
+                <include>io.arenadata.ranger:ranger-hive-chained-plugin-trino</include>
             </includes>
             <binaries>
                 <outputDirectory>ext</outputDirectory>

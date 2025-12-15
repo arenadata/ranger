@@ -26,7 +26,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:security-admin-web</include>
+        <include>io.arenadata.ranger:security-admin-web</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp</outputDirectory>
@@ -38,7 +38,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:unixauthclient</include>
+        <include>io.arenadata.ranger:unixauthclient</include>
       </includes>
       <binaries>
         <outputDirectory>ews/ranger_jaas</outputDirectory>
@@ -50,7 +50,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-hdfs-plugin</include>
+        <include>io.arenadata.ranger:ranger-hdfs-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/hdfs</outputDirectory>
@@ -64,7 +64,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-adscc-plugin</include>
+        <include>io.arenadata.ranger:ranger-adscc-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/adscc</outputDirectory>
@@ -78,7 +78,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-ssm-plugin</include>
+        <include>io.arenadata.ranger:ranger-ssm-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/ssm</outputDirectory>
@@ -92,7 +92,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-hive-plugin</include>
+        <include>io.arenadata.ranger:ranger-hive-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/hive</outputDirectory>
@@ -111,7 +111,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-hbase-plugin</include>
+        <include>io.arenadata.ranger:ranger-hbase-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/hbase</outputDirectory>
@@ -140,7 +140,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-knox-plugin</include>
+        <include>io.arenadata.ranger:ranger-knox-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/knox</outputDirectory>
@@ -160,7 +160,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-storm-plugin</include>
+        <include>io.arenadata.ranger:ranger-storm-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/storm</outputDirectory>
@@ -177,7 +177,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-yarn-plugin</include>
+        <include>io.arenadata.ranger:ranger-yarn-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/yarn</outputDirectory>
@@ -195,7 +195,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-ozone-plugin</include>
+        <include>io.arenadata.ranger:ranger-ozone-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/ozone</outputDirectory>
@@ -230,7 +230,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-kms-plugin</include>
+        <include>io.arenadata.ranger:ranger-kms-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kms</outputDirectory>
@@ -239,7 +239,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-kms-plugin</include>
+          <include>io.arenadata.ranger:ranger-kms-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -247,7 +247,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:embeddedwebserver</include>
+        <include>io.arenadata.ranger:embeddedwebserver</include>
       </includes>
       <binaries>
         <outputDirectory>ews/lib</outputDirectory>
@@ -260,7 +260,7 @@
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-          <include>org.apache.ranger:ranger-plugins-common</include>
+          <include>io.arenadata.ranger:ranger-plugins-common</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
@@ -282,7 +282,7 @@
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
-          <include>org.apache.ranger:credentialbuilder</include>
+          <include>io.arenadata.ranger:credentialbuilder</include>
           <include>org.elasticsearch.client:elasticsearch-rest-client</include>
           <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
           <include>org.elasticsearch:elasticsearch-x-content</include>
@@ -296,8 +296,8 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>
-          <include>org.apache.ranger:ranger-plugins-cred</include>
-          <include>org.apache.ranger:ugsyn-util</include>
+          <include>io.arenadata.ranger:ranger-plugins-cred</include>
+          <include>io.arenadata.ranger:ugsyn-util</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
@@ -311,7 +311,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:credentialbuilder</include>
+        <include>io.arenadata.ranger:credentialbuilder</include>
       </includes>
       <binaries>
         <outputDirectory>cred/lib</outputDirectory>
@@ -342,7 +342,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:jisql</include>
+        <include>io.arenadata.ranger:jisql</include>
       </includes>
       <binaries>
         <outputDirectory>jisql/lib</outputDirectory>
@@ -359,7 +359,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-kafka-plugin</include>
+        <include>io.arenadata.ranger:ranger-kafka-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kafka</outputDirectory>
@@ -368,7 +368,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-kafka-plugin</include>
+          <include>io.arenadata.ranger:ranger-kafka-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -376,7 +376,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-solr-plugin</include>
+        <include>io.arenadata.ranger:ranger-solr-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/solr</outputDirectory>
@@ -385,7 +385,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-solr-plugin</include>
+          <include>io.arenadata.ranger:ranger-solr-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -393,7 +393,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-nifi-plugin</include>
+        <include>io.arenadata.ranger:ranger-nifi-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/nifi</outputDirectory>
@@ -402,7 +402,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-nifi-plugin</include>
+          <include>io.arenadata.ranger:ranger-nifi-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -410,7 +410,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
+        <include>io.arenadata.ranger:ranger-nifi-registry-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/nifi-registry</outputDirectory>
@@ -419,7 +419,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
+          <include>io.arenadata.ranger:ranger-nifi-registry-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -427,7 +427,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-atlas-plugin</include>
+        <include>io.arenadata.ranger:ranger-atlas-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/atlas</outputDirectory>
@@ -436,7 +436,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-nifi-registry-plugin</include>
+          <include>io.arenadata.ranger:ranger-nifi-registry-plugin</include>
           <include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
         </includes>
       </binaries>
@@ -445,7 +445,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-sqoop-plugin</include>
+        <include>io.arenadata.ranger:ranger-sqoop-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/sqoop</outputDirectory>
@@ -454,7 +454,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-sqoop-plugin</include>
+          <include>io.arenadata.ranger:ranger-sqoop-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -462,7 +462,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-kylin-plugin</include>
+        <include>io.arenadata.ranger:ranger-kylin-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/kylin</outputDirectory>
@@ -471,7 +471,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-kylin-plugin</include>
+          <include>io.arenadata.ranger:ranger-kylin-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -479,7 +479,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
+        <include>io.arenadata.ranger:ranger-elasticsearch-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/elasticsearch</outputDirectory>
@@ -488,7 +488,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
+          <include>io.arenadata.ranger:ranger-elasticsearch-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -496,7 +496,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-presto-plugin</include>
+        <include>io.arenadata.ranger:ranger-presto-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/presto</outputDirectory>
@@ -505,7 +505,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-presto-plugin</include>
+          <include>io.arenadata.ranger:ranger-presto-plugin</include>
           <include>io.prestosql:presto-spi:jar:${presto.version}</include>
           <include>io.prestosql:presto-jdbc:jar:${presto.version}</include>
         </includes>
@@ -515,7 +515,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-trino-plugin</include>
+        <include>io.arenadata.ranger:ranger-trino-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/trino</outputDirectory>
@@ -524,7 +524,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-trino-plugin</include>
+          <include>io.arenadata.ranger:ranger-trino-plugin</include>
           <include>io.trino:trino-spi:jar:${trino.version}</include>
           <include>io.trino:trino-jdbc:jar:${trino.version}</include>
         </includes>
@@ -534,7 +534,7 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-kudu-plugin</include>
+        <include>io.arenadata.ranger:ranger-kudu-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kudu</outputDirectory>
@@ -543,14 +543,14 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-kudu-plugin</include>
+          <include>io.arenadata.ranger:ranger-kudu-plugin</include>
         </includes>
       </binaries>
     </moduleSet>
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-schema-registry-plugin</include>
+        <include>io.arenadata.ranger:ranger-schema-registry-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/schema-registry</outputDirectory>
@@ -559,7 +559,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.ranger:ranger-schema-registry-plugin</include>
+          <include>io.arenadata.ranger:ranger-schema-registry-plugin</include>
         </includes>
       </binaries>
     </moduleSet>

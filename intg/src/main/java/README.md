@@ -44,7 +44,7 @@ import org.apache.ranger.plugin.model.*;
 Add the following dependency to pom.xml
 ```xml
 <dependency>
-    <groupId>org.apache.ranger</groupId>
+    <groupId>io.arenadata.ranger</groupId>
     <artifactId>ranger-intg</artifactId>
     <version>3.0.0-SNAPSHOT</version>
     <scope>compile</scope>

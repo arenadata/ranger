@@ -26,8 +26,8 @@
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
-				<include>org.apache.ranger:unixauthservice</include>
-				<include>org.apache.ranger:unixusersync</include>
+				<include>io.arenadata.ranger:unixauthservice</include>
+				<include>io.arenadata.ranger:unixusersync</include>
 			</includes>
 			<binaries>
 				<outputDirectory>dist</outputDirectory>
@@ -51,20 +51,20 @@
 							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 							<include>org.apache.hadoop:hadoop-common</include>
 							<include>org.apache.commons:commons-csv</include>
-							<include>org.apache.ranger:credentialbuilder</include>
-							<include>org.apache.ranger:ranger-util</include>
-							<include>org.apache.ranger:ranger-plugins-cred</include>
+							<include>io.arenadata.ranger:credentialbuilder</include>
+							<include>io.arenadata.ranger:ranger-util</include>
+							<include>io.arenadata.ranger:ranger-plugins-cred</include>
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 							<include>commons-codec:commons-codec</include>
-							<include>org.apache.ranger:ranger-plugins-common</include>
-							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
+							<include>io.arenadata.ranger:ranger-plugins-common</include>
+							<include>io.arenadata.ranger:ranger-common-ha:jar:${project.version}</include>
 							<include>org.apache.curator:curator-framework:jar:${curator.version}</include>
 							<include>org.apache.curator:curator-recipes:jar:${curator.version}</include>
 							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
-							<include>org.apache.ranger:ugsync-util</include>
+							<include>io.arenadata.ranger:ugsync-util</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
 							<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -104,7 +104,7 @@
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
-				<include>org.apache.ranger:ranger-plugins-installer</include>
+				<include>io.arenadata.ranger:ranger-plugins-installer</include>
 			</includes>
 			<binaries>
 				<outputDirectory>installer/lib</outputDirectory>

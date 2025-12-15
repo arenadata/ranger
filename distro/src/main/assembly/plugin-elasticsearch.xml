@@ -26,8 +26,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-elasticsearch-plugin-shim</include>
-        <include>org.apache.ranger:ranger-plugin-classloader</include>
+        <include>io.arenadata.ranger:ranger-elasticsearch-plugin-shim</include>
+        <include>io.arenadata.ranger:ranger-plugin-classloader</include>
       </includes>
       <binaries>
         <outputDirectory>lib/ranger-elasticsearch-plugin</outputDirectory>
@@ -47,10 +47,10 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-audit</include>
-        <include>org.apache.ranger:ranger-plugins-cred</include>
-        <include>org.apache.ranger:ranger-plugins-common</include>
-        <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
+        <include>io.arenadata.ranger:ranger-plugins-audit</include>
+        <include>io.arenadata.ranger:ranger-plugins-cred</include>
+        <include>io.arenadata.ranger:ranger-plugins-common</include>
+        <include>io.arenadata.ranger:ranger-elasticsearch-plugin</include>
       </includes>
       <binaries>
         <outputDirectory>lib/ranger-elasticsearch-plugin/ranger-elasticsearch-plugin-impl</outputDirectory>
@@ -107,8 +107,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-installer</include>
-        <include>org.apache.ranger:credentialbuilder</include>
+        <include>io.arenadata.ranger:ranger-plugins-installer</include>
+        <include>io.arenadata.ranger:credentialbuilder</include>
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
@@ -129,7 +129,7 @@
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.ranger:ranger-plugins-cred</include>
+          <include>io.arenadata.ranger:ranger-plugins-cred</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
         </includes>

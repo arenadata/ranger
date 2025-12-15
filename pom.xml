@@ -22,7 +22,7 @@
         <artifactId>apache</artifactId>
         <version>20</version>
     </parent>
-    <groupId>org.apache.ranger</groupId>
+    <groupId>io.arenadata.ranger</groupId>
     <artifactId>ranger</artifactId>
     <version>2.6.0</version>
     <packaging>pom</packaging>

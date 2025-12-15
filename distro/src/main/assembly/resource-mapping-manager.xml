@@ -26,7 +26,7 @@
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
-				<include>org.apache.ranger:resource-mapping-manager</include>
+				<include>io.arenadata.ranger:resource-mapping-manager</include>
 			</includes>
 			<binaries>
 				<outputDirectory>dist</outputDirectory>

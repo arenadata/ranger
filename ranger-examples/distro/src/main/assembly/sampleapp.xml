@@ -26,7 +26,7 @@
     <moduleSet>
      <useAllReactorProjects>true</useAllReactorProjects>
      <includes>
-       <include>org.apache.ranger:sampleapp</include>
+       <include>io.arenadata.ranger:sampleapp</include>
      </includes>
      <binaries>
         <outputDirectory>lib</outputDirectory>

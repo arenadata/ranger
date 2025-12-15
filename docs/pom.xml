@@ -27,7 +27,7 @@
     </description>
     <url>http://ranger.apache.org/</url>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.apache.ranger</groupId>
+    <groupId>io.arenadata.ranger</groupId>
     <version>2.6.0</version>
     <artifactId>ranger</artifactId>
     <packaging>pom</packaging>

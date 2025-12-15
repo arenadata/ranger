@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache.ranger</groupId>
+        <groupId>io.arenadata.ranger</groupId>
         <artifactId>ranger-examples</artifactId>
         <version>2.6.0</version>
         <relativePath>..</relativePath>
@@ -31,22 +31,22 @@
     <!--Add a dependency here to ensure this module is the final one built-->
     <dependencies>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>conditions-enrichers</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>ranger-sampleapp-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>sample-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>sampleapp</artifactId>
             <version>${project.version}</version>
         </dependency>
