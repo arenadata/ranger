@@ -832,6 +832,7 @@
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
+                <module>plugin-s3</module>
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
@@ -989,6 +990,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>plugin-ozone</module>
+                <module>plugin-s3</module>
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
@@ -1174,6 +1176,7 @@
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
+                <module>plugin-s3</module>
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
@@ -1262,6 +1265,7 @@
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
+                <module>plugin-s3</module>
                 <module>plugin-schema-registry</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>

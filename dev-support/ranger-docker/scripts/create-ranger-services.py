@@ -65,7 +65,15 @@ ozone = RangerService({'name': 'dev_ozone',
                                    'ozone.om.http-address': 'http://om:9874',
                                    'hadoop.security.authentication': 'simple'}})
 
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone]
+s3 = RangerService({'name': 'dev_s3',
+                    'type': 's3',
+                    'displayName': 'dev_s3',
+                    'configs': {'endpoint': 's3://localhost:9000',
+                                'accesskey': 'minioadmin',
+                                'password': 'minioadmin',
+                                'region': 'us-east-1'}})
+
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, s3]
 for service in services:
     try:
         if service_not_exists(service):
