@@ -314,6 +314,12 @@
         </dependency>
         <dependency>
             <groupId>io.arenadata.ranger</groupId>
+            <artifactId>ranger-s3-plugin</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.arenadata.ranger</groupId>
             <artifactId>ranger-solr-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
