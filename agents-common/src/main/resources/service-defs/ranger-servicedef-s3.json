@@ -1,0 +1,126 @@
+{
+    "id": 202,
+    "name": "s3",
+    "displayName": "s3",
+    "implClass": "org.apache.ranger.services.s3.RangerServiceS3",
+    "label": "S3",
+    "description": "S3 Repository",
+    "guid": "b8290b7f-6f69-44a9-89cc-06b6975ea676",
+    "resources": [
+        {
+            "itemId": 1,
+            "name": "endpoint",
+            "type": "string",
+            "level": 10,
+            "mandatory": true,
+            "lookupSupported": true,
+            "recursiveSupported": false,
+            "excludesSupported": true,
+            "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+            "matcherOptions": {
+                "wildCard": "true",
+                "ignoreCase": "false"
+            },
+            "label": "S3 Endpoint",
+            "description": "S3 Endpoint",
+            "isValidLeaf": false
+        },
+        {
+            "itemId": 2,
+            "name": "bucket",
+            "type": "string",
+            "level": 20,
+            "parent": "endpoint",
+            "mandatory": true,
+            "lookupSupported": true,
+            "recursiveSupported": false,
+            "excludesSupported": true,
+            "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+            "matcherOptions": {
+                "wildCard": "true",
+                "ignoreCase": "false"
+            },
+            "label": "S3 Bucket",
+            "description": "S3 Bucket",
+            "isValidLeaf": true
+        },
+        {
+            "itemId": 3,
+            "name": "path",
+            "type": "string",
+            "level": 30,
+            "parent": "bucket",
+            "mandatory": true,
+            "lookupSupported": true,
+            "recursiveSupported": false,
+            "excludesSupported": true,
+            "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+            "matcherOptions": {
+                "wildCard": "true",
+                "ignoreCase": "false"
+            },
+            "label": "S3 Path",
+            "description": "S3 Path",
+            "isValidLeaf": true
+        }
+    ],
+    "accessTypes": [
+        {
+            "itemId": 1,
+            "name": "read",
+            "label": "Read"
+        },
+        {
+            "itemId": 2,
+            "name": "write",
+            "label": "Write"
+        }
+    ],
+    "configs": [
+        {
+            "itemId": 1,
+            "name": "endpoint",
+            "type": "string",
+            "mandatory": true,
+            "label": "S3 Endpoint",
+            "description": "S3 Endpoint URL (e.g., s3://host:port)"
+        },
+        {
+            "itemId": 2,
+            "name": "accesskey",
+            "type": "string",
+            "mandatory": true,
+            "label": "Access Key",
+            "description": "AWS Access Key"
+        },
+        {
+            "itemId": 3,
+            "name": "password",
+            "type": "password",
+            "mandatory": true,
+            "label": "Secret Key",
+            "description": "AWS Secret Key"
+        },
+        {
+            "itemId": 4,
+            "name": "region",
+            "type": "string",
+            "mandatory": false,
+            "defaultValue": "eu-west-1",
+            "label": "AWS Region",
+            "description": "AWS Region (default: eu-west-1)"
+        }
+    ],
+    "policyConditions": [
+        {
+            "itemId": 1,
+            "name": "ip-range",
+            "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+            "label": "IP Address Range",
+            "description": "IP Address Range"
+        }
+    ],
+    "dataMaskDef": {},
+    "rowFilterDef": {}
+}
+
