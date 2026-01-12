@@ -47,8 +47,8 @@ public class EmbeddedServiceDefsUtil {
 	private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServiceDefsUtil.class);
 
 
-	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
+    // following servicedef list should be reviewed/updated whenever a new embedded service-def is added
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure,s3";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";

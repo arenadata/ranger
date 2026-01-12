@@ -1004,6 +1004,35 @@
             </build>
         </profile>
         <profile>
+            <id>ranger-s3-plugin</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${assembly.plugin.version}</version>
+                        <configuration>
+                            <finalName>ranger-${project.version}</finalName>
+                            <outputDirectory>../target</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <skipAssembly>false</skipAssembly>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/plugin-s3.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>ranger-schema-registry-plugin</id>
             <build>
                 <plugins>
