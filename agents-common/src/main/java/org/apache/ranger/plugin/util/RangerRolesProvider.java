@@ -27,13 +27,11 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.util.Date;
-import java.util.HashSet;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.*;
 
 
 public class RangerRolesProvider {
@@ -48,6 +46,8 @@ public class RangerRolesProvider {
 	private final String            cacheFileName;
 	private final String			cacheFileNamePrefix;
 	private final String            cacheDir;
+	private final Set<PosixFilePermission> cacheFilePerms;
+	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final boolean           disableCacheIfServiceNotFound;
 
 	private long	lastActivationTimeInMillis;
@@ -78,6 +78,11 @@ public class RangerRolesProvider {
 		this.cacheDir = cacheDir;
 		String propertyPrefix = config.getPropertyPrefix();
 		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
+		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.file.perms")), "644");
+		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
+
+		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
+		this.cacheDirPerms = FileUtils.parsePermissions(cacheDirPermsString);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
@@ -275,9 +280,9 @@ public class RangerRolesProvider {
 					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
 				} else {
 					try {
-						cacheDirTmp.mkdirs();
+						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
 						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
-					} catch (SecurityException ex) {
+					} catch (Exception ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
 				}
@@ -294,6 +299,10 @@ public class RangerRolesProvider {
 				Writer writer = null;
 
 				try {
+					if (!cacheFile.exists()) {
+						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
+						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
+					}
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, roles);
 		        } catch (Exception excp) {
