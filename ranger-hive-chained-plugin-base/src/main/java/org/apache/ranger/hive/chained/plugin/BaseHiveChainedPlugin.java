@@ -94,10 +94,11 @@ public abstract class BaseHiveChainedPlugin extends ResourceMappingChainedPlugin
     }
 
     protected HiveAccessType toAccessType(String rawAccessType) {
-        return rawAccessType.equals(ANY_ACCESS)
+        String accessType = rawAccessType.trim();
+        return accessType.equals(ANY_ACCESS)
                 // Hive plugin uses "USE" access type as synonym for "_any"
                 ? HiveAccessType.USE
-                : HiveAccessType.valueOf(rawAccessType.toUpperCase());
+                : HiveAccessType.valueOf(accessType.toUpperCase());
     }
 
     protected abstract Optional<AccessMappings> getAccessTypeMappings(HiveObjectType hiveObjectType);
