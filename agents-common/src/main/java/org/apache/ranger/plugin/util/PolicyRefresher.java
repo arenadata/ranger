@@ -19,15 +19,8 @@
 
 package org.apache.ranger.plugin.util;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.util.Timer;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -36,8 +29,14 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
+import java.util.Timer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class PolicyRefresher extends Thread {
@@ -53,6 +52,8 @@ public class PolicyRefresher extends Thread {
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
+	private final Set<PosixFilePermission> cacheFilePerms;
+	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final Gson                           gson;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
@@ -74,6 +75,11 @@ public class PolicyRefresher extends Thread {
 		this.serviceType = plugIn.getServiceType();
 		this.serviceName = plugIn.getServiceName();
 		this.cacheDir    = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
+		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
+		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
+
+		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
+		this.cacheDirPerms = FileUtils.parsePermissions(cacheDirPermsString);
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -414,9 +420,9 @@ public class PolicyRefresher extends Thread {
 					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
 				} else {
 					try {
-						cacheDirTmp.mkdirs();
+						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
 						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
-					} catch (SecurityException ex) {
+					} catch (Exception ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
 				}
@@ -433,6 +439,10 @@ public class PolicyRefresher extends Thread {
 				Writer writer = null;
 	
 				try {
+					if (!cacheFile.exists()) {
+						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
+						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
+					}
 					writer = new FileWriter(cacheFile);
 	
 			        gson.toJson(policies, writer);
