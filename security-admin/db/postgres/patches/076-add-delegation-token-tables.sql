@@ -13,16 +13,20 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE SEQUENCE IF NOT EXISTS x_ranger_dt_master_key_seq;
+
 CREATE TABLE IF NOT EXISTS x_ranger_dt_master_key (
-  id          BIGSERIAL PRIMARY KEY,
+  id          BIGINT DEFAULT nextval('x_ranger_dt_master_key_seq'::regclass) PRIMARY KEY,
   key_id      INT NOT NULL UNIQUE,
   expiry_date BIGINT NOT NULL,
   key_bytes   BYTEA NOT NULL,
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE SEQUENCE IF NOT EXISTS x_ranger_delegation_token_seq;
+
 CREATE TABLE IF NOT EXISTS x_ranger_delegation_token (
-  id              BIGSERIAL PRIMARY KEY,
+  id              BIGINT DEFAULT nextval('x_ranger_delegation_token_seq'::regclass) PRIMARY KEY,
   sequence_number INT NOT NULL UNIQUE,
   owner           VARCHAR(255) NOT NULL,
   renewer         VARCHAR(255),
