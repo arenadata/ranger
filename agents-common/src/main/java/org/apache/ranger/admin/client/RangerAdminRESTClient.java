@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
@@ -1016,9 +1017,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			String tokenEncoded = result.get("urlString");
 			Token<RangerDelegationTokenIdentifier> token = new Token<>();
 			token.decodeFromUrlString(tokenEncoded);
+			token.setService(new Text(restClient.getUrl()));
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerAdminRESTClient.getDelegationToken(): token obtained");
+				LOG.debug("<== RangerAdminRESTClient.getDelegationToken(): token obtained, service={}", restClient.getUrl());
 			}
 			return token;
 		} else {
