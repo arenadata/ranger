@@ -166,6 +166,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 		if (ssoEnabled) {
 			authType = XXAuthSession.AUTH_TYPE_SSO;
+		} else if (request.getAttribute("delegationTokenEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("delegationTokenEnabled")))) {
+			authType = XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN;
 		} else if (request.getAttribute("spnegoEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("spnegoEnabled")))){
 			if (request.getAttribute("trustedProxyEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("trustedProxyEnabled")))) {
 				if (logger.isDebugEnabled()) {

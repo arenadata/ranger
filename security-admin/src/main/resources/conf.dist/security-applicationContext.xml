@@ -65,6 +65,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		<intercept-url pattern="/**" access="isAuthenticated()"/>
 		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
 		<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
+		<security:custom-filter ref="delegationTokenAuthFilter" before="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
@@ -104,6 +105,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
 	</beans:bean>
+
+	<beans:bean id="delegationTokenAuthFilter" class="org.apache.ranger.security.web.filter.RangerDelegationTokenAuthFilter">
+    </beans:bean>
 
 	<beans:bean id="krbAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerKRBAuthenticationFilter">
     </beans:bean>
