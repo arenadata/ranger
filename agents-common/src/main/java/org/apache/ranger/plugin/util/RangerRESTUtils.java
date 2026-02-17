@@ -89,6 +89,12 @@ public class RangerRESTUtils {
 
 	public static final String REST_PARAM_DIFF_ID   = "diffId";
 
+	public static final String REST_URL_DELEGATION_TOKEN        = "/service/delegation-token";
+	public static final String REST_URL_DELEGATION_TOKEN_RENEW  = "/service/delegation-token/renew";
+	public static final String REST_URL_DELEGATION_TOKEN_CANCEL = "/service/delegation-token/cancel";
+	public static final String REST_PARAM_RENEWER               = "renewer";
+	public static final String HEADER_DELEGATION_TOKEN          = "X-Delegation-Token-Encoded";
+
 	public static String hostname;
 
 	static {
