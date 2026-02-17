@@ -23,12 +23,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 
 public abstract class AbstractRangerAdminClient implements RangerAdminClient {
@@ -127,6 +129,20 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
         return null;
     }
 
+    @Override
+    public Token<RangerDelegationTokenIdentifier> getDelegationToken(String renewer) throws Exception {
+        return null;
+    }
+
+    @Override
+    public long renewDelegationToken(Token<RangerDelegationTokenIdentifier> token) throws Exception {
+        return 0;
+    }
+
+    @Override
+    public void cancelDelegationToken(Token<RangerDelegationTokenIdentifier> token) throws Exception {
+    }
+
     public boolean isKerberosEnabled(UserGroupInformation user) {
         final boolean ret;
 
@@ -137,5 +153,23 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
         }
 
         return ret;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Token<RangerDelegationTokenIdentifier> getDelegationTokenFromUGI() {
+        try {
+            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+            if (ugi != null) {
+                Collection<Token<?>> tokens = ugi.getCredentials().getAllTokens();
+                for (Token<?> token : tokens) {
+                    if (RangerDelegationTokenIdentifier.RANGER_DELEGATION_KIND.equals(token.getKind())) {
+                        return (Token<RangerDelegationTokenIdentifier>) token;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Failed to get delegation token from UGI", e);
+        }
+        return null;
     }
 }

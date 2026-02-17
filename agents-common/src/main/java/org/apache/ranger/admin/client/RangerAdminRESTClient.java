@@ -34,8 +34,10 @@ import javax.ws.rs.core.NewCookie;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
 import org.apache.http.HttpStatus;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -141,29 +143,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, Boolean.toString(supportsPolicyDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Service policy if updated as user : " + user);
-			}
-
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					String relativeURL = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceNameUrlParam;
-
-					return restClient.get(relativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : "+e.getMessage());
-				}
-
-				return null;
-			});
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Service policy if updated with old api call");
-			}
-			String relativeURL = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceNameUrlParam;
-			response = restClient.get(relativeURL, queryParams, sessionId);
-		}
+		String secureURL    = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceNameUrlParam;
+		String nonSecureURL = RangerRESTUtils.REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceNameUrlParam;
+		response = getWithAuth(secureURL, nonSecureURL, queryParams, user, isSecureMode, sessionId);
 
 		checkAndResetSessionCookie(response);
 
@@ -226,28 +208,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Roles updated as user : " + user);
-			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
-
-					return restClient.get(relativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : "+e.getMessage());
-				}
-
-				return null;
-			});
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Roles updated as user : " + user);
-			}
-			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
-			response = restClient.get(relativeURL, queryParams, sessionId);
-		}
+		String secureURL    = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
+		String nonSecureURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
+		response = getWithAuth(secureURL, nonSecureURL, queryParams, user, isSecureMode, sessionId);
 
 		checkAndResetSessionCookie(response);
 
@@ -820,25 +783,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, Boolean.toString(supportsTagDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("getServiceTagsIfUpdated as user " + user);
-			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					String relativeURL = RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceNameUrlParam;
-
-					return restClient.get(relativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : "+e.getMessage());
-				}
-
-				return null;
-			});
-		} else {
-			String relativeURL = RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceNameUrlParam;
-			response = restClient.get(relativeURL, queryParams, sessionId);
-		}
+		String secureURL    = RangerRESTUtils.REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceNameUrlParam;
+		String nonSecureURL = RangerRESTUtils.REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceNameUrlParam;
+		response = getWithAuth(secureURL, nonSecureURL, queryParams, user, isSecureMode, sessionId);
 
 		checkAndResetSessionCookie(response);
 
@@ -951,28 +898,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user : " + user);
-			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
-
-					return restClient.get(relativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : "+e.getMessage());
-				}
-
-				return null;
-			});
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user : " + user);
-			}
-			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + serviceNameUrlParam;
-			response = restClient.get(relativeURL, queryParams, sessionId);
-		}
+		String secureURL    = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
+		String nonSecureURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + serviceNameUrlParam;
+		response = getWithAuth(secureURL, nonSecureURL, queryParams, user, isSecureMode, sessionId);
 
 		checkAndResetSessionCookie(response);
 
@@ -1021,8 +949,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.getResourceMappingDiffs({}, {}, {})", sourceService, targetService, diffId);
 		}
 
-		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		Cookie sessionId = this.sessionId;
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = isKerberosEnabled(user);
+		final Cookie sessionId = this.sessionId;
 
 		Map<String, String> queryParams = new HashMap<>();
 		if (diffId != null) {
@@ -1030,23 +959,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 		String relativeURL = String.format("/service/resource-mappings/%s/%s/diffs/new", sourceService, targetService);
 
-		final ClientResponse response;
-		if (isKerberosEnabled(user)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("getResourceMappingDiffs as user {}", user);
-			}
-			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					return restClient.get(relativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response", e);
-				}
-
-				return null;
-			});
-		} else {
-			response = restClient.get(relativeURL, queryParams, sessionId);
-		}
+		final ClientResponse response = getWithAuth(relativeURL, relativeURL, queryParams, user, isSecureMode, sessionId);
 
 		checkAndResetSessionCookie(response);
 
@@ -1064,6 +977,167 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		return diffs;
+	}
+
+	@Override
+	public Token<RangerDelegationTokenIdentifier> getDelegationToken(final String renewer) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getDelegationToken(renewer=" + renewer + ")");
+		}
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = isKerberosEnabled(user);
+
+		if (!isSecureMode) {
+			throw new UnsupportedOperationException("Delegation tokens require Kerberos authentication");
+		}
+
+		final Cookie sessionId = this.sessionId;
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+		if (renewer != null) {
+			queryParams.put(RangerRESTUtils.REST_PARAM_RENEWER, renewer);
+		}
+
+		final ClientResponse response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			try {
+				return restClient.get(RangerRESTUtils.REST_URL_DELEGATION_TOKEN, queryParams, sessionId);
+			} catch (Exception e) {
+				LOG.error("Failed to get delegation token", e);
+			}
+			return null;
+		});
+
+		checkAndResetSessionCookie(response);
+
+		if (response != null && response.getStatus() == HttpServletResponse.SC_OK) {
+			@SuppressWarnings("unchecked")
+			Map<String, String> result = JsonUtilsV2.readResponse(response, Map.class);
+			String tokenEncoded = result.get("urlString");
+			Token<RangerDelegationTokenIdentifier> token = new Token<>();
+			token.decodeFromUrlString(tokenEncoded);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerAdminRESTClient.getDelegationToken(): token obtained");
+			}
+			return token;
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			throw new Exception("Failed to get delegation token: " + (resp != null ? resp.getMessage() : "null response"));
+		}
+	}
+
+	@Override
+	public long renewDelegationToken(final Token<RangerDelegationTokenIdentifier> token) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.renewDelegationToken()");
+		}
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = isKerberosEnabled(user);
+		final Cookie sessionId = this.sessionId;
+
+		final Map<String, String> requestBody = new HashMap<>();
+		requestBody.put("token", token.encodeToUrlString());
+
+		final ClientResponse response;
+		if (isSecureMode) {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+				try {
+					return restClient.put(RangerRESTUtils.REST_URL_DELEGATION_TOKEN_RENEW, (Object) requestBody, sessionId);
+				} catch (Exception e) {
+					LOG.error("Failed to renew delegation token", e);
+				}
+				return null;
+			});
+		} else {
+			response = restClient.put(RangerRESTUtils.REST_URL_DELEGATION_TOKEN_RENEW, (Object) requestBody, sessionId);
+		}
+
+		checkAndResetSessionCookie(response);
+
+		if (response != null && response.getStatus() == HttpServletResponse.SC_OK) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> result = JsonUtilsV2.readResponse(response, Map.class);
+			Number expiryTime = (Number) result.get("expirationTime");
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerAdminRESTClient.renewDelegationToken(): newExpiry={}", expiryTime);
+			}
+			return expiryTime.longValue();
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			throw new Exception("Failed to renew delegation token: " + (resp != null ? resp.getMessage() : "null response"));
+		}
+	}
+
+	@Override
+	public void cancelDelegationToken(final Token<RangerDelegationTokenIdentifier> token) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.cancelDelegationToken()");
+		}
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = isKerberosEnabled(user);
+		final Cookie sessionId = this.sessionId;
+
+		final Map<String, String> requestBody = new HashMap<>();
+		requestBody.put("token", token.encodeToUrlString());
+
+		final ClientResponse response;
+		if (isSecureMode) {
+			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+				try {
+					return restClient.put(RangerRESTUtils.REST_URL_DELEGATION_TOKEN_CANCEL, (Object) requestBody, sessionId);
+				} catch (Exception e) {
+					LOG.error("Failed to cancel delegation token", e);
+				}
+				return null;
+			});
+		} else {
+			response = restClient.put(RangerRESTUtils.REST_URL_DELEGATION_TOKEN_CANCEL, (Object) requestBody, sessionId);
+		}
+
+		checkAndResetSessionCookie(response);
+
+		if (response == null || (response.getStatus() != HttpServletResponse.SC_OK && response.getStatus() != HttpServletResponse.SC_NO_CONTENT)) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			throw new Exception("Failed to cancel delegation token: " + (resp != null ? resp.getMessage() : "null response"));
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.cancelDelegationToken()");
+		}
+	}
+
+	private ClientResponse getWithAuth(String secureRelativeURL, String nonSecureRelativeURL,
+									   Map<String, String> queryParams,
+									   UserGroupInformation user, boolean isSecureMode,
+									   Cookie sessionId) throws Exception {
+		Token<RangerDelegationTokenIdentifier> delegationToken = getDelegationTokenFromUGI();
+
+		if (delegationToken != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using delegation token for Ranger auth");
+			}
+			Map<String, String> headers = new HashMap<>();
+			headers.put(RangerRESTUtils.HEADER_DELEGATION_TOKEN, delegationToken.encodeToUrlString());
+			return restClient.get(secureRelativeURL, queryParams, sessionId, headers);
+		} else if (isSecureMode) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Using Kerberos auth as user: " + user);
+			}
+			return MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+				try {
+					return restClient.get(secureRelativeURL, queryParams, sessionId);
+				} catch (Exception e) {
+					LOG.error("Failed to get response: " + e.getMessage());
+				}
+				return null;
+			});
+		} else {
+			return restClient.get(nonSecureRelativeURL, queryParams, sessionId);
+		}
 	}
 
 	private void checkAndResetSessionCookie(ClientResponse response) {
