@@ -325,5 +325,8 @@ public abstract class RangerDaoManagerBase {
 	public XXRMSResourceMappingDao getXXRMSResourceMapping() { return new XXRMSResourceMappingDao(this); }
 
 	public XXResourceMappingDiffDao getXXResourceMappingDiff() { return new XXResourceMappingDiffDao(this); }
+
+	public XXRangerDTMasterKeyDao getXXRangerDTMasterKey() { return new XXRangerDTMasterKeyDao(this); }
+	public XXRangerDelegationTokenDao getXXRangerDelegationToken() { return new XXRangerDelegationTokenDao(this); }
 }
 
