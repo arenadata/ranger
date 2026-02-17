@@ -223,7 +223,8 @@ public class TestRangerDelegationTokenSecretManager {
     }
 
     /**
-     * Testable subclass that bypasses PropertiesUtil config loading.
+     * Testable subclass that bypasses PropertiesUtil config loading
+     * and executes DB callbacks directly without TransactionTemplate.
      */
     private static class TestableSecretManager extends RangerDelegationTokenSecretManager {
         TestableSecretManager() {
@@ -233,6 +234,11 @@ public class TestRangerDelegationTokenSecretManager {
         @Override
         public boolean isEnabled() {
             return true;
+        }
+
+        @Override
+        protected <T> T executeInTransaction(org.springframework.transaction.support.TransactionCallback<T> action) {
+            return action.doInTransaction(null);
         }
     }
 }

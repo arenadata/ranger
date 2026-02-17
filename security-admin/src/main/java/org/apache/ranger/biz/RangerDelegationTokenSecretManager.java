@@ -42,7 +42,12 @@ import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Component
 public class RangerDelegationTokenSecretManager
@@ -57,6 +62,10 @@ public class RangerDelegationTokenSecretManager
 
     @Autowired
     private RangerDaoManager daoManager;
+
+    @Autowired
+    @Qualifier("transactionManager")
+    private PlatformTransactionManager txManager;
 
     private final boolean enabled;
     private volatile boolean started = false;
@@ -158,11 +167,15 @@ public class RangerDelegationTokenSecretManager
             LOG.debug("==> storeNewMasterKey(keyId={})", key.getKeyId());
         }
         try {
-            XXRangerDTMasterKey entity = new XXRangerDTMasterKey();
-            entity.setKeyId(key.getKeyId());
-            entity.setExpiryDate(key.getExpiryDate());
-            entity.setKeyBytes(serializeDelegationKey(key));
-            daoManager.getXXRangerDTMasterKey().create(entity);
+            byte[] keyBytes = serializeDelegationKey(key);
+            executeInTransaction(status -> {
+                XXRangerDTMasterKey entity = new XXRangerDTMasterKey();
+                entity.setKeyId(key.getKeyId());
+                entity.setExpiryDate(key.getExpiryDate());
+                entity.setKeyBytes(keyBytes);
+                daoManager.getXXRangerDTMasterKey().create(entity);
+                return null;
+            });
         } catch (Exception e) {
             throw new IOException("Failed to store master key: keyId=" + key.getKeyId(), e);
         }
@@ -174,7 +187,10 @@ public class RangerDelegationTokenSecretManager
             LOG.debug("==> removeStoredMasterKey(keyId={})", key.getKeyId());
         }
         try {
-            daoManager.getXXRangerDTMasterKey().deleteByKeyId(key.getKeyId());
+            executeInTransaction(status -> {
+                daoManager.getXXRangerDTMasterKey().deleteByKeyId(key.getKeyId());
+                return null;
+            });
         } catch (Exception e) {
             LOG.warn("Failed to remove master key: keyId=" + key.getKeyId(), e);
         }
@@ -186,17 +202,21 @@ public class RangerDelegationTokenSecretManager
             LOG.debug("==> storeNewToken(seqNum={}, owner={})", ident.getSequenceNumber(), ident.getOwner());
         }
         try {
-            XXRangerDelegationToken entity = new XXRangerDelegationToken();
-            entity.setSequenceNumber(ident.getSequenceNumber());
-            entity.setOwner(ident.getOwner().toString());
-            entity.setRenewer(ident.getRenewer() != null ? ident.getRenewer().toString() : null);
-            entity.setRealUser(ident.getRealUser() != null ? ident.getRealUser().toString() : null);
-            entity.setIssueDate(ident.getIssueDate());
-            entity.setMaxDate(ident.getMaxDate());
-            entity.setRenewDate(renewDate);
-            entity.setMasterKeyId(ident.getMasterKeyId());
-            entity.setTokenPassword(retrievePassword(ident));
-            daoManager.getXXRangerDelegationToken().create(entity);
+            byte[] tokenPassword = retrievePassword(ident);
+            executeInTransaction(status -> {
+                XXRangerDelegationToken entity = new XXRangerDelegationToken();
+                entity.setSequenceNumber(ident.getSequenceNumber());
+                entity.setOwner(ident.getOwner().toString());
+                entity.setRenewer(ident.getRenewer() != null ? ident.getRenewer().toString() : null);
+                entity.setRealUser(ident.getRealUser() != null ? ident.getRealUser().toString() : null);
+                entity.setIssueDate(ident.getIssueDate());
+                entity.setMaxDate(ident.getMaxDate());
+                entity.setRenewDate(renewDate);
+                entity.setMasterKeyId(ident.getMasterKeyId());
+                entity.setTokenPassword(tokenPassword);
+                daoManager.getXXRangerDelegationToken().create(entity);
+                return null;
+            });
         } catch (Exception e) {
             throw new IOException("Failed to store token: seqNum=" + ident.getSequenceNumber(), e);
         }
@@ -208,7 +228,10 @@ public class RangerDelegationTokenSecretManager
             LOG.debug("==> updateStoredToken(seqNum={}, renewDate={})", ident.getSequenceNumber(), renewDate);
         }
         try {
-            daoManager.getXXRangerDelegationToken().updateRenewDate(ident.getSequenceNumber(), renewDate);
+            executeInTransaction(status -> {
+                daoManager.getXXRangerDelegationToken().updateRenewDate(ident.getSequenceNumber(), renewDate);
+                return null;
+            });
         } catch (Exception e) {
             throw new IOException("Failed to update token: seqNum=" + ident.getSequenceNumber(), e);
         }
@@ -220,54 +243,66 @@ public class RangerDelegationTokenSecretManager
             LOG.debug("==> removeStoredToken(seqNum={})", ident.getSequenceNumber());
         }
         try {
-            daoManager.getXXRangerDelegationToken().deleteBySequenceNumber(ident.getSequenceNumber());
+            executeInTransaction(status -> {
+                daoManager.getXXRangerDelegationToken().deleteBySequenceNumber(ident.getSequenceNumber());
+                return null;
+            });
         } catch (Exception e) {
             LOG.warn("Failed to remove token: seqNum=" + ident.getSequenceNumber(), e);
         }
     }
 
+    protected <T> T executeInTransaction(TransactionCallback<T> action) {
+        TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+        txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return txTemplate.execute(action);
+    }
+
     private void loadFromDB() {
         LOG.info("Loading delegation token state from DB");
 
-        List<XXRangerDTMasterKey> masterKeys = daoManager.getXXRangerDTMasterKey().findAll();
-        if (masterKeys != null) {
-            for (XXRangerDTMasterKey entity : masterKeys) {
-                try {
-                    DelegationKey key = deserializeDelegationKey(entity.getKeyBytes());
-                    addKey(key);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Loaded master key: keyId={}", key.getKeyId());
+        executeInTransaction(status -> {
+            List<XXRangerDTMasterKey> masterKeys = daoManager.getXXRangerDTMasterKey().findAll();
+            if (masterKeys != null) {
+                for (XXRangerDTMasterKey entity : masterKeys) {
+                    try {
+                        DelegationKey key = deserializeDelegationKey(entity.getKeyBytes());
+                        addKey(key);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Loaded master key: keyId={}", key.getKeyId());
+                        }
+                    } catch (Exception e) {
+                        LOG.error("Failed to load master key: keyId=" + entity.getKeyId(), e);
                     }
-                } catch (Exception e) {
-                    LOG.error("Failed to load master key: keyId=" + entity.getKeyId(), e);
                 }
+                LOG.info("Loaded {} master keys from DB", masterKeys.size());
             }
-            LOG.info("Loaded {} master keys from DB", masterKeys.size());
-        }
 
-        List<XXRangerDelegationToken> tokens = daoManager.getXXRangerDelegationToken().findAll();
-        if (tokens != null) {
-            for (XXRangerDelegationToken entity : tokens) {
-                try {
-                    RangerDelegationTokenIdentifier ident = new RangerDelegationTokenIdentifier(
-                            new Text(entity.getOwner()),
-                            entity.getRenewer() != null ? new Text(entity.getRenewer()) : null,
-                            entity.getRealUser() != null ? new Text(entity.getRealUser()) : null
-                    );
-                    ident.setIssueDate(entity.getIssueDate());
-                    ident.setMaxDate(entity.getMaxDate());
-                    ident.setSequenceNumber(entity.getSequenceNumber());
-                    ident.setMasterKeyId(entity.getMasterKeyId());
-                    addPersistedDelegationToken(ident, entity.getRenewDate());
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Loaded delegation token: seqNum={}, owner={}", entity.getSequenceNumber(), entity.getOwner());
+            List<XXRangerDelegationToken> tokens = daoManager.getXXRangerDelegationToken().findAll();
+            if (tokens != null) {
+                for (XXRangerDelegationToken entity : tokens) {
+                    try {
+                        RangerDelegationTokenIdentifier ident = new RangerDelegationTokenIdentifier(
+                                new Text(entity.getOwner()),
+                                entity.getRenewer() != null ? new Text(entity.getRenewer()) : null,
+                                entity.getRealUser() != null ? new Text(entity.getRealUser()) : null
+                        );
+                        ident.setIssueDate(entity.getIssueDate());
+                        ident.setMaxDate(entity.getMaxDate());
+                        ident.setSequenceNumber(entity.getSequenceNumber());
+                        ident.setMasterKeyId(entity.getMasterKeyId());
+                        addPersistedDelegationToken(ident, entity.getRenewDate());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Loaded delegation token: seqNum={}, owner={}", entity.getSequenceNumber(), entity.getOwner());
+                        }
+                    } catch (Exception e) {
+                        LOG.error("Failed to load delegation token: seqNum=" + entity.getSequenceNumber(), e);
                     }
-                } catch (Exception e) {
-                    LOG.error("Failed to load delegation token: seqNum=" + entity.getSequenceNumber(), e);
                 }
+                LOG.info("Loaded {} delegation tokens from DB", tokens.size());
             }
-            LOG.info("Loaded {} delegation tokens from DB", tokens.size());
-        }
+            return null;
+        });
     }
 
     private static byte[] serializeDelegationKey(DelegationKey key) throws IOException {
