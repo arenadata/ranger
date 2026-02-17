@@ -71,12 +71,6 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
             return;
         }
 
-        Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
-        if (existingAuth != null && existingAuth.isAuthenticated()) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         String tokenEncoded = httpRequest.getHeader(HEADER_DELEGATION_TOKEN);
         if (StringUtils.isEmpty(tokenEncoded)) {
             tokenEncoded = httpRequest.getParameter(PARAM_DELEGATION_TOKEN);
@@ -88,7 +82,7 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerDelegationTokenAuthFilter: found delegation token in request");
+            LOG.debug("==> RangerDelegationTokenAuthFilter: found delegation token in request for URI={}", httpRequest.getRequestURI());
         }
 
         try {
@@ -112,6 +106,7 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             httpRequest.setAttribute("delegationTokenEnabled", true);
+            httpRequest.getSession(true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("<== RangerDelegationTokenAuthFilter: authenticated user={} via delegation token", userName);
