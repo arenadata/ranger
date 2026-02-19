@@ -1124,22 +1124,35 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			Map<String, String> headers = new HashMap<>();
 			headers.put(RangerRESTUtils.HEADER_DELEGATION_TOKEN, delegationToken.encodeToUrlString());
-			return restClient.get(secureRelativeURL, queryParams, sessionId, headers);
+			ClientResponse response = restClient.get(secureRelativeURL, queryParams, sessionId, headers);
+
+			if (response != null && response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED && isSecureMode) {
+				LOG.warn("Delegation token auth failed (HTTP 401). Falling back to Kerberos/SPNEGO");
+
+				response = getWithKerberos(secureRelativeURL, queryParams, sessionId);
+			}
+
+			return response;
 		} else if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Using Kerberos auth as user: " + user);
 			}
-			return MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
-				try {
-					return restClient.get(secureRelativeURL, queryParams, sessionId);
-				} catch (Exception e) {
-					LOG.error("Failed to get response: " + e.getMessage());
-				}
-				return null;
-			});
+			return getWithKerberos(secureRelativeURL, queryParams, sessionId);
 		} else {
 			return restClient.get(nonSecureRelativeURL, queryParams, sessionId);
 		}
+	}
+
+	private ClientResponse getWithKerberos(String relativeURL, Map<String, String> queryParams,
+										   Cookie sessionId) throws Exception {
+		return MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+			try {
+				return restClient.get(relativeURL, queryParams, sessionId);
+			} catch (Exception e) {
+				LOG.error("Kerberos/SPNEGO auth failed: " + e.getMessage());
+			}
+			return null;
+		});
 	}
 
 	private void checkAndResetSessionCookie(ClientResponse response) {
