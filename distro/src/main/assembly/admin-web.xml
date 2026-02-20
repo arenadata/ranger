@@ -269,6 +269,7 @@
           <include>commons-lang:commons-lang</include>
           <include>commons-io:commons-io</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+          <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.noggit:noggit</include>

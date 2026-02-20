@@ -82,6 +82,7 @@
               <include>com.fasterxml.jackson.core:jackson-databind</include>
               <include>com.fasterxml.jackson.core:jackson-core</include>
               <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+              <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
               <include>commons-codec:commons-codec</include>
               <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
               <include>net.java.dev.jna:jna:jar:${jna.version}</include>

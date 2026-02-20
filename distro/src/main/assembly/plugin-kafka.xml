@@ -73,6 +73,7 @@
                                         <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
 					<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+					<include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>

@@ -276,6 +276,17 @@
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
+            <artifactId>solr-hadoop-auth-framework</artifactId>
+            <version>${solr.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
             <exclusions>
