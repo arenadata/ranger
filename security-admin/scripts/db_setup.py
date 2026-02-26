@@ -772,7 +772,17 @@ class BaseDB(object):
 							log("[E] Ranger "+ userName +" default password change request failed", "error")
 							sys.exit(1)
 
-	def hasPendingPatches(self, db_name, db_user, db_password, version):
+	def hasPendingPatches(self, db_name, db_user, db_password, version, patches_path=None):
+		if patches_path is not None and os.path.exists(patches_path):
+			files = os.listdir(patches_path)
+			for filename in files:
+				if not filename.endswith('.sql'):
+					continue
+				patch_version = filename.split('-')[0]
+				output = self.execute_query(self.get_version_query(patch_version,'Y'))
+				if not output.strip(patch_version + " |"):
+					return True
+			return False
 		output = self.execute_query(self.get_patch_status_in_current_version_query(version,ranger_version,'Y'))
 		if output.strip(version + " |"):
 			return False
@@ -1386,7 +1396,7 @@ def main(argv):
 		log("[I] --------- Importing Ranger Core DB Schema ---------","info")
 		xa_sqlObj.import_core_db_schema(db_name, db_user, db_password, xa_db_core_file,first_table,last_table)
 
-		applyDBPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "DB_PATCHES")
+		applyDBPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "DB_PATCHES", xa_patch_file)
 		if applyDBPatches == True:
 			log("[I] --------- Applying Ranger DB patches ---------","info")
 			xa_sqlObj.apply_patches(db_name, db_user, db_password, xa_patch_file)
