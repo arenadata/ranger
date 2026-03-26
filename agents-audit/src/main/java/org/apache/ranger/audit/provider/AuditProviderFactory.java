@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -145,10 +146,13 @@ public class AuditProviderFactory {
 				AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP, false);
 
 		List<AuditHandler> providers = new ArrayList<AuditHandler>();
+		List<Pattern> customSensitivePropertyPatterns = AuditPropertyMaskingUtil.getCustomSensitivePropertyPatterns(props);
 
 		for (Object propNameObj : props.keySet()) {
-			LOG.info("AUDIT PROPERTY: " + propNameObj.toString() + "="
-					+ props.getProperty(propNameObj.toString()));
+			String propName = propNameObj.toString();
+			String propValue = props.getProperty(propName);
+			LOG.info("AUDIT PROPERTY: " + propName + "="
+					+ AuditPropertyMaskingUtil.getLoggablePropertyValue(propName, propValue, customSensitivePropertyPatterns));
 		}
 
 		// Process new audit configurations

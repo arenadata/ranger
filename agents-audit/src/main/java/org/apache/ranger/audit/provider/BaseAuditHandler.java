@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -148,6 +149,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		LOG.info(basePropertyName + ".status.log.interval.sec=" + (statusLogIntervalMS / 1000));
 
 		String configPropsNamePrefix = propPrefix + "." + PROP_CONFIG + ".";
+		List<Pattern> customSensitivePropertyPatterns = AuditPropertyMaskingUtil.getCustomSensitivePropertyPatterns(props);
 		for (Object propNameObj : props.keySet()) {
 			String propName = propNameObj.toString();
 
@@ -157,7 +159,8 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			String configName = propName.substring(configPropsNamePrefix.length());
 			String configValue = props.getProperty(propName);
 			configProps.put(configName, configValue);
-			LOG.info("Found Config property: " + configName + " => " + configValue);
+			LOG.info("Found Config property: " + configName + " => "
+					+ AuditPropertyMaskingUtil.getLoggablePropertyValue(configName, configValue, customSensitivePropertyPatterns));
 		}
 	}
 
