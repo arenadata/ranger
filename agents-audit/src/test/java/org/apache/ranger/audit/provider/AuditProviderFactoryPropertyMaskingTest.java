@@ -68,7 +68,7 @@ public class AuditProviderFactoryPropertyMaskingTest {
             resetSlf4j();
         }
 
-        String logs = String.join("\n", LOG_EVENTS);
+        String logs = String.join("\n", new ArrayList<>(LOG_EVENTS));
 
         assertTrue(logs.contains("AUDIT PROPERTY: xasecure.policymgr.clientssl.truststore.password=******"));
         assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.destination.solr.urls=https://admin:******@solr1:8983/solr/ranger_audits"));
