@@ -68,17 +68,14 @@ public class AuditPropertyMaskingUtil {
     }
 
     public static List<Pattern> getCustomSensitivePropertyPatterns(Properties props) {
-        List<Pattern> ret = new ArrayList<Pattern>();
-
         if (props == null) {
-            return ret;
+            return null;
         }
-
+        List<Pattern> ret = new ArrayList<Pattern>();
         String regexConfig = MiscUtil.getStringProperty(props, AUDIT_LOG_MASK_KEY_REGEX_PROP);
         if (StringUtils.isBlank(regexConfig)) {
             return ret;
         }
-
         for (String regex : regexConfig.split(",")) {
             String trimmedRegex = StringUtils.trimToEmpty(regex);
 
