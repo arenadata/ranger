@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,11 +31,7 @@ import org.slf4j.spi.MDCAdapter;
 import org.slf4j.spi.SLF4JServiceProvider;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.assertFalse;
@@ -45,11 +41,7 @@ public class AuditProviderFactoryPropertyMaskingTest {
     private static final List<String> LOG_EVENTS = Collections.synchronizedList(new ArrayList<>());
 
     @Test
-    public void testSensitiveAuditPropertiesAreMaskedInLogs() throws Exception {
-        resetSlf4j();
-        LOG_EVENTS.clear();
-        System.setProperty(LoggerFactory.PROVIDER_PROPERTY_KEY, CapturingSlf4jProvider.class.getName());
-
+    public void testSensitiveAuditPropertiesAreMaskedInLogsCustom() throws Exception {
         Properties props = new Properties();
         props.setProperty("xasecure.audit.is.enabled", "true");
         props.setProperty("xasecure.policymgr.clientssl.truststore.password", "secret123");
@@ -58,17 +50,7 @@ public class AuditProviderFactoryPropertyMaskingTest {
         props.setProperty("xasecure.audit.destination.custom.authheader", "Bearer verySensitiveTokenValue");
         props.setProperty("xasecure.audit.token.cache", "rawTokenValue");
 
-        try {
-            AuditProviderFactory factory = new AuditProviderFactory();
-            factory.init(props, "trino");
-            factory.shutdown();
-        }
-        finally {
-            System.clearProperty(LoggerFactory.PROVIDER_PROPERTY_KEY);
-            resetSlf4j();
-        }
-
-        String logs = String.join("\n", new ArrayList<>(LOG_EVENTS));
+        String logs = testSensitiveAuditPropertiesAreMaskedInLogs(props);
 
         assertTrue(logs.contains("AUDIT PROPERTY: xasecure.policymgr.clientssl.truststore.password=******"));
         assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.destination.solr.urls=https://admin:******@solr1:8983/solr/ranger_audits"));
@@ -77,6 +59,56 @@ public class AuditProviderFactoryPropertyMaskingTest {
         assertFalse(logs.contains("secret123"));
         assertFalse(logs.contains("myPass"));
         assertFalse(logs.contains("verySensitiveTokenValue"));
+    }
+
+    @Test
+    public void testSensitiveAuditPropertiesAreMaskedInLogsDefault() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("xasecure.audit.is.enabled", "true");
+        props.setProperty("xasecure.policymgr.clientssl.truststore.password", "secret123");
+        props.setProperty("xasecure.audit.token.cache", "secretValue");
+        props.setProperty("xasecure.audit.test", "no secret value");
+
+        String logs = testSensitiveAuditPropertiesAreMaskedInLogs(props);
+
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.policymgr.clientssl.truststore.password=******"));
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.token.cache=******"));
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.test=no secret value"));
+        assertFalse(logs.contains("secret123"));
+        assertFalse(logs.contains("secretValue"));
+    }
+
+    @Test
+    public void testSensitiveAuditPropertiesAreMaskedInLogsEmpty() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("xasecure.audit.is.enabled", "true");
+        props.setProperty("xasecure.policymgr.clientssl.truststore.password", "secret123");
+        props.setProperty("xasecure.audit.token.cache", "secretValue");
+        props.setProperty("xasecure.audit.test", "no secret value");
+
+        props.setProperty(AuditPropertyMaskingUtil.AUDIT_LOG_MASK_KEY_REGEX_PROP, "");
+
+        String logs = testSensitiveAuditPropertiesAreMaskedInLogs(props);
+
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.policymgr.clientssl.truststore.password=secret123"));
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.token.cache=secretValue"));
+        assertTrue(logs.contains("AUDIT PROPERTY: xasecure.audit.test=no secret value"));
+    }
+
+    private String testSensitiveAuditPropertiesAreMaskedInLogs(Properties props) throws Exception {
+        resetSlf4j();
+        LOG_EVENTS.clear();
+        System.setProperty(LoggerFactory.PROVIDER_PROPERTY_KEY, CapturingSlf4jProvider.class.getName());
+
+        try {
+            AuditProviderFactory factory = new AuditProviderFactory();
+            factory.init(props, "trino");
+            factory.shutdown();
+        } finally {
+            System.clearProperty(LoggerFactory.PROVIDER_PROPERTY_KEY);
+            resetSlf4j();
+        }
+        return String.join("\n", new ArrayList<>(LOG_EVENTS));
     }
 
     private static void resetSlf4j() throws Exception {
@@ -143,7 +175,7 @@ public class AuditProviderFactoryPropertyMaskingTest {
 
         @Override
         protected void handleNormalizedLoggingCall(Level level, org.slf4j.Marker marker, String messagePattern,
-                Object[] arguments, Throwable throwable) {
+                                                   Object[] arguments, Throwable throwable) {
             String formattedMessage = MessageFormatter.basicArrayFormat(messagePattern, arguments);
 
             if (throwable != null) {

@@ -73,6 +73,9 @@ public class AuditPropertyMaskingUtil {
         }
         List<Pattern> ret = new ArrayList<Pattern>();
         String regexConfig = MiscUtil.getStringProperty(props, AUDIT_LOG_MASK_KEY_REGEX_PROP);
+        if (regexConfig == null) {
+            return null;
+        }
         if (StringUtils.isBlank(regexConfig)) {
             return ret;
         }
@@ -101,8 +104,8 @@ public class AuditPropertyMaskingUtil {
         String normalizedName = propertyName.toLowerCase(Locale.ROOT);
         return customSensitivePropertyPatterns != null
                 ? customSensitivePropertyPatterns.stream()
-                .filter(Objects::nonNull)
-                .anyMatch(pattern -> pattern.matcher(propertyName).matches())
+                  .filter(Objects::nonNull)
+                  .anyMatch(pattern -> pattern.matcher(propertyName).matches())
                 : Arrays.stream(SENSITIVE_PROPERTY_NAME_TOKENS).anyMatch(normalizedName::contains);
     }
 
