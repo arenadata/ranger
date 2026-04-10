@@ -27,7 +27,7 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(RangerChainedPluginConfig.class);
 
-    private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
+    private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file", "xasecure.policymgr.clientssl.keystore.password", "xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "xasecure.policymgr.clientssl.truststore.password", "hadoop.security.credential.provider.path"};
     private final String[] chainedPluginPropertyPrefixes = new String[] { ".chained.services"};
 
     public RangerChainedPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {

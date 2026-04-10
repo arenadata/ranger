@@ -52,12 +52,14 @@ public class RangerSslHelper {
 	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
 	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
 	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS = "sslKeyStore";
+	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD         = "xasecure.policymgr.clientssl.keystore.password";
 	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";	
 
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE                  = "xasecure.policymgr.clientssl.truststore";	
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";	
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
+	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_PASSWORD         = "xasecure.policymgr.clientssl.truststore.password";
 	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";	
 
 	static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
@@ -67,10 +69,12 @@ public class RangerSslHelper {
 	private String mKeyStoreURL;
 	private String mKeyStoreAlias;
 	private String mKeyStoreFile;
+	private String mKeyStorePassword;
 	private String mKeyStoreType;
 	private String mTrustStoreURL;
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
+	private String mTrustStorePassword;
 	private String mTrustStoreType;
 
 	final static HostnameVerifier _Hv = new HostnameVerifier() {
@@ -120,11 +124,13 @@ public class RangerSslHelper {
 			mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
 			mKeyStoreType  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
 			mKeyStoreFile  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+			mKeyStorePassword = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD);
 
 			mTrustStoreURL   = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
 			mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
 			mTrustStoreType  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
 			mTrustStoreFile  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+			mTrustStorePassword = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_PASSWORD);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(toString());
@@ -141,7 +147,13 @@ public class RangerSslHelper {
 	private KeyManager[] getKeyManagers() {
 		KeyManager[] kmList = null;
 
-		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
+		String keyStoreFilepwd = "";
+
+		if (!StringUtil.isEmpty(mKeyStoreURL) && !StringUtil.isEmpty(mKeyStoreAlias)) {
+			keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
+		} else if (!StringUtil.isEmpty(mKeyStorePassword)) {
+			keyStoreFilepwd = mKeyStorePassword;
+		}
 
 		if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
 			InputStream in =  null;
@@ -185,7 +197,13 @@ public class RangerSslHelper {
 	private TrustManager[] getTrustManagers() {
 		TrustManager[] tmList = null;
 
-		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
+		String trustStoreFilepwd = "";
+
+		if (!StringUtil.isEmpty(mTrustStoreURL) && !StringUtil.isEmpty(mTrustStoreAlias)) {
+			trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
+		} else if (!StringUtil.isEmpty(mTrustStorePassword)) {
+			trustStoreFilepwd = mTrustStorePassword;
+		}
 
 		if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
 			InputStream in =  null;

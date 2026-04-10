@@ -77,12 +77,14 @@ public class RangerRESTClient {
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS = "sslKeyStore";
+	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD         = "xasecure.policymgr.clientssl.keystore.password";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";	
 
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE                  = "xasecure.policymgr.clientssl.truststore";
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";	
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
+	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_PASSWORD         = "xasecure.policymgr.clientssl.truststore.password";
 	public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";	
 
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE					 = KeyManagerFactory.getDefaultAlgorithm();
@@ -98,12 +100,14 @@ public class RangerRESTClient {
 	private String mKeyStoreURL;
 	private String mKeyStoreAlias;
 	private String mKeyStoreFile;
+	private String mKeyStorePassword;
 	private String mKeyStoreType;
 	private String mTrustStoreURL;
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
-	private String       mTrustStoreType;
-	private int          mRestClientConnTimeOutMs;
+	private String mTrustStorePassword;
+	private String mTrustStoreType;
+	private int    mRestClientConnTimeOutMs;
 	private int    mRestClientReadTimeOutMs;
 	private int    maxRetryAttempts;
 	private int    retryIntervalMs;
@@ -294,11 +298,13 @@ public class RangerRESTClient {
 				mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
 				mKeyStoreType = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
 				mKeyStoreFile = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+				mKeyStorePassword = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD);
 
 				mTrustStoreURL = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
 				mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
 				mTrustStoreType = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
 				mTrustStoreFile = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+				mTrustStorePassword = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_PASSWORD);
 			} catch (IOException ioe) {
 				LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
 			} finally {
@@ -328,12 +334,16 @@ public class RangerRESTClient {
 	}
 
 	private KeyManager[] getKeyManagers() {
-		KeyManager[] kmList = null;
-
-		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
-
-		kmList = getKeyManagers(mKeyStoreFile,keyStoreFilepwd);
-		return kmList;
+		if (StringUtils.isNotEmpty(mKeyStoreURL) && StringUtils.isNotEmpty(mKeyStoreAlias)) {
+			String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
+			if (StringUtils.isNotEmpty(keyStoreFilepwd)) {
+				return getKeyManagers(mKeyStoreFile, keyStoreFilepwd);
+			}
+		}
+		if (StringUtils.isNotEmpty(mKeyStorePassword)){
+			return getKeyManagers(mKeyStoreFile, mKeyStorePassword);
+		}
+		return null;
 	}
 
 	public KeyManager[] getKeyManagers(String keyStoreFile, String keyStoreFilePwd) {
@@ -386,14 +396,16 @@ public class RangerRESTClient {
 	}
 
 	private TrustManager[] getTrustManagers() {
-		TrustManager[] tmList = null;
 		if (StringUtils.isNotEmpty(mTrustStoreURL) && StringUtils.isNotEmpty(mTrustStoreAlias)) {
 			String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 			if (StringUtils.isNotEmpty(trustStoreFilepwd)) {
-				tmList = getTrustManagers(mTrustStoreFile, trustStoreFilepwd);
+				return getTrustManagers(mTrustStoreFile, trustStoreFilepwd);
 			}
 		}
-		return tmList;
+		if (StringUtils.isNotEmpty(mTrustStorePassword)){
+			return getTrustManagers(mTrustStoreFile, mTrustStorePassword);
+		}
+		return null;
 	}
 
 	public TrustManager[] getTrustManagers(String trustStoreFile, String trustStoreFilepwd) {
