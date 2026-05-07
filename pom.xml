@@ -44,7 +44,7 @@
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.version>2.4.0</atlas.version>
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
-        <bouncycastle.version>1.70</bouncycastle.version>
+        <bouncycastle.version>1.82</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
         <checkstyle.version>8.29</checkstyle.version>
@@ -61,7 +61,7 @@
         <!-- Tencent KMS depencies -->
         <com.tencentcloudapi.sdk.version>3.1.322</com.tencentcloudapi.sdk.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
-        <commons.cli.version>1.2</commons.cli.version>
+        <commons.cli.version>1.5.0</commons.cli.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.26.2</commons.compress.version>
@@ -88,10 +88,10 @@
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
-        <fasterxml.jackson.databind.version>2.17.2</fasterxml.jackson.databind.version>
-        <fasterxml.jackson.version>2.17.2</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.18.6</fasterxml.jackson.databind.version>
+        <fasterxml.jackson.version>2.18.6</fasterxml.jackson.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
-        <gcp.protobuf-java.version>3.25.5</gcp.protobuf-java.version>
+        <gcp.protobuf-java.version>3.25.9</gcp.protobuf-java.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
@@ -99,13 +99,13 @@
         <graalvm.version>22.3.0</graalvm.version>
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
-        <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
-        <hadoop.version>3.3.6</hadoop.version>
+        <hadoop-shaded-guava.version>1.6.0.1-4.3.0-0</hadoop-shaded-guava.version>
+        <hadoop.version>3.4.3.1-4.3.0-0</hadoop.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <hbase-shaded-miscellaneous>4.1.5</hbase-shaded-miscellaneous>
-        <hbase-shaded-netty>4.1.7</hbase-shaded-netty>
-        <hbase-shaded-protobuf>4.1.7</hbase-shaded-protobuf>
-        <hbase.version>2.5.10</hbase.version>
+        <hbase-shaded-miscellaneous>4.1.13</hbase-shaded-miscellaneous>
+        <hbase-shaded-netty>4.1.13</hbase-shaded-netty>
+        <hbase-shaded-protobuf>4.1.13</hbase-shaded-protobuf>
+        <hbase.version>2.6.5.1-4.3.0-0</hbase.version>
         <hive.storage-api.version>4.0.1</hive.storage-api.version>
         <hive.version>4.0.1</hive.version>
         <hppc.version>0.8.0</hppc.version>
@@ -138,7 +138,7 @@
         <jersey-server.version>1.19.4</jersey-server.version>
         <jersey-spring.version>1.19.4</jersey-spring.version>
         <jettison.version>1.5.4</jettison.version>
-        <jetty-client.version>9.4.56.v20240826</jetty-client.version>
+        <jetty-client.version>9.4.58.v20250814</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jna-platform.version>5.7.0</jna-platform.version>
         <jna.version>5.7.0</jna.version>
@@ -157,7 +157,7 @@
         <libpam4j.version>1.10</libpam4j.version>
         <libthrift.version>0.16.0</libthrift.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
-        <log4j2.version>2.17.2</log4j2.version>
+        <log4j2.version>2.23.1</log4j2.version>
         <logback.version>1.3.14</logback.version>
         <lucene.version>8.11.3</lucene.version>
         <maven-plugin-sortpom.version>3.0.1</maven-plugin-sortpom.version>
@@ -169,13 +169,13 @@
         <mockito.version>3.0.0</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
-        <netty-all.version>4.1.100.Final</netty-all.version>
+        <netty-all.version>4.1.131.Final</netty-all.version>
         <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
-        <orc.core.version>1.6.7</orc.core.version>
-        <orc.version>1.5.8</orc.version>
-        <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
-        <org.bouncycastle.bcprov-jdk15on>1.70</org.bouncycastle.bcprov-jdk15on>
+        <orc.core.version>1.9.8</orc.core.version>
+        <orc.version>1.9.8</orc.version>
+        <org.bouncycastle.bcpkix-jdk18on>1.82</org.bouncycastle.bcpkix-jdk18on>
+        <org.bouncycastle.bcprov-jdk18on>1.82</org.bouncycastle.bcprov-jdk18on>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <ozone.version>1.4.1</ozone.version>
         <paranamer.version>2.3</paranamer.version>
@@ -188,7 +188,7 @@
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.version>333</presto.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>3.25.5</protobuf-java.version>
+        <protobuf-java.version>3.25.9</protobuf-java.version>
         <ratis-thirdparty.version>0.7.0</ratis-thirdparty.version>
         <ratis.version>2.1.0</ratis.version>
         <reload4j.version>1.2.19</reload4j.version>
