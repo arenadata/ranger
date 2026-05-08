@@ -299,7 +299,11 @@
 	<property>
 		<name>ranger.spnego.kerberos.keytab</name>
 		<value></value>
-	</property>	
+	</property>
+	<property>
+		<name>ranger.admin.kerberos.allow.unregistered.user</name>
+		<value>true</value>
+	</property>
 	<property>
 		<name>ranger.lookup.kerberos.principal</name>
 		<value>rangerlookup/_HOST@REALM</value>
