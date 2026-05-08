@@ -56,7 +56,8 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         Configuration        configuration         = new Configuration();
         FilenameFilter       fileNameFilter        = (dir, name) -> name.startsWith("ranger-") && name.endsWith("security.xml");
 
-        graalVmConfigsDefault.put("polyglot.js.allowHostAccess", Boolean.TRUE); //default is true for backward(Nashorn) compatibility
+        graalVmConfigsDefault.put("polyglot.js.allowHostAccess", Boolean.TRUE);
+        graalVmConfigsDefault.put("polyglot.js.allowHostClassLookup", Boolean.FALSE);
         graalVmConfigsDefault.put("polyglot.js.nashorn-compat", Boolean.TRUE);  //default is true for backward(Nashorn) compatibility
 
         for (String file: findFiles(fileNameFilter)) {

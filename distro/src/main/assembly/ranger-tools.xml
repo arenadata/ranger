@@ -46,7 +46,6 @@
               <include>log4j:log4j</include>
               <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
               <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
               <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
               <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
               <include>org.eclipse.persistence:eclipselink</include>
@@ -57,7 +56,6 @@
               <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
               <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
               <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-              <include>org.noggit:noggit:jar:${noggit.version}</include>
               <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>

@@ -57,7 +57,6 @@
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.noggit:noggit:jar:${noggit.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
@@ -75,6 +74,12 @@
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.graalvm.js:js:jar:${graalvm.version}</include>
+          <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
+          <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
+          <include>com.ibm.icu:icu4j</include>
         </includes>
       </binaries>
     </moduleSet>

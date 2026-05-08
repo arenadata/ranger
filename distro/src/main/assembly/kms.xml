@@ -85,7 +85,6 @@
                     <include>org.tukaani:xz</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
-                    <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
@@ -115,8 +114,8 @@
                     <include>com.sun.mail:javax.mail</include>
                     <include>com.nimbusds:nimbus-jose-jwt</include>
                     <include>com.microsoft.azure:azure-keyvault-webkey</include>
-                    <include>org.bouncycastle:bcprov-jdk15on</include>
-                    <include>org.bouncycastle:bcpkix-jdk15on</include>
+                    <include>org.bouncycastle:bcprov-jdk18on</include>
+                    <include>org.bouncycastle:bcpkix-jdk18on</include>
                     <include>com.microsoft.azure:azure-mgmt-resources</include>
                     <include>com.microsoft.azure:azure-client-authentication</include>
                     <include>com.microsoft.azure:azure-mgmt-graph-rbac</include>
@@ -305,7 +304,6 @@
                             <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                            <include>org.noggit:noggit:jar:${noggit.version}</include>
                             <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                             <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                             <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
