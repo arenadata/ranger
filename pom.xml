@@ -78,8 +78,8 @@
         <commons.net.version>3.9.0</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
         <commons.text.version>1.10.0</commons.text.version>
-        <curator.test.version>5.4.0</curator.test.version>
-        <curator.version>5.4.0</curator.version>
+        <curator.test.version>5.9.0.1-4.3.0-0</curator.test.version>
+        <curator.version>5.9.0.1-4.3.0-0</curator.version>
         <derby.version>10.14.2.0</derby.version>
         <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
         <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
@@ -199,21 +199,21 @@
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>2.0.13</slf4j-api.version>
         <slf4j.version>2.0.13</slf4j.version>
-        <solr.version>8.11.3</solr.version>
+        <solr.version>8.11.4</solr.version>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
         <spotbugs.failOnViolation>false</spotbugs.failOnViolation>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <spring-ldap-core.version>2.4.4</spring-ldap-core.version>
-        <springframework.security.version>5.7.12</springframework.security.version>
+        <springframework.security.version>5.7.14</springframework.security.version>
         <springframework.test.version>5.3.39</springframework.test.version>
         <springframework.version>5.3.39</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>9.0.98</tomcat.embed.version>
+        <tomcat.embed.version>9.0.117</tomcat.embed.version>
 
         <!-- trino plugin deps -->
         <trino.airlift.version>293</trino.airlift.version>
@@ -223,7 +223,7 @@
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
         <trino.version>468</trino.version>
         <velocity.version>2.3</velocity.version>
-        <zookeeper.version>3.8.4</zookeeper.version>
+        <zookeeper.version>3.9.5.1-4.3.0-0</zookeeper.version>
     </properties>
     <dependencyManagement>
         <dependencies>
