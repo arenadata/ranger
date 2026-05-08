@@ -20,13 +20,16 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Executes an injected javascript command to determine if the user has access to the selected record
@@ -46,18 +49,16 @@ public class RecordFilterJavaScript {
             "&& isNaN(x) && isNaN(y)); } while (k < len) { if (sameValueZero(o[k], valueToFind)) { return true; } k++; }" +
             " return false; } }); }";
 
+    private static final String NASHORN_POLYFILL_STRING_PROTOTYPE_EQUALS = "if (!String.prototype.equals) " +
+            "{ Object.defineProperty(String.prototype, 'equals', { value: function(s) { return String(this) === String(s); } }); }";
+
 
     /**
      * This class filter prevents javascript from importing, using or reflecting any java classes
      * Helps keep javascript clean of injections.  It also contains other checks to ensure that injected
      * javascript is reasonably safe.
      */
-    static class SecurityFilter implements ClassFilter {
-        @Override
-        public boolean exposeToScripts(String s) {
-            return false;
-        }
-
+    static class SecurityFilter {
         /**
          *
           * @param filterExpr the javascript to check if it contains potentially harmful commands
@@ -78,15 +79,34 @@ public class RecordFilterJavaScript {
             throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
         }
 
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
+        ClassLoader         clsLoader = Thread.currentThread().getContextClassLoader();
+        ScriptEngineManager mgr       = new ScriptEngineManager(clsLoader);
+        ScriptEngine        engine    = mgr.getEngineByName("graal.js");
+
+        if (engine != null) {
+            try {
+                Map<String, Boolean> graalVmConfigs = new HashMap<>();
+
+                graalVmConfigs.put("polyglot.js.allowHostAccess", Boolean.TRUE);
+                graalVmConfigs.put("polyglot.js.allowHostClassLookup", Boolean.FALSE);
+                graalVmConfigs.put("polyglot.js.nashorn-compat", Boolean.TRUE);
+
+                Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+                bindings.putAll(graalVmConfigs);
+                engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+            } catch (Throwable t) {
+                logger.debug("RecordFilterJavaScript.filterRow(): failed to configure graal.js engine", t);
+            }
+        } else {
+            throw new MaskingException("graal.js script engine is not available; cannot evaluate filter expression: " + filterExpr);
+        }
 
         if (logger.isDebugEnabled()) {
             logger.debug("filterExpr: " + filterExpr);
         }
 
         // convert the given JSON string to JavaScript object, which the filterExpr expects, and then exec the filterExpr
-        String script = " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + filterExpr;
+        String script = " jsonAttr = JSON.parse(jsonString); " + NASHORN_POLYFILL_ARRAY_PROTOTYPE_INCLUDES + " " + NASHORN_POLYFILL_STRING_PROTOTYPE_EQUALS + " " + filterExpr;
 
         try {
             Bindings bindings = engine.createBindings();

@@ -77,7 +77,7 @@
 							<include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
 							<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
 							<include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
-							<include>joda-time:joda-time:jar:${joda-time.version}</include>
+							<include>joda-time:joda-time:jar:${joda.time.version}</include>
 							<include>org.codehaus.woodstox:stax2-api</include>
 							<include>com.fasterxml.woodstox:woodstox-core</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
