@@ -19,7 +19,7 @@
 
 package org.apache.ranger.audit.queue;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
