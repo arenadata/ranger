@@ -64,6 +64,8 @@ import org.apache.hadoop.util.HttpExceptionUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.util.RestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +109,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	static final String AUTH_COOKIE_NAME = "hadoop.auth";
 	static final String HOST_NAME = "ranger.service.host";
 	static final String ALLOW_TRUSTED_PROXY = "ranger.authentication.allow.trustedproxy";
+	static final String ALLOW_UNREGISTERED_USER = "ranger.admin.kerberos.allow.unregistered.user";
 	static final String PROXY_PREFIX = "ranger.proxyuser.";
 	static final String RULES_MECHANISM = "hadoop.security.rules.mechanism";
 	static final String RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
@@ -272,6 +275,9 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 								}
 								return;
 							}
+							if (!isUserAuthorizedForRanger(doAsUser, response)) {
+								return;
+							}
 							final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 							grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
 							final UserDetails principal = new User(doAsUser, "", grantedAuths);
@@ -288,6 +294,9 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 					}
 
 				}else {
+					if (!isUserAuthorizedForRanger(userName, response)) {
+						return;
+					}
 					//if we get the userName from the token then log into ranger using the same user
 					final List<GrantedAuthority> grantedAuths = new ArrayList<>();
 					grantedAuths.add(new SimpleGrantedAuthority(rangerLdapDefaultRole));
@@ -436,6 +445,29 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 			grantedAuths.add(new SimpleGrantedAuthority(role));
 		}
 		return grantedAuths;
+	}
+
+	boolean isUserAuthorizedForRanger(String loginId, HttpServletResponse response) throws IOException {
+		if (StringUtils.isEmpty(loginId)) {
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Authentication required");
+			return false;
+		}
+		XXPortalUser user = userMgr.findByLoginId(loginId);
+		if (user == null) {
+			if (PropertiesUtil.getBooleanProperty(ALLOW_UNREGISTERED_USER, true)) {
+				LOG.info("SPNEGO authentication: user '" + loginId + "' is not registered in Ranger; allowed by " + ALLOW_UNREGISTERED_USER + "=true");
+				return true;
+			}
+			LOG.warn("Rejecting SPNEGO authentication: user '" + loginId + "' is not registered in Ranger");
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "User '" + loginId + "' is not registered in Ranger");
+			return false;
+		}
+		if (user.getStatus() != RangerConstants.ACT_STATUS_ACTIVE) {
+			LOG.warn("Rejecting SPNEGO authentication: user '" + loginId + "' is not active in Ranger (status=" + user.getStatus() + ")");
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "User '" + loginId + "' is not active in Ranger");
+			return false;
+		}
+		return true;
 	}
 
 	protected static ServletContext noContext = new ServletContext() {
