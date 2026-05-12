@@ -40,14 +40,14 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import java.math.BigDecimal;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 
 public class CredentialsProviderUtil {
     private static final Logger logger = LoggerFactory.getLogger(CredentialsProviderUtil.class);
@@ -71,11 +71,9 @@ public class CredentialsProviderUtil {
         try {
             final GSSName gssUserPrincipalName = gssManager.createName(user, GSSName.NT_USER_NAME);
             Subject subject = login(user, password);
-            final AccessControlContext acc = AccessController.getContext();
             final GSSCredential credential = doAsPrivilegedWrapper(subject,
                     (PrivilegedExceptionAction<GSSCredential>) () -> gssManager.createCredential(gssUserPrincipalName,
-                            GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY),
-                    acc);
+                            GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY));
             credentialsProvider.setCredentials(
                     new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthSchemes.SPNEGO),
                     new KerberosCredentials(credential));
@@ -130,28 +128,30 @@ public class CredentialsProviderUtil {
     }
 
     public static synchronized Subject login(String userPrincipalName, String keytabPath) throws PrivilegedActionException {
-             Subject sub = AccessController.doPrivileged((PrivilegedExceptionAction<Subject>) () -> {
-                final Subject subject = new Subject(false, Collections.singleton(new KerberosPrincipal(userPrincipalName)),
-                        Collections.emptySet(), Collections.emptySet());
-                Configuration conf = new KeytabJaasConf(userPrincipalName, keytabPath, false);
+        try {
+            final Subject subject = new Subject(false, Collections.singleton(new KerberosPrincipal(userPrincipalName)),
+                    Collections.emptySet(), Collections.emptySet());
+            Configuration conf = new KeytabJaasConf(userPrincipalName, keytabPath, false);
 
-                LoginContext loginContext = new LoginContext(CRED_CONF_NAME, subject, null, conf);
-                loginContext.login();
-                return loginContext.getSubject();
-            });
-        return sub;
+            LoginContext loginContext = new LoginContext(CRED_CONF_NAME, subject, null, conf);
+            loginContext.login();
+            return loginContext.getSubject();
+        } catch (LoginException e) {
+            throw new PrivilegedActionException(e);
+        }
     }
 
 
-    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action, final AccessControlContext acc)
+    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action)
             throws PrivilegedActionException {
         try {
-            return AccessController.doPrivileged((PrivilegedExceptionAction<T>) () -> Subject.doAsPrivileged(subject, action, acc));
-        } catch (PrivilegedActionException pae) {
-            if (pae.getCause() instanceof PrivilegedActionException) {
-                throw (PrivilegedActionException) pae.getCause();
+            return Subject.callAs(subject, action::run);
+        } catch (CompletionException ce) {
+            Throwable cause = ce.getCause();
+            if (cause instanceof Exception) {
+                throw new PrivilegedActionException((Exception) cause);
             }
-            throw pae;
+            throw ce;
         }
     }
 

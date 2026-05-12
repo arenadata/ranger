@@ -21,9 +21,6 @@ package org.apache.ranger.plugin.classloader;
 
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -52,9 +49,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
     public RangerPluginClassLoader(String pluginType, Class<?> pluginClass ) throws Exception {
         super(RangerPluginClassLoaderUtil.getInstance().getPluginFilesForServiceTypeAndPluginclass(pluginType, pluginClass), null);
 
-        componentClassLoader = AccessController.doPrivileged(
-                (PrivilegedAction<MyClassLoader>) () -> new MyClassLoader(Thread.currentThread().getContextClassLoader())
-        );
+        componentClassLoader = new MyClassLoader(Thread.currentThread().getContextClassLoader());
     }
 
     public static RangerPluginClassLoader getInstance(final String pluginType, final Class<?> pluginClass ) throws Exception {
@@ -66,9 +61,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
                 if (ret == null) {
                     if (pluginClass != null) {
-                        ret = AccessController.doPrivileged(
-                                (PrivilegedExceptionAction<RangerPluginClassLoader>) () -> new RangerPluginClassLoader(pluginType, pluginClass)
-                        );
+                        ret = new RangerPluginClassLoader(pluginType, pluginClass);
                     } else if (pluginType == null) { // let us pick an existing entry from pluginClassLoaders
                         if (!pluginClassLoaders.isEmpty()) {
                             // to be predictable, sort the keys

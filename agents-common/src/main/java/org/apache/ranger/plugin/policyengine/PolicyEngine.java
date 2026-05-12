@@ -134,6 +134,7 @@ public class PolicyEngine {
     }
 
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         try {
             cleanup();

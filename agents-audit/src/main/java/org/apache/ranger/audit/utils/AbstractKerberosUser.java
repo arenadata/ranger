@@ -33,6 +33,7 @@ import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractKerberosUser implements KerberosUser {
@@ -129,7 +130,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             throw new IllegalStateException("Must login before executing actions");
         }
 
-        return Subject.doAs(subject, action);
+        return Subject.callAs(subject, action::run);
     }
 
     /**
@@ -148,7 +149,15 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             throw new IllegalStateException("Must login before executing actions");
         }
 
-        return Subject.doAs(subject, action);
+        try {
+            return Subject.callAs(subject, action::run);
+        } catch (CompletionException ce) {
+            Throwable cause = ce.getCause();
+            if (cause instanceof Exception) {
+                throw new PrivilegedActionException((Exception) cause);
+            }
+            throw ce;
+        }
     }
 
     /**

@@ -126,6 +126,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	protected void finalize() throws Throwable {
 		try {
 			cleanup();

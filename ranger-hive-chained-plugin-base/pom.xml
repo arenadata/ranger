@@ -28,7 +28,6 @@
     <name>Hive Chained Security Plugin Base</name>
 
     <properties>
-        <lombok.version>1.18.32</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

@@ -29,7 +29,6 @@
     <name>Hive Trino Chained Security Plugin</name>
 
     <properties>
-        <lombok.version>1.18.32</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <trino-ranger.version>468</trino-ranger.version>
     </properties>
