@@ -783,6 +783,10 @@
     </issueManagement>
     <repositories>
         <repository>
+            <id>arenadata</id>
+            <url>https://maven.pkg.github.com/arenadata/*</url>
+        </repository>
+        <repository>
             <id>jetbrains-pty4j</id>
             <name>jetbrains-intellij-dependencies</name>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
@@ -790,9 +794,9 @@
     </repositories>
     <distributionManagement>
         <repository>
-            <id>${distMgmtStagingId}</id>
-            <name>${distMgmtStagingName}</name>
-            <url>${distMgmtStagingUrl}</url>
+            <id>github</id>
+            <name>GitHub arenadata Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/arenadata/ranger</url>
         </repository>
     </distributionManagement>
     <profiles>
