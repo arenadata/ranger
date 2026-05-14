@@ -75,6 +75,7 @@
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
         </includes>
       </binaries>
     </moduleSet>

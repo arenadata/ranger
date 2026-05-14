@@ -21,10 +21,12 @@
 
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -66,4 +68,10 @@ public interface RangerAdminClient {
 	RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception;
 
 	ResourceMappingDiffs getResourceMappingDiffs(String sourceService, String targetService, Long diffId) throws Exception;
+
+	Token<RangerDelegationTokenIdentifier> getDelegationToken(String renewer) throws Exception;
+
+	long renewDelegationToken(Token<RangerDelegationTokenIdentifier> token) throws Exception;
+
+	void cancelDelegationToken(Token<RangerDelegationTokenIdentifier> token) throws Exception;
 }

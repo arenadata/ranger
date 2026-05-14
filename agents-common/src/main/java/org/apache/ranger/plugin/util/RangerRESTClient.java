@@ -543,6 +543,10 @@ public class RangerRESTClient {
 	}
 
 	public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception{
+		return get(relativeUrl, params, sessionId, null);
+	}
+
+	public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId, Map<String, String> headers) throws Exception{
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int retryAttempt = 0;
@@ -552,6 +556,12 @@ public class RangerRESTClient {
 
 			try {
 				WebResource.Builder br = createWebResource(currentIndex, relativeUrl, params, sessionId);
+
+				if (headers != null) {
+					for (Map.Entry<String, String> entry : headers.entrySet()) {
+						br = br.header(entry.getKey(), entry.getValue());
+					}
+				}
 
 				finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
 

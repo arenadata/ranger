@@ -123,11 +123,15 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 	 * AUTH_TYPE_TRUSTED_PROXY is an element of enum AuthType. Its value is "AUTH_TYPE_TRUSTED_PROXY".
 	 */
 	public static final int AUTH_TYPE_TRUSTED_PROXY = 4;
+	/**
+	 * AUTH_TYPE_DELEGATION_TOKEN is an element of enum AuthType. Its value is "AUTH_TYPE_DELEGATION_TOKEN".
+	 */
+	public static final int AUTH_TYPE_DELEGATION_TOKEN = 5;
 
 	/**
 	 * Max value for enum AuthType_MAX
 	 */
-	public static final int AuthType_MAX = 4;
+	public static final int AuthType_MAX = 5;
 
 
 

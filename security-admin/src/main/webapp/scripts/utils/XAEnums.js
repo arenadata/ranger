@@ -154,7 +154,8 @@ define(function(require) {
 		AUTH_TYPE_PASSWORD:{value:1, label:'Username/Password', rbkey:'xa.enum.AuthType.AUTH_TYPE_PASSWORD', tt: 'lbl.AuthType_AUTH_TYPE_PASSWORD'},
 		AUTH_TYPE_KERBEROS:{value:2, label:'Kerberos', rbkey:'xa.enum.AuthType.AUTH_TYPE_KERBEROS', tt: 'lbl.AuthType_AUTH_TYPE_KERBEROS'},
 		AUTH_TYPE_SSO:{value:3, label:'SingleSignOn', rbkey:'xa.enum.AuthType.AUTH_TYPE_SSO', tt: 'lbl.AuthType_AUTH_TYPE_SSO'},
-		AUTH_TYPE_TRUSTED_PROXY:{value:4, label:'Trusted Proxy', rbkey:'xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY', tt: 'lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY'}
+		AUTH_TYPE_TRUSTED_PROXY:{value:4, label:'Trusted Proxy', rbkey:'xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY', tt: 'lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY'},
+		AUTH_TYPE_DELEGATION_TOKEN:{value:5, label:'Delegation Token', rbkey:'xa.enum.AuthType.AUTH_TYPE_DELEGATION_TOKEN', tt: 'lbl.AuthType_AUTH_TYPE_DELEGATION_TOKEN'}
 	});
 
 	XAEnums.BooleanValue = mergeParams(XAEnums.BooleanValue, {

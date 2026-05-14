@@ -27,15 +27,19 @@ import org.apache.ranger.audit.utils.InMemoryJAASConfiguration;
 import org.apache.ranger.audit.utils.KerberosAction;
 import org.apache.ranger.audit.utils.KerberosUser;
 import org.apache.ranger.audit.utils.KerberosJAASConfigUser;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpClientUtil;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
 import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.hadoop.SolrDelegationTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,26 +164,57 @@ public class SolrAuditDestination extends AuditDestination {
 					LOG.info("Solr zkHosts=" + zkHosts + ", solrURLs=" + urls
 							+ ", collectionName=" + collectionName);
 
+					// Check for a Solr delegation token in UGI credentials
+					String delegationToken = null;
+					try {
+						Credentials creds = UserGroupInformation.getLoginUser().getCredentials();
+						delegationToken = SolrDelegationTokenUtil.findTokenInCredentials(creds);
+						if (delegationToken != null) {
+							LOG.info("Found Solr delegation token in UGI credentials, will use it for authentication");
+						}
+					} catch (Exception e) {
+						LOG.debug("Failed to look up Solr delegation token, falling back to Kerberos", e);
+					}
+
 					if (zkHosts != null && !zkHosts.isEmpty()) {
 						LOG.info("Connecting to solr cloud using zkHosts="
 								+ zkHosts);
 						try {
-							// Instantiate
-							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-							SolrHttpClientBuilder kb = krbBuild.getBuilder();
-							HttpClientUtil.setHttpClientBuilder(kb);
-
 							final List<String> zkhosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
-							final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
-								@Override
-								public CloudSolrClient run()  throws Exception {
-									CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
-									return solrCloudClient;
-								};
-							});
 
-							solrCloudClient.setDefaultCollection(collectionName);
-							me = solrClient = solrCloudClient;
+							if (delegationToken != null) {
+								final String dt = delegationToken;
+								final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
+									@Override
+									public CloudSolrClient run() throws Exception {
+										return new CloudSolrClient.Builder(zkhosts, Optional.empty())
+												.withLBHttpSolrClientBuilder(new LBHttpSolrClient.Builder()
+														.withConnectionTimeout(1000)
+														.withHttpSolrClientBuilder(
+																new HttpSolrClient.Builder()
+																		.withKerberosDelegationToken(dt)))
+												.build();
+									}
+								});
+								solrCloudClient.setDefaultCollection(collectionName);
+								me = solrClient = solrCloudClient;
+							} else {
+								// Instantiate
+								Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+								SolrHttpClientBuilder kb = krbBuild.getBuilder();
+								HttpClientUtil.setHttpClientBuilder(kb);
+
+								final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
+									@Override
+									public CloudSolrClient run()  throws Exception {
+										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
+										return solrCloudClient;
+									};
+								});
+
+								solrCloudClient.setDefaultCollection(collectionName);
+								me = solrClient = solrCloudClient;
+							}
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. ZooKeepers="
 									+ zkHosts, t);
@@ -190,25 +225,46 @@ public class SolrAuditDestination extends AuditDestination {
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
 						try {
 							LOG.info("Connecting to Solr using URLs=" + solrURLs);
-							Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
-							SolrHttpClientBuilder kb = krbBuild.getBuilder();
-							HttpClientUtil.setHttpClientBuilder(kb);
 							final List<String> solrUrls = solrURLs;
-							final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
-								@Override
-								public LBHttpSolrClient run()  throws Exception {
-									LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
-									builder.withBaseSolrUrl(solrUrls.get(0));
-									builder.withConnectionTimeout(1000);
-									LBHttpSolrClient lbSolrClient = builder.build();
-									return lbSolrClient;
-								};
-							});
 
-							for (int i = 1; i < solrURLs.size(); i++) {
-								lbSolrClient.addSolrServer(solrURLs.get(i));
+							if (delegationToken != null) {
+								final String dt = delegationToken;
+								final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
+									@Override
+									public LBHttpSolrClient run() throws Exception {
+										return new LBHttpSolrClient.Builder()
+												.withBaseSolrUrl(solrUrls.get(0))
+												.withConnectionTimeout(1000)
+												.withHttpSolrClientBuilder(
+														new HttpSolrClient.Builder()
+																.withKerberosDelegationToken(dt))
+												.build();
+									}
+								});
+								for (int i = 1; i < solrURLs.size(); i++) {
+									lbSolrClient.addSolrServer(solrURLs.get(i));
+								}
+								me = solrClient = lbSolrClient;
+							} else {
+								Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
+								SolrHttpClientBuilder kb = krbBuild.getBuilder();
+								HttpClientUtil.setHttpClientBuilder(kb);
+								final LBHttpSolrClient lbSolrClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<LBHttpSolrClient>() {
+									@Override
+									public LBHttpSolrClient run()  throws Exception {
+										LBHttpSolrClient.Builder builder = new LBHttpSolrClient.Builder();
+										builder.withBaseSolrUrl(solrUrls.get(0));
+										builder.withConnectionTimeout(1000);
+										LBHttpSolrClient lbSolrClient = builder.build();
+										return lbSolrClient;
+									};
+								});
+
+								for (int i = 1; i < solrURLs.size(); i++) {
+									lbSolrClient.addSolrServer(solrURLs.get(i));
+								}
+								me = solrClient = lbSolrClient;
 							}
-							me = solrClient = lbSolrClient;
 						} catch (Throwable t) {
 							LOG.error("Can't connect to Solr server. URL="
 									+ solrURLs, t);
