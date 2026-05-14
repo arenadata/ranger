@@ -15,14 +15,13 @@ package org.apache.ranger.services.trino.client;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.security.auth.Subject;
 
 import java.io.Closeable;
 import java.security.PrivilegedAction;
@@ -71,7 +70,7 @@ public class TrinoClient
     private void init()
             throws Exception
     {
-        Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>()
+        SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<Void>()
         {
             public Void run()
             {
@@ -254,7 +253,7 @@ public class TrinoClient
     {
         final String ndl = needle;
         final List<String> catList = catalogs;
-        List<String> dbs = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+        List<String> dbs = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
             @Override
             public List<String> run()
             {
@@ -350,7 +349,7 @@ public class TrinoClient
         final String ndl = needle;
         final List<String> cats = catalogs;
         final List<String> shms = schemas;
-        List<String> schemaList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>()
+        List<String> schemaList = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>()
         {
             @Override
             public List<String> run()
@@ -450,7 +449,7 @@ public class TrinoClient
         final List<String> cats = catalogs;
         final List<String> shms = schemas;
         final List<String> tbls = tables;
-        List<String> tableList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+        List<String> tableList = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
             @Override
             public List<String> run()
             {
@@ -561,7 +560,7 @@ public class TrinoClient
         final List<String> shms = schemas;
         final List<String> tbls = tables;
         final List<String> cols = columns;
-        List<String> columnList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+        List<String> columnList = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
             @Override
             public List<String> run()
             {
@@ -621,7 +620,7 @@ public class TrinoClient
 
     public void close()
     {
-        Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>()
+        SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<Void>()
         {
             public Void run()
             {

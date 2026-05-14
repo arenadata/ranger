@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.utils;
 
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,7 +130,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             throw new IllegalStateException("Must login before executing actions");
         }
 
-        return Subject.doAs(subject, action);
+        return SubjectUtil.doAs(subject, action);
     }
 
     /**
@@ -148,7 +149,7 @@ public abstract class AbstractKerberosUser implements KerberosUser {
             throw new IllegalStateException("Must login before executing actions");
         }
 
-        return Subject.doAs(subject, action);
+        return SubjectUtil.doAs(subject, action);
     }
 
     /**

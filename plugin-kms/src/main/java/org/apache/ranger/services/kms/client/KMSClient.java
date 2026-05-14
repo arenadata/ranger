@@ -37,6 +37,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -195,7 +196,7 @@ public class KMSClient {
 					}
 				}
 				final WebResource webResource = client.resource(uri);
-				response = Subject.doAs(sub, new PrivilegedAction<ClientResponse>() {
+				response = SubjectUtil.doAs(sub, new PrivilegedAction<ClientResponse>() {
 					@Override
 					public ClientResponse run() {
 						return webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);

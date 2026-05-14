@@ -36,6 +36,7 @@ import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -457,7 +458,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 				return ret;
 			}
 
-			Map<String, List<String>> typesDef = Subject.doAs(subj, new PrivilegedAction<Map<String, List<String>>>() {
+			Map<String, List<String>> typesDef = SubjectUtil.doAs(subj, new PrivilegedAction<Map<String, List<String>>>() {
 				@Override
 				public Map<String, List<String>> run() {
 					Map<String, List<String>> ret  = null;
@@ -543,7 +544,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 				return null;
 			}
 
-			List<String> list = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+			List<String> list = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 				@Override
 				public List<String> run() {
 					List<String> ret = null;

@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.KrbPasswordSaverLoginModule;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
@@ -257,7 +258,7 @@ public class StormClient {
 				loginSubj = loginContext.getSubject();
 			}
 			if (loginSubj != null) {
-				ret = Subject.doAs(loginSubj, action);
+				ret = SubjectUtil.doAs(loginSubj, action);
 			}
 		} catch (LoginException le) {
 			String msgDesc = "executeUnderKerberos: Login failure using given"

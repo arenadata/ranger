@@ -22,6 +22,7 @@ import java.security.PrivilegedExceptionAction;
 
 import javax.security.auth.Subject;
 
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.generated.RebalanceOptions;
@@ -60,7 +61,7 @@ public class StormRangerAuthorizerTest {
         // bob can create a new topology
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 cluster.submitTopology("word-count", conf, builder.createTopology());
                 return null;
@@ -73,7 +74,7 @@ public class StormRangerAuthorizerTest {
     public static void cleanup() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 cluster.killTopology("word-count");
                 return null;
@@ -96,7 +97,7 @@ public class StormRangerAuthorizerTest {
 
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 try {
                     cluster.submitTopology("word-count2", conf, builder.createTopology());
@@ -114,7 +115,7 @@ public class StormRangerAuthorizerTest {
     public void testTopologyActivation() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
 
                 // Deactivate "word-count"
@@ -152,7 +153,7 @@ public class StormRangerAuthorizerTest {
     public void testTopologyRebalancing() throws Exception {
         final Subject subject = new Subject();
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 RebalanceOptions options = new RebalanceOptions();
 
@@ -193,7 +194,7 @@ public class StormRangerAuthorizerTest {
         final Subject subject = new Subject();
 
         subject.getPrincipals().add(new SimplePrincipal("bob"));
-        Subject.doAs(subject, new PrivilegedExceptionAction<Void>() {
+        SubjectUtil.doAs(subject, new PrivilegedExceptionAction<Void>() {
             public Void run() throws Exception {
                 // bob can create the "stormdev" topology
                 cluster.submitTopology("stormdev", conf, builder.createTopology());

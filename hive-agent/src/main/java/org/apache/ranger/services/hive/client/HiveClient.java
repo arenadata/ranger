@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.security.auth.Subject;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +44,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
@@ -83,7 +82,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		isKerberosAuth = getConfigHolder().isKerberosAuthentication();
 		if (isKerberosAuth) {
 			LOG.info("Secured Mode: JDBC Connection done with preAuthenticated Subject");
-				Subject.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>(){
+				SubjectUtil.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>(){
 				public Void run() throws Exception {
 					initConnection();
 					return null;
@@ -93,7 +92,7 @@ public class HiveClient extends BaseClient implements Closeable {
 			LOG.info("Since Password is NOT provided, Trying to use UnSecure client with username and password");
 			final String userName = getConfigHolder().getUserName();
 			final String password = getConfigHolder().getPassword();
-			    Subject.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>() {
+			    SubjectUtil.doAs(getLoginSubject(), new PrivilegedExceptionAction<Void>() {
 				public Void run() throws Exception {
 					initConnection(userName,password);
 					return null;
@@ -104,7 +103,7 @@ public class HiveClient extends BaseClient implements Closeable {
 	public List<String> getDatabaseList(String databaseMatching, final List<String> databaseList) throws HadoopException{
 	 	final String 	   dbMatching = databaseMatching;
 	 	final List<String> dbList	  = databaseList;
-		List<String> dblist = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+		List<String> dblist = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String>  run() {
 				List<String> ret = null;
 				try {
@@ -224,7 +223,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		final List<String> dbList  	 	   = databaseList;
 		final List<String> tblList   	   = tblNameList;
 
-		List<String> tableList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+		List<String> tableList = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String>  run() {
 				List<String> ret = null;
 				try {
@@ -371,7 +370,7 @@ public class HiveClient extends BaseClient implements Closeable {
 		final List<String> databaseList = dbList;
 		final List<String> tableList    = tblList;
 		final List<String> clmList 	= colList;
-		List<String> columnList = Subject.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
+		List<String> columnList = SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<List<String>>() {
 			public List<String> run() {
 				    List<String> ret = null;
 					try {
@@ -525,7 +524,7 @@ public class HiveClient extends BaseClient implements Closeable {
 	
 	
 	public void close() {
-		Subject.doAs(getLoginSubject(), new PrivilegedAction<Void>(){
+		SubjectUtil.doAs(getLoginSubject(), new PrivilegedAction<Void>(){
 			public Void run() {
 				close(con);
 				return null;

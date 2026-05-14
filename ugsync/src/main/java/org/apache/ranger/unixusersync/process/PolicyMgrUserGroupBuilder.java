@@ -43,6 +43,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
@@ -408,7 +409,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 			LOG.info(String.format("Using principal: %s and keytab: %s", principal, keytab));
 			Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-			Boolean isInitDone = Subject.doAs(sub, new PrivilegedAction<Boolean>() {
+			Boolean isInitDone = SubjectUtil.doAs(sub, new PrivilegedAction<Boolean>() {
 				@Override
 				public Boolean run() {
 					try {
@@ -962,7 +963,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final GetXUserListResponse xUserListFinal = xUserList;
-				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+				ret = SubjectUtil.doAs(sub, new PrivilegedAction<Integer>() {
 					@Override
 					public Integer run() {
 						try {
@@ -1067,7 +1068,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final GetXGroupListResponse xGroupListFinal = xGroupList;
-				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+				ret = SubjectUtil.doAs(sub, new PrivilegedAction<Integer>() {
 					@Override
 					public Integer run() {
 						try {
@@ -1143,7 +1144,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final List<GroupUserInfo> groupUserInfoListFinal = groupUserInfoList;
-				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+				ret = SubjectUtil.doAs(sub, new PrivilegedAction<Integer>() {
 					@Override
 					public Integer run() {
 						try {
@@ -1213,7 +1214,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final UsersGroupRoleAssignments result = ugRoleAssignments;
-				return Subject.doAs(sub, (PrivilegedAction<String>) () -> {
+				return SubjectUtil.doAs(sub, (PrivilegedAction<String>) () -> {
 					try {
 						return updateUsersRoles(result);
 					} catch (Exception e) {
@@ -1308,7 +1309,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 				final UgsyncAuditInfo auditInfoFinal = auditInfo;
-				Subject.doAs(sub, new PrivilegedAction<Void>() {
+				SubjectUtil.doAs(sub, new PrivilegedAction<Void>() {
 					@Override
 					public Void run() {
 						try {
@@ -1755,7 +1756,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				keytab)) {
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+				ret = SubjectUtil.doAs(sub, new PrivilegedAction<Integer>() {
 					@Override
 					public Integer run() {
 						try {
@@ -1876,7 +1877,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				keytab)) {
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+				ret = SubjectUtil.doAs(sub, new PrivilegedAction<Integer>() {
 					@Override
 					public Integer run() {
 						try {

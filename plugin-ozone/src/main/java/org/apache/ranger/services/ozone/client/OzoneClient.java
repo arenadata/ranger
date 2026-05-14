@@ -26,11 +26,11 @@ import org.apache.hadoop.ozone.client.OzoneBucket;
 import org.apache.hadoop.ozone.client.OzoneClientFactory;
 import org.apache.hadoop.ozone.client.OzoneKey;
 import org.apache.hadoop.ozone.client.OzoneVolume;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.Subject;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
@@ -55,7 +55,7 @@ public class OzoneClient extends BaseClient {
                 conf.set(key, value);
             }
         }
-        Subject.doAs(getLoginSubject(), (PrivilegedExceptionAction<Void>) () -> {
+        SubjectUtil.doAs(getLoginSubject(), (PrivilegedExceptionAction<Void>) () -> {
             String[] serviceIds = conf.getTrimmedStrings("ozone.om.service.ids", "ozone1");
             ozoneClient = OzoneClientFactory.getRpcClient(serviceIds[0], conf);
             return null;
