@@ -58,7 +58,6 @@
                     <include>commons-collections:commons-collections</include>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -97,7 +96,6 @@
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 		            <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 		            <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
-                    <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
@@ -111,7 +109,6 @@
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 		            <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>

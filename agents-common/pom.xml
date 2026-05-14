@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.6.0</version>
+        <version>2.6.0.4-2.2.0-0</version>
         <relativePath>..</relativePath>
     </parent>
     <artifactId>ranger-plugins-common</artifactId>
@@ -79,11 +79,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>${commons.lang.version}</version>
-        </dependency>
-        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
@@ -106,6 +101,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
             <version>${commons.configuration.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -172,7 +172,6 @@
             <artifactId>ranger-plugins-cred</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- To be added for JDK15 and above -->
         <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js</artifactId>
@@ -184,15 +183,16 @@
             <version>${graalvm.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.graalvm.truffle</groupId>
-            <artifactId>truffle-api</artifactId>
-            <version>${graalvm.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
         <!-- Test -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

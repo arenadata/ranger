@@ -19,7 +19,7 @@
 
 package org.apache.ranger.audit.destination;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -440,7 +440,12 @@ public class SolrAuditDestination extends AuditDestination {
 		String credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
 		String keyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
 		String keyStoreFile = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE);
-		String keyStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, keyStoreAlias);
+		String keyStoreFilepwd = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_PASSWORD);
+
+		if (StringUtils.isNotEmpty(credentialProviderPath) && StringUtils.isNotEmpty(keyStoreAlias)) {
+			keyStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, keyStoreAlias);
+		}
+
 		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
 			InputStream in = null;
 
@@ -487,7 +492,12 @@ public class SolrAuditDestination extends AuditDestination {
 		String credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
 		String trustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
 		String trustStoreFile = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE);
-		String trustStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, trustStoreAlias);
+		String trustStoreFilepwd = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_PASSWORD);
+
+		if (StringUtils.isNotEmpty(credentialProviderPath) && StringUtils.isNotEmpty(trustStoreAlias)) {
+			trustStoreFilepwd = MiscUtil.getCredentialString(credentialProviderPath, trustStoreAlias);
+		}
+
 		if (StringUtils.isNotEmpty(trustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
 			InputStream in = null;
 

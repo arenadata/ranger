@@ -37,7 +37,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
-          <include>commons-lang:commons-lang</include>
           <include>org.slf4j:slf4j-api</include>
           <include>org.slf4j:slf4j-log4j12</include>
         </includes>
@@ -61,7 +60,6 @@
         <includes>
           <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
@@ -72,7 +70,6 @@
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.noggit:noggit:jar:${noggit.version}</include>
           <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-databind:${fasterxml.jackson.version}</include>
@@ -123,7 +120,6 @@
           <include>commons-collections:commons-collections</include>
           <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
-          <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>

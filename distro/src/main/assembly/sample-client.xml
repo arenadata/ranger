@@ -40,7 +40,6 @@
                 <includes>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>org.apache.commons:commons-lang3</include>
                     <include>org.apache.commons:commons-compress</include>
                     <include>com.google.code.gson:gson</include>
@@ -56,7 +55,6 @@
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-io:commons-io</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                    <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>

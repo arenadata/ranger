@@ -57,7 +57,6 @@
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.noggit:noggit:jar:${noggit.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
@@ -76,6 +75,12 @@
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.graalvm.js:js:jar:${graalvm.version}</include>
+          <include>org.graalvm.js:js-scriptengine:jar:${graalvm.version}</include>
+          <include>org.graalvm.regex:regex:jar:${graalvm.version}</include>
+          <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
+          <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
+          <include>com.ibm.icu:icu4j</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -95,7 +100,6 @@
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
-          <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>

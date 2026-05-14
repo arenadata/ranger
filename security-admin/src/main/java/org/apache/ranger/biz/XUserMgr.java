@@ -32,7 +32,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
@@ -2871,10 +2871,17 @@ public class XUserMgr extends XUserMgrBase {
 							+ " Total memory = " + Runtime.getRuntime().totalMemory()/mb);
 				}
 				for (GroupUserInfo groupUserInfo : groupUserInfoList) {
-					xGroupUserService.createOrDeleteXGroupUsers(groupUserInfo, usersFromDB);
+					if (xGroupUserService.createOrDeleteXGroupUsers(groupUserInfo, usersFromDB)) {
+						updatedGroups++;
+					}
 				}
-				updatedGroups = groupUserInfoList.size();
+				if (logger.isDebugEnabled()) {
+					logger.debug("No. of groups actually updated = " + updatedGroups);
+				}
 			}
+		}
+		if (updatedGroups > 0) {
+			updateUserStoreVersion("createOrDeleteXGroupUserList(updatedGroups=" + updatedGroups + ")");
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("<<== createOrDeleteXGroupUserList");

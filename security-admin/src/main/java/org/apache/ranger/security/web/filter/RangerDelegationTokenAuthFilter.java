@@ -30,7 +30,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
