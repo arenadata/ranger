@@ -33,6 +33,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.http.HttpStatus;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -98,7 +99,7 @@ public class SqoopClient extends BaseClient {
 			return Collections.emptyList();
 		}
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+		List<String> ret = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 
 			@Override
 			public List<String> run() {
@@ -138,7 +139,7 @@ public class SqoopClient extends BaseClient {
 			return Collections.emptyList();
 		}
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+		List<String> ret = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 
 			@Override
 			public List<String> run() {
@@ -177,7 +178,7 @@ public class SqoopClient extends BaseClient {
 			return Collections.emptyList();
 		}
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+		List<String> ret = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 
 			@Override
 			public List<String> run() {

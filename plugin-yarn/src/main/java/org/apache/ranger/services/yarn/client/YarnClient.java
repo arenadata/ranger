@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.Subject;
 
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
@@ -99,7 +100,7 @@ public class YarnClient extends BaseClient {
 				Subject subj = getLoginSubject();
 
 				if (subj != null) {
-					yarnQueueListGetter = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+					yarnQueueListGetter = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 
 					@Override
 					public List<String> run() {

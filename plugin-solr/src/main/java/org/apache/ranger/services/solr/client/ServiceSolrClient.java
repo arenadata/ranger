@@ -37,6 +37,7 @@ import javax.security.auth.Subject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -92,7 +93,7 @@ public class ServiceSolrClient {
 		Map<String, Object> responseData = new HashMap<String, Object>();
 
 		if(this.isKerberosAuth) {
-			Subject.doAs(this.loginSubject, new PrivilegedAction<Void>() {
+			SubjectUtil.doAs(this.loginSubject, new PrivilegedAction<Void>() {
 				@Override
 				public Void run() {
 					testConnection(responseData);
@@ -314,7 +315,7 @@ public class ServiceSolrClient {
 							try {
 								List<String> list = null;
 								if (isKerberosAuth) {
-									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+									list = SubjectUtil.doAs(loginSubject, new PrivilegedAction<List<String>>() {
 										@Override
 										public List<String> run() {
 											List<String> ret = null;
@@ -354,7 +355,7 @@ public class ServiceSolrClient {
 							try {
 								List<String> list = null;
 								if (isKerberosAuth) {
-									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+									list = SubjectUtil.doAs(loginSubject, new PrivilegedAction<List<String>>() {
 										@Override
 										public List<String> run() {
 											List<String> ret = new ArrayList<String>();
@@ -395,7 +396,7 @@ public class ServiceSolrClient {
 							try {
 								List<String> list = null;
 								if (isKerberosAuth) {
-									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+									list = SubjectUtil.doAs(loginSubject, new PrivilegedAction<List<String>>() {
 										@Override
 										public List<String> run() {
 											List<String> ret = null;
@@ -459,7 +460,7 @@ public class ServiceSolrClient {
 							try {
 								List<String> list = null;
 								if (isKerberosAuth) {
-									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+									list = SubjectUtil.doAs(loginSubject, new PrivilegedAction<List<String>>() {
 										@Override
 										public List<String> run() {
 											List<String> ret = null;

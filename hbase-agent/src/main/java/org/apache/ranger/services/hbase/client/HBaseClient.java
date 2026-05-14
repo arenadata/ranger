@@ -30,6 +30,7 @@ import javax.security.auth.Subject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.slf4j.Logger;
@@ -121,7 +122,7 @@ public class HBaseClient extends BaseClient {
 		if (subj != null) {
 			try {
 
-				hbaseStatus = Subject.doAs(subj, new PrivilegedAction<Boolean>() {
+				hbaseStatus = SubjectUtil.doAs(subj, new PrivilegedAction<Boolean>() {
 					@Override
 					public Boolean run() {
 						Boolean hbaseStatus1 = false;
@@ -220,7 +221,7 @@ public class HBaseClient extends BaseClient {
 		subj = getLoginSubject();
 
 		if (subj != null) {
-			ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+			ret = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 
 				@Override
 				public List<String> run() {
@@ -322,7 +323,7 @@ public class HBaseClient extends BaseClient {
 		if (subj != null) {
 			try {
 
-				ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+				ret = SubjectUtil.doAs(subj, new PrivilegedAction<List<String>>() {
 					String tblName = null;
 					@Override
 					public List<String> run() {

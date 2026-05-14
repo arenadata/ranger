@@ -19,7 +19,6 @@
 package org.apache.ranger.authorization.knox;
 
 import java.io.IOException;
-import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +38,7 @@ import org.apache.knox.gateway.filter.AbstractGatewayFilter;
 import org.apache.knox.gateway.security.GroupPrincipal;
 import org.apache.knox.gateway.security.ImpersonatedPrincipal;
 import org.apache.knox.gateway.security.PrimaryPrincipal;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.RequestBuilder;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -105,7 +105,7 @@ public class RangerPDPKnoxFilter implements Filter {
 			perf = RangerPerfTracer.getPerfTracer(PERF_KNOXAUTH_REQUEST_LOG, "RangerPDPKnoxFilter.doFilter(url=" + sourceUrl + ", topologyName=" + topologyName + ")");
 		}
 
-		Subject subject = Subject.getSubject(AccessController.getContext());
+		Subject subject = SubjectUtil.current();
 
 		Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(
 				PrimaryPrincipal.class);

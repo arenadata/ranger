@@ -24,6 +24,7 @@ import org.apache.http.auth.KerberosCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.AuthSchemes;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.ranger.authorization.credutils.kerberos.KerberosCredentialsProvider;
 import org.apache.ranger.authorization.credutils.kerberos.KeytabJaasConf;
@@ -41,7 +42,6 @@ import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import java.math.BigDecimal;
-import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -71,11 +71,9 @@ public class CredentialsProviderUtil {
         try {
             final GSSName gssUserPrincipalName = gssManager.createName(user, GSSName.NT_USER_NAME);
             Subject subject = login(user, password);
-            final AccessControlContext acc = AccessController.getContext();
             final GSSCredential credential = doAsPrivilegedWrapper(subject,
                     (PrivilegedExceptionAction<GSSCredential>) () -> gssManager.createCredential(gssUserPrincipalName,
-                            GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY),
-                    acc);
+                            GSSCredential.DEFAULT_LIFETIME, SPNEGO_OID, GSSCredential.INITIATE_ONLY));
             credentialsProvider.setCredentials(
                     new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthSchemes.SPNEGO),
                     new KerberosCredentials(credential));
@@ -143,16 +141,9 @@ public class CredentialsProviderUtil {
     }
 
 
-    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action, final AccessControlContext acc)
+    static <T> T doAsPrivilegedWrapper(final Subject subject, final PrivilegedExceptionAction<T> action)
             throws PrivilegedActionException {
-        try {
-            return AccessController.doPrivileged((PrivilegedExceptionAction<T>) () -> Subject.doAsPrivileged(subject, action, acc));
-        } catch (PrivilegedActionException pae) {
-            if (pae.getCause() instanceof PrivilegedActionException) {
-                throw (PrivilegedActionException) pae.getCause();
-            }
-            throw pae;
-        }
+        return SubjectUtil.doAs(subject, action);
     }
 
     public static CredentialsProvider getBasicCredentials(String user, String password) {

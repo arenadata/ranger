@@ -25,8 +25,6 @@ import java.net.UnknownHostException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
-import javax.security.auth.Subject;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -36,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.slf4j.Logger;
@@ -167,7 +166,7 @@ public class HdfsClient extends BaseClient {
 				return listFilesInternal(baseDir, fileMatching, pathList);
 			}
 		};
-		return Subject.doAs(getLoginSubject(),action);
+		return SubjectUtil.doAs(getLoginSubject(),action);
 	}
 	
 	public static final void main(String[] args) {

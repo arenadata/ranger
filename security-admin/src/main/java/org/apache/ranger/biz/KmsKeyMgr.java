@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -149,7 +150,7 @@ public class KmsKeyMgr {
 						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(repoName);
-						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+						response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
 								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
@@ -252,7 +253,7 @@ public class KmsKeyMgr {
 					 response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);}
 					else{
 						Subject sub = getSubjectForKerberos(provider);
-			            response = Subject.doAs(sub, new PrivilegedAction<String>() {
+			            response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
 		                        return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
@@ -305,7 +306,7 @@ public class KmsKeyMgr {
 						response = r.delete(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(provider);
-						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+						response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
 								return r.delete(String.class);
@@ -358,7 +359,7 @@ public class KmsKeyMgr {
 						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
 					}else{
 							Subject sub = getSubjectForKerberos(provider);
-							response = Subject.doAs(sub, new PrivilegedAction<String>() {
+							response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 								@Override
 								public String run() {
 									return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
@@ -410,7 +411,7 @@ public class KmsKeyMgr {
 						response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 					}else{
 						Subject sub = getSubjectForKerberos(provider);
-						response = Subject.doAs(sub, new PrivilegedAction<String>() {
+						response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 							@Override
 							public String run() {
 								return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
@@ -447,7 +448,7 @@ public class KmsKeyMgr {
 			response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 		}else{
 			Subject sub = getSubjectForKerberos(repoName);
-			response = Subject.doAs(sub, new PrivilegedAction<String>() {
+			response = SubjectUtil.doAs(sub, new PrivilegedAction<String>() {
 				@Override
 				public String run() {
 					return r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).get(String.class);

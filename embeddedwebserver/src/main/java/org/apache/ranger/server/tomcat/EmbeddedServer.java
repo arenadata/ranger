@@ -45,6 +45,7 @@ import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 
 import org.apache.ranger.credentialapi.CredentialReader;
 
@@ -298,7 +299,7 @@ public class EmbeddedServer {
 					LOG.info("Provided Kerberos Credential : Principal = "
 							+ principal + " and Keytab = " + keytab);
 					Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-					Subject.doAs(sub, new PrivilegedAction<Void>() {
+					SubjectUtil.doAs(sub, new PrivilegedAction<Void>() {
 						@Override
 						public Void run() {
 							LOG.info("Starting Server using kerberos credential");
