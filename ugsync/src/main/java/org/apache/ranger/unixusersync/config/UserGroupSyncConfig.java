@@ -150,6 +150,12 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.nameattribute";
 	private static final String DEFAULT_USER_NAME_ATTRIBUTE = "cn";
 
+	private static final String LGSYNC_USER_FIRST_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.firstnameattribute";
+	private static final String DEFAULT_USER_FIRST_NAME_ATTRIBUTE = "givenName";
+
+	private static final String LGSYNC_USER_LAST_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.lastnameattribute";
+	private static final String DEFAULT_USER_LAST_NAME_ATTRIBUTE = "sn";
+
 	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.groupnameattribute";
 	private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 
@@ -707,6 +713,22 @@ public class UserGroupSyncConfig  {
 		return val;
 	}
 
+	public String getUserFirstNameAttribute() {
+		String val = prop.getProperty(LGSYNC_USER_FIRST_NAME_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_FIRST_NAME_ATTRIBUTE;
+		}
+		return val.trim();
+	}
+
+	public String getUserLastNameAttribute() {
+		String val = prop.getProperty(LGSYNC_USER_LAST_NAME_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_LAST_NAME_ATTRIBUTE;
+		}
+		return val.trim();
+	}
+
 	public String getUserGroupNameAttribute() {
 		String val =  prop.getProperty(LGSYNC_USER_GROUP_NAME_ATTRIBUTE);
 		if(val == null || val.trim().isEmpty()) {
@@ -1246,6 +1268,16 @@ public class UserGroupSyncConfig  {
 	/* Used only for unit testing */
     	public void setUserNameAttribute(String userNameAttr) {
 		prop.setProperty(LGSYNC_USER_NAME_ATTRIBUTE, userNameAttr);
+	}
+
+	/* Used only for unit testing */
+	public void setUserFirstNameAttribute(String userFirstNameAttr) {
+		prop.setProperty(LGSYNC_USER_FIRST_NAME_ATTRIBUTE, userFirstNameAttr);
+	}
+
+	/* Used only for unit testing */
+	public void setUserLastNameAttribute(String userLastNameAttr) {
+		prop.setProperty(LGSYNC_USER_LAST_NAME_ATTRIBUTE, userLastNameAttr);
 	}
 
 	/* Used only for unit testing */

@@ -91,6 +91,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
   private String[] userSearchBase;
 	private String userNameAttribute;
+	private String userFirstNameAttribute;
+	private String userLastNameAttribute;
 	private String userCloudIdAttribute;
   private int    userSearchScope;
   private String userObjectClass;
@@ -232,10 +234,14 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		userObjectClass = config.getUserObjectClass();
 		userSearchFilter = config.getUserSearchFilter();
 		userNameAttribute = config.getUserNameAttribute();
+		userFirstNameAttribute = config.getUserFirstNameAttribute();
+		userLastNameAttribute = config.getUserLastNameAttribute();
 		userCloudIdAttribute = config.getUserCloudIdAttribute();
 
 		Set<String> userSearchAttributes = new HashSet<String>();
 		userSearchAttributes.add(userNameAttribute);
+		userSearchAttributes.add(userFirstNameAttribute);
+		userSearchAttributes.add(userLastNameAttribute);
 		userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
 		for (String useGroupNameAttribute : userGroupNameAttributeSet) {
 			userSearchAttributes.add(useGroupNameAttribute);
@@ -319,6 +325,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				+ ",  userSearchFilter: " + userSearchFilter
 				+ ",  extendedUserSearchFilter: " + extendedUserSearchFilter
 				+ ",  userNameAttribute: " + userNameAttribute
+				+ ",  userFirstNameAttribute: " + userFirstNameAttribute
+				+ ",  userLastNameAttribute: " + userLastNameAttribute
 				+ ",  userSearchAttributes: " + userSearchAttributes
 				+ ",  userGroupNameAttributeSet: " + userGroupNameAttributeSet
 				+ ",  otherUserAttributes: " + otherUserAttributes
@@ -578,6 +586,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userFullName);
 						userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 						userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
+						addNameAttrToMap(attributes, userFirstNameAttribute, UgsyncCommonConstants.FIRST_NAME, userAttrMap);
+						addNameAttrToMap(attributes, userLastNameAttribute, UgsyncCommonConstants.LAST_NAME, userAttrMap);
 						Attribute userCloudIdAttr = attributes.get(userCloudIdAttribute);
 						if (userCloudIdAttr != null) {
 							addToAttrMap(userAttrMap, "cloud_id", userCloudIdAttr, config.getUserCloudIdAttributeDataType());
@@ -1054,6 +1064,24 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			closeLdapContext();
 		}
 		goUpGroupHierarchyLdap(nextLevelGroups, groupHierarchyLevels-1);
+	}
+
+	private void addNameAttrToMap(Attributes attributes, String ldapAttrName, String mapKey, Map<String, String> userAttrMap) throws NamingException {
+		if (StringUtils.isEmpty(ldapAttrName) || attributes == null) {
+			return;
+		}
+		Attribute attr = attributes.get(ldapAttrName);
+		if (attr == null) {
+			return;
+		}
+		Object val = attr.get();
+		if (val == null) {
+			return;
+		}
+		String strVal = val.toString().trim();
+		if (!strVal.isEmpty()) {
+			userAttrMap.put(mapKey, strVal);
+		}
 	}
 
 	private void addToAttrMap(Map<String, String> userAttrMap, String attrName, Attribute attr, String attrType) throws Throwable{

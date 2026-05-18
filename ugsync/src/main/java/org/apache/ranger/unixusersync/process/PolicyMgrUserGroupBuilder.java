@@ -639,6 +639,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			xUserInfo.setSyncSource(syncSource);
 			xUserInfo.setOtherAttrsMap(otherAttrsMap);
 			xUserInfo.setOtherAttributes(otherAttributes);
+			if (otherAttrsMap != null) {
+				String firstName = otherAttrsMap.get(UgsyncCommonConstants.FIRST_NAME);
+				if (StringUtils.isNotBlank(firstName)) {
+					xUserInfo.setFirstName(firstName);
+				}
+				String lastName = otherAttrsMap.get(UgsyncCommonConstants.LAST_NAME);
+				if (StringUtils.isNotBlank(lastName)) {
+					xUserInfo.setLastName(lastName);
+				}
+			}
 			return ((T) xUserInfo);
 		} else if (uginfo instanceof XGroupInfo ){
 			XGroupInfo xGroupInfo = ((XGroupInfo) uginfo);
@@ -909,7 +919,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private XUserInfo addXUserInfo(String aUserName, Map<String, String> otherAttrsMap, String otherAttributes) {
 		XUserInfo xuserInfo = new XUserInfo();
 		xuserInfo.setName(aUserName);
-		xuserInfo.setFirstName(aUserName);
+		String firstName = otherAttrsMap != null ? otherAttrsMap.get(UgsyncCommonConstants.FIRST_NAME) : null;
+		String lastName  = otherAttrsMap != null ? otherAttrsMap.get(UgsyncCommonConstants.LAST_NAME)  : null;
+		xuserInfo.setFirstName(StringUtils.isNotBlank(firstName) ? firstName : aUserName);
+		if (StringUtils.isNotBlank(lastName)) {
+			xuserInfo.setLastName(lastName);
+		}
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
 		xuserInfo.setUserSource(SOURCE_EXTERNAL);
 		xuserInfo.setStatus(STATUS_ENABLED);

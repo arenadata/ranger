@@ -28,6 +28,7 @@ public class XUserInfo {
 	private String id;
 	private String name;
 	private String firstName;
+	private String lastName;
 	private String 	description;
 	private String otherAttributes;
 	private String syncSource;
@@ -57,6 +58,10 @@ public class XUserInfo {
 	public String getFirstName() { return firstName; }
 
 	public void setFirstName(String firstName) { this.firstName = firstName; }
+
+	public String getLastName() { return lastName; }
+
+	public void setLastName(String lastName) { this.lastName = lastName; }
 
 	public String getDescription() {
 		return description;
@@ -140,7 +145,8 @@ public class XUserInfo {
 
 	@Override
     public String toString() {
-        return "XUserInfo [id=" + id + ", name=" + name + ", firstName=" + firstName + ", description="
+        return "XUserInfo [id=" + id + ", name=" + name + ", firstName=" + firstName
+                + ", lastName=" + lastName + ", description="
                 + description + ", groupNameList=" + groupNameList
                 + ", userRoleList=" + userRoleList + "]";
     }

@@ -25,5 +25,7 @@ public class UgsyncCommonConstants {
     public static final String FULL_NAME = "full_name";
     public static final String SYNC_SOURCE = "sync_source";
     public static final String LDAP_URL = "ldap_url";
+    public static final String FIRST_NAME = "first_name";
+    public static final String LAST_NAME = "last_name";
 
 }
