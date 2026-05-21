@@ -412,7 +412,9 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 				SolrHttpClientBuilder kb = krbBuild.getBuilder();
 				HttpClientUtil.setHttpClientBuilder(kb);
 				final List<String> zkhosts         = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
-				CloudSolrClient    solrCloudClient = new CloudSolrClient.Builder(zkhosts, null).build();
+				CloudSolrClient    solrCloudClient = new CloudSolrClient.Builder(zkhosts, null)
+						.withParallelUpdates(false)
+						.build();
 				solrCloudClient.setDefaultCollection(collectionName);
 				return solrCloudClient;
 			} catch (Exception e) {
