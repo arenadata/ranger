@@ -188,6 +188,7 @@ public class SolrAuditDestination extends AuditDestination {
 									@Override
 									public CloudSolrClient run() throws Exception {
 										return new CloudSolrClient.Builder(zkhosts, Optional.empty())
+												.withParallelUpdates(false)
 												.withLBHttpSolrClientBuilder(new LBHttpSolrClient.Builder()
 														.withConnectionTimeout(1000)
 														.withHttpSolrClientBuilder(
@@ -207,7 +208,9 @@ public class SolrAuditDestination extends AuditDestination {
 								final CloudSolrClient solrCloudClient = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<CloudSolrClient>() {
 									@Override
 									public CloudSolrClient run()  throws Exception {
-										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
+										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty())
+												.withParallelUpdates(false)
+												.build();
 										return solrCloudClient;
 									};
 								});
