@@ -32,6 +32,7 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
         private Map<String, Set<String>> groupUsers;
         private Set<String> invalidGroups;
         private Set<String> invalidUsers;
+        private Map<String, Map<String, String>> userAttrsByName;
 
         public PolicyMgrUserGroupBuilderTest() {
                 super();
@@ -44,6 +45,11 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 groupUsers = new HashMap<>();
                 invalidGroups = new HashSet<>();
                 invalidUsers = new HashSet<>();
+                userAttrsByName = new HashMap<>();
+        }
+
+        public Map<String, String> getUserAttrs(String username) {
+                return userAttrsByName.get(username);
         }
 
         public int getTotalUsers() {
@@ -97,8 +103,10 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
 
                 for (String userdn : sourceUsers.keySet()) {
                         //System.out.println("Username: " + sourceUsers.get(userdn).get("original_name"));
-                        String username = userNameTransform(sourceUsers.get(userdn).get("original_name"));
+                        Map<String, String> userAttrs = sourceUsers.get(userdn);
+                        String username = userNameTransform(userAttrs.get("original_name"));
                         allUsers.add(username);
+                        userAttrsByName.put(username, userAttrs);
                         if (!isValidString(username)) {
                                 invalidUsers.add(username);
                         }

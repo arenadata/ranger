@@ -21,6 +21,12 @@ package org.apache.ranger.usergroupsync;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.Map;
+
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 
 import org.apache.directory.server.annotations.CreateLdapConnectionPool;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
@@ -464,6 +470,62 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		sink.init();
 		ldapBuilder.updateSink(sink);
 		assertEquals(2, sink.getGroupsWithNoUsers());
+	}
+
+	@Test
+	public void testUserFirstAndLastNameMapping() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserFirstNameAttribute("cn");
+		config.setUserLastNameAttribute("sn");
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(false);
+		config.setPagedResultsEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+		config.setUserSearchEnabled(true);
+		// clear any group-name filter leftover from prior tests in this suite
+		config.setGroupnames("");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+
+		// sAMAccountName for cn=User1000 entry is "U1000"; cn/sn provide first/last name
+		Map<String, String> u1000Attrs = sink.getUserAttrs("U1000");
+		assertNotNull("U1000 should have been synced", u1000Attrs);
+		assertEquals("User1000", u1000Attrs.get(UgsyncCommonConstants.FIRST_NAME));
+		assertEquals("User1000", u1000Attrs.get(UgsyncCommonConstants.LAST_NAME));
+	}
+
+	@Test
+	public void testUserNameMappingWithoutFirstNameAttribute() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		// firstName attribute defaults to givenName which is not present in the test LDIF
+		config.setUserFirstNameAttribute("givenName");
+		config.setUserLastNameAttribute("sn");
+		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(false);
+		config.setPagedResultsEnabled(true);
+		config.setGroupSearchFirstEnabled(false);
+		config.setUserSearchEnabled(true);
+		// clear any group-name filter leftover from prior tests in this suite
+		config.setGroupnames("");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+
+		Map<String, String> u1000Attrs = sink.getUserAttrs("U1000");
+		assertNotNull("U1000 should have been synced", u1000Attrs);
+		assertNull("givenName is absent in the test LDIF", u1000Attrs.get(UgsyncCommonConstants.FIRST_NAME));
+		assertEquals("User1000", u1000Attrs.get(UgsyncCommonConstants.LAST_NAME));
 	}
 
 	@After
