@@ -56,7 +56,7 @@ class RangerTrinoPluginTest {
 
     @BeforeAll
     static void setUp() {
-        Gson gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
+        Gson gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
                 .create();
 
