@@ -411,6 +411,69 @@
     },
     {
       "service": "cl1_trino",
+      "name": "alice-schemafunction",
+      "policyType": 0,
+      "policyPriority": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "catalog": {
+          "values": [
+            "alice-catalog"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "schema": {
+          "values": [
+            "schema"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "schemafunction": {
+          "values": [
+            "query"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "execute",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "alice"
+          ],
+          "groups": [],
+          "roles": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "serviceType": "trino",
+      "options": {},
+      "validitySchedules": [],
+      "policyLabels": [],
+      "zoneName": "",
+      "isDenyAllElse": false,
+      "id": 58,
+      "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "cl1_trino",
       "name": "alice-view",
       "policyType": 0,
       "policyPriority": 0,
@@ -944,6 +1007,28 @@
         "label": "Schema Procedure",
         "description": "Schema Procedure",
         "accessTypeRestrictions": ["execute", "grant"]
+      },
+      {
+        "itemId": 10,
+        "name": "schemafunction",
+        "type": "string",
+        "level": 30,
+        "parent": "schema",
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": false,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": true,
+          "ignoreCase": true
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Schema Function",
+        "description": "Schema Function",
+        "accessTypeRestrictions": ["create", "drop", "show", "execute", "grant"]
       }
     ],
     "accessTypes": [
