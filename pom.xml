@@ -800,7 +800,7 @@
     </repositories>
     <distributionManagement>
         <repository>
-            <id>github</id>
+            <id>arenadata</id>
             <name>GitHub arenadata Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/arenadata/ranger</url>
         </repository>

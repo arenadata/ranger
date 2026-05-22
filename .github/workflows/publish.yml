@@ -1,0 +1,32 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  MAVEN_ARGS: -B -V -e -ntp -DskipTests=true -Dcheckstyle.skip=true -Djacoco.skip=true -Dpmd.skip=true -Drat.skip=true -Dspotbugs.skip=true -Denunciate.skip=true
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - name: Maven Deploy
+        run: mvn ${{ env.MAVEN_ARGS }} --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
