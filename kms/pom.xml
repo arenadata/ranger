@@ -26,6 +26,10 @@
     <packaging>jar</packaging>
     <name>Key Management Service</name>
     <description>Key Management Service</description>
+    <properties>
+        <javac.source.version>1.8</javac.source.version>
+        <javac.target.version>1.8</javac.target.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>asm</groupId>

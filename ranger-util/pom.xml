@@ -25,6 +25,10 @@
     <artifactId>ranger-util</artifactId>
     <name>Ranger Util</name>
     <description>Common Utilities of Ranger</description>
+    <properties>
+        <javac.source.version>1.8</javac.source.version>
+        <javac.target.version>1.8</javac.target.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

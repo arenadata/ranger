@@ -27,6 +27,8 @@
     <name>Security Admin Web Application</name>
     <description>security-admin-tool java web application</description>
     <properties>
+        <javac.source.version>1.8</javac.source.version>
+        <javac.target.version>1.8</javac.target.version>
         <skipJSTests>false</skipJSTests>
     </properties>
     <dependencies>
@@ -251,6 +253,10 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
         </dependency>
         <dependency>
             <groupId>net.htmlparser.jericho</groupId>
@@ -695,6 +701,10 @@
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>cglib</artifactId>
             <version>${cglib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
