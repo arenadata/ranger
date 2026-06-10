@@ -79,6 +79,15 @@
                     <include>com.jcraft:jsch</include>
                     <include>com.google.code.findbugs:jsr305</include>
                     <include>io.netty:netty-all</include>
+                    <include>io.netty:netty-handler</include>
+                    <include>io.netty:netty-common</include>
+                    <include>io.netty:netty-buffer</include>
+                    <include>io.netty:netty-transport</include>
+                    <include>io.netty:netty-codec</include>
+                    <include>io.netty:netty-resolver</include>
+                    <include>io.netty:netty-handler-proxy</include>
+                    <include>io.netty:netty-transport-native-unix-common</include>
+                    <include>io.netty:netty-transport-classes-epoll</include>
                     <include>com.thoughtworks.paranamer:paranamer</include>
                     <include>org.xerial.snappy:snappy-java</include>
                     <include>xmlenc:xmlenc</include>
