@@ -19,7 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyChangeListener;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyProvider;

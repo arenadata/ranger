@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
@@ -210,7 +209,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 	}
 
 	public List<XXPolicy> findByRoleId(Long roleId) {
-		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		List<XXPolicy> ret = Collections.emptyList();
 		if (roleId != null) {
 			try {
 				ret = getEntityManager().createNamedQuery("XXPolicy.findByRoleId", tClass)
@@ -222,7 +221,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		return ret;
 	}
 	public List<Long> findServiceIdsByRoleId(Long roleId) {
-		List<Long> ret = ListUtils.EMPTY_LIST;
+		List<Long> ret = Collections.emptyList();
 		if (roleId != null) {
 			try {
 				ret = getEntityManager().createNamedQuery("XXPolicy.findServiceIdsByRoleId", Long.class)
@@ -281,7 +280,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 	}
 
 	public List<XXPolicy> getAllByPolicyItem() {
-		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		List<XXPolicy> ret = Collections.emptyList();
 		try {
 			ret = getEntityManager().createNamedQuery("XXPolicy.getAllByPolicyItem", tClass)
 					.getResultList();
@@ -344,7 +343,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 	}
 
 	public List<String> findDuplicateGUIDByServiceIdAndZoneId(Long serviceId, Long zoneId) {
-		List<String> ret = ListUtils.EMPTY_LIST;
+		List<String> ret = Collections.emptyList();
 		if(serviceId == null || zoneId == null) {
 			return ret;
 		}
@@ -360,7 +359,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 	}
 
 	public List<XXPolicy> findPolicyByGUIDAndServiceIdAndZoneId(String guid, Long serviceId, Long zoneId) {
-		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		List<XXPolicy> ret = Collections.emptyList();
 		if (guid == null || serviceId == null ||  zoneId == null) {
 			return ret;
 		}

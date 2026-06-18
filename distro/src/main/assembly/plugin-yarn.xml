@@ -85,6 +85,8 @@
           <include>org.graalvm.sdk:graal-sdk:jar:${graalvm.version}</include>
           <include>org.graalvm.truffle:truffle-api:jar:${graalvm.version}</include>
           <include>com.ibm.icu:icu4j</include>
+          <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4</include>
         </includes>
       </binaries>
     </moduleSet>

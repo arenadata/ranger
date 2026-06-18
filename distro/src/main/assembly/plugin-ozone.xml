@@ -129,6 +129,8 @@
                     <include>org.apache.orc:orc-core:jar:${orc.version}</include>
                     <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+		            <include>commons-collections:commons-collections</include>
+		            <include>org.apache.commons:commons-collections4</include>
                 </includes>
             </binaries>
         </moduleSet>

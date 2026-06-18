@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -34,7 +34,7 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 	public TagPredicateUtil() { super(); }
 
 	@Override
-	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+	public void addPredicates(SearchFilter filter, List<Predicate<Object>> predicates) {
 		super.addPredicates(filter, predicates);
 
 		addPredicateForTagDefId(filter.getParam(SearchFilter.TAG_DEF_ID), predicates);
@@ -52,12 +52,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		addPredicateForTagResourceMapId(filter.getParam(SearchFilter.TAG_MAP_ID), predicates);
 	}
 
-	private Predicate addPredicateForTagDefId(final String id, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagDefId(final String id, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -84,12 +84,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagDefGuid(final String guid, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagDefGuid(final String guid, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(guid)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -116,12 +116,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagId(final String id, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagId(final String id, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -151,12 +151,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagGuid(final String guid, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagGuid(final String guid, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(guid)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -183,12 +183,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagType(final String type, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagType(final String type, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(type)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -219,12 +219,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceId(final String id, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForResourceId(final String id, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -255,12 +255,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceGuid(final String id, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForResourceGuid(final String id, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -287,12 +287,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForServiceResourceServiceName(final String serviceName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceResourceServiceName(final String serviceName, List<Predicate<Object>> predicates) {
 		if (serviceName == null || StringUtils.isEmpty(serviceName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -318,12 +318,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceSignature(final String signature, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForResourceSignature(final String signature, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(signature)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 
@@ -350,12 +350,12 @@ public class TagPredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagResourceMapId(final String id, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagResourceMapId(final String id, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(id)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 

@@ -17,6 +17,8 @@
 
 package org.apache.ranger.biz;
 
+import java.util.Collections;
+
 import static org.mockito.ArgumentMatchers.anyString;
 
 import java.util.ArrayList;
@@ -27,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -1386,7 +1387,7 @@ public class TestServiceDBStore {
 				xServiceConfigMapDao.findByServiceId(rangerService.getId()))
 				.thenReturn(xConfMapList);
 		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
-		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(Collections.emptyList());
 
 		Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
 
@@ -1837,7 +1838,7 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
 		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
-		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(Collections.emptyList());
 
 
 		RangerPolicyResourceSignature signature = Mockito
@@ -1986,7 +1987,7 @@ public class TestServiceDBStore {
 		Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
 				xService);
 		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
-		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
+		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(Collections.emptyList());
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
         Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);

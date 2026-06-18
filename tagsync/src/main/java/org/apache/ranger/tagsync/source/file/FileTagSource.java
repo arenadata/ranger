@@ -19,7 +19,7 @@
 
 package org.apache.ranger.tagsync.source.file;
 
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
