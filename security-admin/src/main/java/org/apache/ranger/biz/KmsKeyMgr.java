@@ -36,10 +36,10 @@ import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.PredicateUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.PredicateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.ProviderUtils;
@@ -612,7 +612,7 @@ public class KmsKeyMgr {
 
 		KeySearchFilter filter = getKeySearchFilter(request, sortFields);
 		
-		Predicate pred = getPredicate(filter);
+		Predicate<Object> pred = getPredicate(filter);
 		
 		if(pred != null) {
 			CollectionUtils.filter(vXKmsKeyList.getVXKeys(), pred);
@@ -620,26 +620,26 @@ public class KmsKeyMgr {
 		return vXKmsKeyList;
 	}
 	
-	private Predicate getPredicate(KeySearchFilter filter) {
+	private Predicate<Object> getPredicate(KeySearchFilter filter) {
 		if(filter == null || filter.isEmpty()) {
 			return null;
 		}
 
-		List<Predicate> predicates = new ArrayList<Predicate>();
+		List<Predicate<Object>> predicates = new ArrayList<Predicate<Object>>();
 
 		addPredicateForKeyName(filter.getParam(KeySearchFilter.KEY_NAME), predicates);
 		
-		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+		Predicate<Object> ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
 
 		return ret;
 	}
 	
-	private Predicate addPredicateForKeyName(final String name, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForKeyName(final String name, List<Predicate<Object>> predicates) {
 			if(StringUtils.isEmpty(name)) {
 				return null;
 			}
 
-			Predicate ret = new Predicate() {
+			Predicate<Object> ret = new Predicate<Object>() {
 				@Override
 				public boolean evaluate(Object object) {
 					if(object == null) {

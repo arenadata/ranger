@@ -31,6 +31,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
@@ -50,6 +51,11 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons.codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

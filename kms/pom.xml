@@ -31,6 +31,7 @@
         <javac.target.version>1.8</javac.target.version>
     </properties>
     <dependencies>
+
         <dependency>
             <groupId>asm</groupId>
             <artifactId>asm-all</artifactId>
@@ -291,6 +292,11 @@
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
             <version>${jsonsmart.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

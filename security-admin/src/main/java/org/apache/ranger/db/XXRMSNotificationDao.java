@@ -22,7 +22,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRMSNotification;
 import org.slf4j.Logger;

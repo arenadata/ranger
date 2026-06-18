@@ -19,9 +19,9 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.Predicate;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;

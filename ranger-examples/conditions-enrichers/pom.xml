@@ -27,6 +27,12 @@
     <description>Ranger Examples - Conditions and ContextEnrichers</description>
     <dependencies>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>

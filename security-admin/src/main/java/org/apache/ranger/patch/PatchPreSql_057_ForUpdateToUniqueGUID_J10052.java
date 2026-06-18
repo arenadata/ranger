@@ -19,7 +19,7 @@ package org.apache.ranger.patch;
 
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;

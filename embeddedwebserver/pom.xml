@@ -28,6 +28,7 @@
     <name>Embedded Web Server Invoker</name>
     <description>Embedded Web Server Invoker</description>
     <dependencies>
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -47,6 +48,11 @@
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
             <version>${jsonsmart.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

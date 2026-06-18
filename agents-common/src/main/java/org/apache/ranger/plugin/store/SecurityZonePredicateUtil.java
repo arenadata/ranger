@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -32,7 +32,7 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
     }
 
     @Override
-    public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+    public void addPredicates(SearchFilter filter, List<Predicate<Object>> predicates) {
         //super.addPredicates(filter, predicates);
 
         addPredicateForServiceName(filter.getParam(SearchFilter.SERVICE_NAME), predicates);
@@ -43,12 +43,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
 		addPredicateForCreatedBy(filter.getParam(SearchFilter.CREATED_BY), predicates);
     }
 
-    private Predicate addPredicateForServiceName(final String serviceName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForServiceName(final String serviceName, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(serviceName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -74,12 +74,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForMatchingZoneId(final String zoneId, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForMatchingZoneId(final String zoneId, List<Predicate<Object>> predicates) {
         if (StringUtils.isEmpty(zoneId)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -107,12 +107,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForMatchingZoneName(final String zoneName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForMatchingZoneName(final String zoneName, List<Predicate<Object>> predicates) {
         if (StringUtils.isEmpty(zoneName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -140,12 +140,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForNonMatchingZoneName(final String zoneName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForNonMatchingZoneName(final String zoneName, List<Predicate<Object>> predicates) {
         if (StringUtils.isEmpty(zoneName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -173,12 +173,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-	private Predicate addPredicateForMatchingZoneNamePartial(final String zoneName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForMatchingZoneNamePartial(final String zoneName, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(zoneName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if (object == null) {
@@ -206,12 +206,12 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForCreatedBy(final String createdBy, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForCreatedBy(final String createdBy, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(createdBy)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if (object == null) {

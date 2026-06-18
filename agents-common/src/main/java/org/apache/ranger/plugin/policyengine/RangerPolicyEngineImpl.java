@@ -19,9 +19,8 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -502,7 +501,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 			RangerPolicyRepository policyRepository = policyEngine.getPolicyRepository();
-			List<RangerPolicy> oldPolicies = policyRepository == null ? ListUtils.EMPTY_LIST : policyRepository.getPolicies();
+			List<RangerPolicy> oldPolicies = policyRepository == null ? Collections.emptyList() : policyRepository.getPolicies();
 			ret = CollectionUtils.isNotEmpty(oldPolicies) ? new ArrayList<>(oldPolicies) : oldPolicies;
 		}
 		return ret;
@@ -519,7 +518,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 			RangerPolicyRepository tagPolicyRepository = policyEngine.getTagPolicyRepository();
-			List<RangerPolicy> oldPolicies = tagPolicyRepository == null ? ListUtils.EMPTY_LIST : tagPolicyRepository.getPolicies();
+			List<RangerPolicy> oldPolicies = tagPolicyRepository == null ? Collections.emptyList() : tagPolicyRepository.getPolicies();
 			ret = CollectionUtils.isNotEmpty(oldPolicies) ? new ArrayList<>(oldPolicies) : oldPolicies;
 		}
 		return ret;

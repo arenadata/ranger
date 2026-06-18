@@ -27,10 +27,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.PredicateUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.Predicate;
+import org.apache.commons.collections4.PredicateUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +52,7 @@ public class AbstractPredicateUtil {
 			return;
 		}
 
-		Predicate pred = getPredicate(filter);
+		Predicate<Object> pred = getPredicate(filter);
 
 		if(pred != null) {
 			CollectionUtils.filter(objList, pred);
@@ -68,21 +68,21 @@ public class AbstractPredicateUtil {
 		}
 	}
 
-	public Predicate getPredicate(SearchFilter filter) {
+	public Predicate<Object> getPredicate(SearchFilter filter) {
 		if(filter == null || filter.isEmpty()) {
 			return null;
 		}
 
-		List<Predicate> predicates = new ArrayList<>();
+		List<Predicate<Object>> predicates = new ArrayList<>();
 		
 		addPredicates(filter, predicates);
 
-		Predicate ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
+		Predicate<Object> ret = CollectionUtils.isEmpty(predicates) ? null : PredicateUtils.allPredicate(predicates);
 
 		return ret;
 	}
 
-	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+	public void addPredicates(SearchFilter filter, List<Predicate<Object>> predicates) {
 		addPredicateForServiceType(filter.getParam(SearchFilter.SERVICE_TYPE), predicates);
 		addPredicateForServiceTypeId(filter.getParam(SearchFilter.SERVICE_TYPE_ID), predicates);
 		addPredicateForServiceName(filter.getParam(SearchFilter.SERVICE_NAME), predicates);
@@ -243,12 +243,12 @@ public class AbstractPredicateUtil {
 		sorterMap.put(SearchFilter.ZONE_NAME, zoneNameComparator);
 	}
 
-	private Predicate addPredicateForServiceType(final String serviceType, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceType(final String serviceType, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(serviceType)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -277,12 +277,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForServiceTypeId(final String serviceTypeId, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceTypeId(final String serviceTypeId, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(serviceTypeId)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -313,12 +313,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForServiceName(final String serviceName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceName(final String serviceName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(serviceName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -350,12 +350,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPolicyName(final String policyName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPolicyName(final String policyName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(policyName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -383,12 +383,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPartialPolicyName(final String policyName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPartialPolicyName(final String policyName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(policyName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -416,12 +416,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPolicyId(final String policyId, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPolicyId(final String policyId, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(policyId)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -451,12 +451,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForUserName(final String userName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForUserName(final String userName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(userName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -509,12 +509,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForGroupName(final String groupName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForGroupName(final String groupName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(groupName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -567,12 +567,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForRoleName(final String roleName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForRoleName(final String roleName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(roleName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -625,12 +625,12 @@ public class AbstractPredicateUtil {
 
 	}
 
-	private Predicate addPredicateForIsEnabled(final String status, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForIsEnabled(final String status, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(status)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -662,12 +662,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResources(final Map<String, String> resources, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForResources(final Map<String, String> resources, List<Predicate<Object>> predicates) {
 		if(MapUtils.isEmpty(resources)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -725,12 +725,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPolicyResource(final String resourceValue, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPolicyResource(final String resourceValue, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(resourceValue)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -778,14 +778,14 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForIsRecursive(final String isRecursiveStr, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForIsRecursive(final String isRecursiveStr, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(isRecursiveStr)) {
 			return null;
 		}
 
 		final boolean isRecursive = Boolean.parseBoolean(isRecursiveStr);
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -825,12 +825,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagServiceName(final String tagServiceName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagServiceName(final String tagServiceName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(tagServiceName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -858,9 +858,9 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForResourceSignature(String signature, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForResourceSignature(String signature, List<Predicate<Object>> predicates) {
 
-		Predicate ret = createPredicateForResourceSignature(signature);
+		Predicate<Object> ret = createPredicateForResourceSignature(signature);
 
 		if(predicates != null && ret != null) {
 			predicates.add(ret);
@@ -869,12 +869,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPolicyType(final String policyType, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPolicyType(final String policyType, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(policyType)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -902,12 +902,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPartialPolicyLabels(final String policyLabels, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPartialPolicyLabels(final String policyLabels, List<Predicate<Object>> predicates) {
 		if (StringUtils.isEmpty(policyLabels)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if (object == null) {
@@ -942,12 +942,12 @@ public class AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForPolicyPriority(final String policyPriority, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForPolicyPriority(final String policyPriority, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(policyPriority)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if (object == null) {
@@ -984,13 +984,13 @@ public class AbstractPredicateUtil {
 	}
 
 
-	public Predicate createPredicateForResourceSignature(final String policySignature) {
+	public Predicate<Object> createPredicateForResourceSignature(final String policySignature) {
 
 		if (StringUtils.isEmpty(policySignature)) {
 			return null;
 		}
 
-		return new Predicate() {
+		return new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -1011,13 +1011,13 @@ public class AbstractPredicateUtil {
 			}
 		};
 	}
-    private Predicate addPredicateForZoneName(final String zoneName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForZoneName(final String zoneName, List<Predicate<Object>> predicates) {
 
     if(StringUtils.isEmpty(zoneName)) {
     	return null;
     }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {

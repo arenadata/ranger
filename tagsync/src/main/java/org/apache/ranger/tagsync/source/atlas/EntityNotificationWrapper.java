@@ -29,7 +29,7 @@ import org.apache.atlas.v1.model.instance.Id;
 import org.apache.atlas.v1.model.instance.Referenceable;
 import org.apache.atlas.v1.model.instance.Struct;
 import org.apache.atlas.v1.model.notification.EntityNotificationV1;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.slf4j.Logger;

@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.Subject;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.SubjectUtil;

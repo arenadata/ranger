@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
 
 public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {

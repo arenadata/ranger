@@ -17,7 +17,8 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.ListUtils;
+import java.util.Collections;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRole;
@@ -71,7 +72,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
         return ret;
     }
@@ -84,7 +85,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
                     .setParameter("serviceId", serviceId)
                     .getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
         return ret;
     }
@@ -107,7 +108,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
 			ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", UserId)
 					.getResultList();
 		} catch (NoResultException e) {
-			ret = ListUtils.EMPTY_LIST;
+			ret = Collections.emptyList();
 		}
 		return ret;
 	}
@@ -122,7 +123,7 @@ public class XXRoleDao extends BaseDao<XXRole> {
             ret = getEntityManager().createNamedQuery("XXRole.findByGroupId", tClass).setParameter("groupId", groupId)
                     .getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
         return ret;
     }

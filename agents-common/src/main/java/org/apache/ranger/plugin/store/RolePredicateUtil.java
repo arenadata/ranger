@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -33,7 +33,7 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     @Override
-    public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+    public void addPredicates(SearchFilter filter, List<Predicate<Object>> predicates) {
         addPredicateForRoleName(filter.getParam(SearchFilter.ROLE_NAME), predicates);
         addPredicateForRoleId(filter.getParam(SearchFilter.ROLE_ID), predicates);
         addPredicateForGroupName(filter.getParam(SearchFilter.GROUP_NAME), predicates);
@@ -44,12 +44,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         addPredicateForPartialUserName(filter.getParam(SearchFilter.USER_NAME_PARTIAL), predicates);
     }
 
-    private Predicate addPredicateForRoleName(final String roleName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForRoleName(final String roleName, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(roleName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -86,12 +86,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForPartialRoleName(final String roleNamePartial, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForPartialRoleName(final String roleNamePartial, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(roleNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -128,12 +128,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForRoleId(final String roleId, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForRoleId(final String roleId, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(roleId)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -159,12 +159,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForGroupName(final String groupName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForGroupName(final String groupName, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(groupName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -197,12 +197,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForPartialGroupName(final String groupNamePartial, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForPartialGroupName(final String groupNamePartial, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(groupNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -235,12 +235,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForUserName(final String userName, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForUserName(final String userName, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(userName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {
@@ -273,12 +273,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         return ret;
     }
 
-    private Predicate addPredicateForPartialUserName(final String userNamePartial, List<Predicate> predicates) {
+    private Predicate<Object> addPredicateForPartialUserName(final String userNamePartial, List<Predicate<Object>> predicates) {
         if(StringUtils.isEmpty(userNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
+        Predicate<Object> ret = new Predicate<Object>() {
             @Override
             public boolean evaluate(Object object) {
                 if(object == null) {

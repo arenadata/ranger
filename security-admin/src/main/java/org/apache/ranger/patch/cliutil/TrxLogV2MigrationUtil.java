@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXTrxLogV2;
