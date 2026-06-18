@@ -19,10 +19,11 @@
 
 package org.apache.ranger.plugin.service;
 
+import java.util.Collections;
+
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ public class RangerDefaultService extends RangerBaseService {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("RangerDefaultService.lookupResource Context: (" + context + "), returning empty list");
 		}
-		return ListUtils.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 }

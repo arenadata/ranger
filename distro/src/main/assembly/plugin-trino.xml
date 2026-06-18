@@ -64,6 +64,7 @@
                     <include>com.sun.jersey:jersey-server</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
+                    <include>org.apache.commons:commons-collections4</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>commons-codec:commons-codec</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
@@ -131,6 +132,7 @@
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
+                    <include>org.apache.commons:commons-collections4</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>

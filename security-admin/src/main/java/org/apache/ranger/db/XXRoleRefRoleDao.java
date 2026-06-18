@@ -26,7 +26,7 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefRole;
 import org.springframework.stereotype.Service;

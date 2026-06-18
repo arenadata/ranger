@@ -52,6 +52,7 @@
           <include>com.fasterxml.woodstox:woodstox-core</include>
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
@@ -82,6 +83,8 @@
         <fileMode>644</fileMode>
         <includes>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+          <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>

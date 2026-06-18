@@ -17,6 +17,8 @@
 
 package org.apache.ranger.biz;
 
+import java.util.Collections;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,8 +26,7 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -420,7 +421,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     public List<RangerRole> getRoles(String serviceName) {
-        List<RangerRole> ret = ListUtils.EMPTY_LIST;
+        List<RangerRole> ret = Collections.emptyList();
         if (StringUtils.isNotEmpty(serviceName)) {
             XXService xxService = daoMgr.getXXService().findByName(serviceName);
             ret = getRoles(xxService);
@@ -429,7 +430,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     public List<RangerRole> getRoles(Long serviceId) {
-        List<RangerRole> ret = ListUtils.EMPTY_LIST;
+        List<RangerRole> ret = Collections.emptyList();
 
         if (serviceId != null) {
             String       serviceTypeName            = daoMgr.getXXServiceDef().findServiceDefTypeByServiceId(serviceId);
@@ -462,7 +463,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     public List<RangerRole> getRoles(XXService service) {
-        return service == null ? ListUtils.EMPTY_LIST : getRoles(service.getId());
+        return service == null ? Collections.emptyList() : getRoles(service.getId());
     }
 
     @Override

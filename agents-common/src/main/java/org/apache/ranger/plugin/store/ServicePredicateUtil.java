@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -37,7 +37,7 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 	}
 
 	@Override
-	public void addPredicates(SearchFilter filter, List<Predicate> predicates) {
+	public void addPredicates(SearchFilter filter, List<Predicate<Object>> predicates) {
 		super.addPredicates(filter, predicates);
 
 		addPredicateForServiceType(filter.getParam(SearchFilter.SERVICE_TYPE), predicates);
@@ -75,12 +75,12 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 	}
 
 
-	private Predicate addPredicateForServiceType(final String serviceType, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceType(final String serviceType, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(serviceType)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -114,12 +114,12 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForServiceId(final String serviceId, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForServiceId(final String serviceId, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(serviceId)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -156,12 +156,12 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagSeviceName(final String tagServiceName, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagSeviceName(final String tagServiceName, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(tagServiceName)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {
@@ -189,12 +189,12 @@ public class ServicePredicateUtil extends AbstractPredicateUtil {
 		return ret;
 	}
 
-	private Predicate addPredicateForTagSeviceId(final String tagServiceId, List<Predicate> predicates) {
+	private Predicate<Object> addPredicateForTagSeviceId(final String tagServiceId, List<Predicate<Object>> predicates) {
 		if(StringUtils.isEmpty(tagServiceId)) {
 			return null;
 		}
 
-		Predicate ret = new Predicate() {
+		Predicate<Object> ret = new Predicate<Object>() {
 			@Override
 			public boolean evaluate(Object object) {
 				if(object == null) {

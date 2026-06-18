@@ -72,6 +72,7 @@
 							<include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
 							<include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
 							<include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
+							<include>org.apache.commons:commons-collections4</include>
 							<include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>

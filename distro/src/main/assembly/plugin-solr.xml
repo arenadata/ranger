@@ -76,6 +76,8 @@
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
           <include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
+          <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -96,6 +98,7 @@
             <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include><include>com.fasterxml.woodstox:woodstox-core</include>
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>org.apache.commons:commons-lang3</include>
           <include>commons-logging:commons-logging</include>

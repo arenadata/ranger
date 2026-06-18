@@ -20,7 +20,7 @@
 package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.*;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;

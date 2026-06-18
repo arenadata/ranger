@@ -22,7 +22,7 @@ package org.apache.ranger.common.db;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.ranger.service.RangerTransactionService;
 import org.slf4j.Logger;

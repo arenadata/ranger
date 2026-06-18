@@ -21,7 +21,7 @@ package org.apache.ranger.tagsync.source.atlasrest;
 import org.apache.atlas.type.AtlasClassificationType;
 import org.apache.atlas.type.AtlasStructType;
 import org.apache.atlas.type.AtlasTypeRegistry;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
 
