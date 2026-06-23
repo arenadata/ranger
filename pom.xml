@@ -131,7 +131,7 @@
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>4.0.0</javax.servlet.version>
         <javax.validation>2.0.1.Final</javax.validation>
-        <jaxb-impl.version>2.3.3</jaxb-impl.version>
+        <jaxb-impl.version>2.3.1</jaxb-impl.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
