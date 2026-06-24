@@ -26,6 +26,7 @@ from subprocess import Popen,PIPE
 from datetime import date
 import datetime
 from time import gmtime, strftime
+from pg_jdbc_util import build_pg_query_params
 globalDict = {}
 
 os_name = platform.system()
@@ -353,16 +354,17 @@ class PostgresConf(BaseDB):
 					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s -Djavax.net.ssl.trustStoreType=%s -Djavax.net.ssl.keyStoreType=%s" %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword,self.javax_net_ssl_trustStore_type,self.javax_net_ssl_keyStore_type)
 			else:
 				db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
+		db_query_param = build_pg_query_params(db_ssl_param, db_host=self.host)
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string,user, password)
 			else:
-				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
+				jisql_cmd = "%s %s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_query_param,user, password)
 		elif os_name == "WINDOWS":
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
 				jisql_cmd = "%s %s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
 			else:
-				jisql_cmd = "%s %s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
+				jisql_cmd = "%s %s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN,self.JAVA_OPTS,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_query_param,user, password)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):

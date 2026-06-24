@@ -28,6 +28,7 @@ from datetime import date
 import time
 try: input = raw_input
 except NameError: pass
+from pg_jdbc_util import build_pg_query_params
 globalDict = {}
 
 os_name = platform.system()
@@ -727,7 +728,7 @@ class OracleConf(BaseDB):
 
 class PostgresConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string='false',db_override_jdbc_connection_string=''):
 		self.host = host.lower()
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -739,6 +740,8 @@ class PostgresConf(BaseDB):
 		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
@@ -755,10 +758,17 @@ class PostgresConf(BaseDB):
 					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 			else:
 				db_ssl_param="?ssl=%s&sslfactory=org.postgresql.ssl.NonValidatingFactory" %(self.db_ssl_enabled)
+		db_query_param = build_pg_query_params(db_ssl_param, db_host=self.host)
 		if is_unix:
-			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string, user, password)
+			else:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_query_param,user, password)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
+			else:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_query_param,user, password)
 		return jisql_cmd
 
 	def verify_user(self, root_user, db_root_password, db_user,dryMode):
@@ -1748,7 +1758,7 @@ def main(argv):
 
 	elif XA_DB_FLAVOR == "POSTGRES":
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
-		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
+		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME,postgres_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME,postgres_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME,postgres_patches)
@@ -1789,7 +1799,7 @@ def main(argv):
 
 	elif AUDIT_DB_FLAVOR == "POSTGRES":
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
-		audit_sqlObj = PostgresConf(audit_db_host,POSTGRES_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
+		audit_sqlObj = PostgresConf(audit_db_host,POSTGRES_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,postgres_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "MSSQL":

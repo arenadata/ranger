@@ -514,5 +514,10 @@
             <outputDirectory></outputDirectory>
             <fileMode>755</fileMode>
         </file>
+        <file>
+            <source>${project.parent.basedir}/security-admin/scripts/pg_jdbc_util.py</source>
+            <outputDirectory></outputDirectory>
+            <fileMode>544</fileMode>
+        </file>
     </files>
 </assembly>

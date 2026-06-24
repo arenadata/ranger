@@ -35,6 +35,25 @@ import glob
 import pprint
 from subprocess import  Popen,PIPE
 
+try:
+    sys.path.insert(0, os.getenv('RANGER_ADMIN_HOME', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'scripts')))
+    from pg_jdbc_util import build_pg_host_segment, build_pg_query_params
+except ImportError:
+    def build_pg_host_segment(host, port=None):
+        if not host:
+            return ''
+        host = str(host).strip()
+        if ',' in host or ':' in host:
+            return host
+        return '%s:%s' % (host, str(port or 5432))
+    def build_pg_query_params(existing_ssl_param, is_multi_host_flag=None, db_host=None):
+        if is_multi_host_flag is None:
+            is_multi_host_flag = bool(db_host and ',' in str(db_host))
+        param = existing_ssl_param or ''
+        if not is_multi_host_flag:
+            return param
+        return param + ('&' if param else '?') + 'targetServerType=primary'
+
 conf_dict={}
 
 
@@ -292,7 +311,6 @@ def init_variables(switch):
                 conf_dict['SQL_CONNECTOR_JAR'] = os.path.join(dir,filename)
 
 
-    conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST") + ":" + os.getenv("RANGER_ADMIN_DB_PORT")
     conf_dict['db_name']=os.getenv("RANGER_ADMIN_DB_DBNAME")
     conf_dict['db_user']=os.getenv("RANGER_ADMIN_DB_USERNAME")
     conf_dict['db_password']=os.getenv("RANGER_ADMIN_DB_PASSWORD")
@@ -812,10 +830,14 @@ def update_properties():
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
     elif RANGER_DB_FLAVOR == "POSTGRES":
+        pg_admin_host = build_pg_host_segment(MYSQL_HOST, RANGER_ADMIN_DB_PORT)
+        pg_audit_host = build_pg_host_segment(MYSQL_HOST, RANGER_AUDIT_DB_PORT)
+        pg_query_suffix = build_pg_query_params('', db_host=MYSQL_HOST)
+
         propertyName="ranger.jpa.jdbc.url"
-        newPropertyValue="jdbc:postgresql://%s:%s/%s" %(MYSQL_HOST, RANGER_ADMIN_DB_PORT, db_name)
+        newPropertyValue="jdbc:postgresql://%s/%s%s" % (pg_admin_host, db_name, pg_query_suffix)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-		
+
         propertyName="ranger.jpa.jdbc.user"
         newPropertyValue=db_user
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
@@ -823,9 +845,9 @@ def update_properties():
         propertyName="ranger.jpa.audit.jdbc.user"
         newPropertyValue=audit_db_user
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-		
+
         propertyName="ranger.jpa.audit.jdbc.url"
-        newPropertyValue="jdbc:postgresql://%s:%s/%s" %(MYSQL_HOST, RANGER_AUDIT_DB_PORT, audit_db_name)
+        newPropertyValue="jdbc:postgresql://%s/%s%s" % (pg_audit_host, audit_db_name, pg_query_suffix)
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
         propertyName="ranger.jpa.jdbc.dialect"
