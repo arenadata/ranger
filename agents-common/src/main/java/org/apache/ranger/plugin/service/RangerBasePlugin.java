@@ -68,6 +68,7 @@ public class RangerBasePlugin {
 	private final Map<String, LogHistory>     logHistoryList = new Hashtable<>();
 	private final int                         logInterval    = 30000; // 30 seconds
 	private final DownloadTrigger             accessTrigger  = new DownloadTrigger();
+	private final boolean                     failClosedOnPolicyRefreshAuthzDenied;
 	private       PolicyRefresher             refresher;
 	private       RangerPolicyEngine          policyEngine;
 	private       RangerAuthContext           currentAuthContext;
@@ -113,6 +114,9 @@ public class RangerBasePlugin {
 		setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 		setServiceAdmins(serviceAdmins);
+
+		String authzDeniedMode = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".policy.refresh.authz.denied.mode", "continue");
+		this.failClosedOnPolicyRefreshAuthzDenied = StringUtils.equals(authzDeniedMode, "failclosed");
 
 		String  ugiPrefix = pluginConfig.getPropertyPrefix() + ".ugi";
 		boolean initUgi   = pluginConfig.getBoolean(ugiPrefix + ".initialize", false);
@@ -549,6 +553,10 @@ public class RangerBasePlugin {
 		return this.resultProcessor;
 	}
 
+	public boolean isPolicyRefreshAuthzDenied() {
+		return failClosedOnPolicyRefreshAuthzDenied && pluginContext.isPolicyRefreshAuthzDenied();
+	}
+
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request) {
 		return isAccessAllowed(request, resultProcessor);
 	}
@@ -560,12 +568,15 @@ public class RangerBasePlugin {
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerAccessResult ret          = null;
 		RangerPolicyEngine policyEngine = this.policyEngine;
+		boolean            isPolicyRefreshAuthzDenied = isPolicyRefreshAuthzDenied();
 
-		if (policyEngine != null) {
+		if (isPolicyRefreshAuthzDenied) {
+			ret = getPolicyRefreshAuthzDeniedResult(request, RangerPolicy.POLICY_TYPE_ACCESS);
+		} else if (policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
 		}
 
-		if (ret != null) {
+		if (!isPolicyRefreshAuthzDenied && ret != null) {
 			for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("BasePlugin.isAccessAllowed result=[" + ret + "]");
@@ -605,12 +616,18 @@ public class RangerBasePlugin {
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
 		Collection<RangerAccessResult> ret          = null;
 		RangerPolicyEngine             policyEngine = this.policyEngine;
+		boolean                        isPolicyRefreshAuthzDenied = isPolicyRefreshAuthzDenied();
 
-		if (policyEngine != null) {
+		if (isPolicyRefreshAuthzDenied) {
+			ret = new ArrayList<>();
+			for (RangerAccessRequest request : requests) {
+				ret.add(getPolicyRefreshAuthzDeniedResult(request, RangerPolicy.POLICY_TYPE_ACCESS));
+			}
+		} else if (policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, null);
 		}
 
-		if (CollectionUtils.isNotEmpty(ret)) {
+		if (!isPolicyRefreshAuthzDenied && CollectionUtils.isNotEmpty(ret)) {
 			for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 				Collection<RangerAccessResult> chainedResults = chainedPlugin.isAccessAllowed(requests);
 
@@ -646,8 +663,11 @@ public class RangerBasePlugin {
 	public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		RangerAccessResult ret          = null;
+		boolean            isPolicyRefreshAuthzDenied = isPolicyRefreshAuthzDenied();
 
-		if(policyEngine != null) {
+		if (isPolicyRefreshAuthzDenied) {
+			ret = getPolicyRefreshAuthzDeniedResult(request, RangerPolicy.POLICY_TYPE_DATAMASK);
+		} else if(policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
 
 			if (ret != null) {
@@ -682,8 +702,11 @@ public class RangerBasePlugin {
 	public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		RangerAccessResult ret          = null;
+		boolean            isPolicyRefreshAuthzDenied = isPolicyRefreshAuthzDenied();
 
-		if(policyEngine != null) {
+		if (isPolicyRefreshAuthzDenied) {
+			ret = getPolicyRefreshAuthzDeniedResult(request, RangerPolicy.POLICY_TYPE_ROWFILTER);
+		} else if(policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
 
 			if (ret != null) {
@@ -711,6 +734,16 @@ public class RangerBasePlugin {
 
 			policyEngine.evaluateAuditPolicies(ret);
 		}
+
+		return ret;
+	}
+
+	private RangerAccessResult getPolicyRefreshAuthzDeniedResult(RangerAccessRequest request, int policyType) {
+		RangerAccessResult ret = new RangerAccessResult(policyType, pluginConfig.getServiceName(), getServiceDef(), request);
+
+		ret.setIsAllowed(false);
+		ret.setReason("Policy refresh authorization denied by Ranger Admin");
+		ret.setPolicyVersion(getPolicyVersion());
 
 		return ret;
 	}

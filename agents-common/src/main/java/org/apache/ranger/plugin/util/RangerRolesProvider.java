@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.RangerAdminClientAccessDeniedException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -52,6 +53,7 @@ public class RangerRolesProvider {
 	private final String            cacheFileName;
 	private final String			cacheFileNamePrefix;
 	private final String            cacheDir;
+	private final RangerLocalDirectory.ResolvedDirectory cacheDirectory;
 	private final Set<PosixFilePermission> cacheFilePerms;
 	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final boolean           disableCacheIfServiceNotFound;
@@ -80,15 +82,18 @@ public class RangerRolesProvider {
 		cacheFilename = cacheFilename.replace(File.separatorChar, '_');
 		cacheFilename = cacheFilename.replace(File.pathSeparatorChar, '_');
 
-		this.cacheFileName = cacheFilename;
-		this.cacheDir = cacheDir;
 		String propertyPrefix = config.getPropertyPrefix();
 		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.file.perms")), "644");
-		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
-
 		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
-		this.cacheDirPerms = FileUtils.parsePermissions(cacheDirPermsString);
+		this.cacheDirectory = RangerLocalDirectory.resolve(cacheDir,
+				config.get(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
+				FileUtils.parsePermissions(cacheDirPermsString),
+				FileUtils.parsePermissions(cacheFilePermsString));
+		this.cacheFileName  = cacheFilename;
+		this.cacheDir       = this.cacheDirectory.getPath();
+		this.cacheFilePerms = this.cacheDirectory.getFilePermissions();
+		this.cacheDirPerms  = this.cacheDirectory.getDirPermissions();
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
@@ -119,8 +124,8 @@ public class RangerRolesProvider {
 		}
 
 		try {
-			//load userGroupRoles from ranger admin
 			RangerRoles roles = loadUserGroupRolesFromAdmin();
+			plugIn.getPluginContext().setRoleDownloadAuthzDenied(false);
 
 			if (roles == null) {
 				//if userGroupRoles fetch from ranger Admin Fails, load from cache
@@ -146,6 +151,9 @@ public class RangerRolesProvider {
 					serviceDefSetInPlugin = true;
 				}
 			}
+		} catch (RangerAdminClientAccessDeniedException ade) {
+			plugIn.getPluginContext().setRoleDownloadAuthzDenied(true);
+            LOG.warn("RangerRolesProvider(serviceName={}): role refresh authorization denied. Access checks will fail closed if configured.", serviceName, ade);
 		} catch (RangerServiceNotFoundException snfe) {
 			if (disableCacheIfServiceNotFound) {
 				disableCache();
@@ -156,6 +164,19 @@ public class RangerRolesProvider {
 			}
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);
+			if (!rangerUserGroupRolesSetInPlugin) {
+				RangerRoles roles = loadUserGroupRolesFromCache();
+
+				if (roles != null) {
+					plugIn.setRoles(roles);
+					rangerUserGroupRolesSetInPlugin = true;
+					setLastActivationTimeInMillis(System.currentTimeMillis());
+					lastKnownRoleVersion = roles.getRoleVersion() != null ? roles.getRoleVersion() : -1;
+				} else if (!serviceDefSetInPlugin) {
+					plugIn.setRoles(null);
+					serviceDefSetInPlugin = true;
+				}
+			}
 		}
 
 		RangerPerfTracer.log(perf);
@@ -165,7 +186,7 @@ public class RangerRolesProvider {
 		}
 	}
 
-	private RangerRoles loadUserGroupRolesFromAdmin() throws RangerServiceNotFoundException {
+	private RangerRoles loadUserGroupRolesFromAdmin() throws Exception {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").loadUserGroupRolesFromAdmin()");
@@ -196,9 +217,12 @@ public class RangerRolesProvider {
 		} catch (RangerServiceNotFoundException snfe) {
 			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of roles (" + lastKnownRoleVersion + ")", snfe);
 			throw snfe;
+		} catch (RangerAdminClientAccessDeniedException ade) {
+            LOG.warn("RangerRolesProvider(serviceName={}): failed to refresh roles due to authorization denial (lastKnownRoleVersion={})", serviceName, lastKnownRoleVersion, ade);
+			throw ade;
 		} catch (Exception excp) {
-			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to refresh roles. Will continue to use last known version of roles (" + "lastKnowRoleVersion= " + lastKnownRoleVersion, excp);
-			roles = null;
+            LOG.error("RangerRolesProvider(serviceName={}): failed to refresh roles. Will continue to use last known version of roles (lastKnowRoleVersion= {}", serviceName, lastKnownRoleVersion, excp);
+			throw excp;
 		}
 
 		RangerPerfTracer.log(perf);
@@ -219,6 +243,13 @@ public class RangerRolesProvider {
 		}
 
 		File cacheFile = cacheDir == null ? null : new File(cacheDir + File.separator + cacheFileName);
+
+		try {
+			cacheDirectory.ensureDirectory();
+		} catch (Exception excp) {
+            LOG.error("failed to validate roles cache directory {}", cacheDir, excp);
+			return null;
+		}
 
 		if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
 			Reader reader = null;
@@ -280,17 +311,11 @@ public class RangerRolesProvider {
 		if(roles != null) {
 			File cacheFile = null;
 			if (cacheDir != null) {
-				// Create the cacheDir if it doesn't already exist
-				File cacheDirTmp = new File(cacheDir);
-				if (cacheDirTmp.exists()) {
+				try {
+					cacheDirectory.ensureDirectory();
 					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
-				} else {
-					try {
-						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
-						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
-					} catch (Exception ex) {
-						LOG.error("Cannot create cache directory", ex);
-					}
+				} catch (Exception ex) {
+					LOG.error("Cannot create cache directory", ex);
 				}
 			}
 

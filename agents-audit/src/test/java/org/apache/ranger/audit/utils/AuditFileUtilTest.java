@@ -28,7 +28,9 @@ import java.util.Comparator;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class AuditFileUtilTest {
 
@@ -145,6 +147,139 @@ public class AuditFileUtilTest {
                             Files.delete(path);
                         } catch (IOException e) {
                             // Ignore cleanup exceptions
+                        }
+                    });
+        }
+    }
+
+    @Test
+    public void testResolvePerUserDirectoryUsesPrivatePermissions() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("auditSpoolDir");
+        try {
+            Files.setPosixFilePermissions(tempBaseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(tempBaseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERUSER,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+
+            directory.ensureDirectory();
+
+            Path resolvedPath = new File(directory.getPath()).toPath();
+            assertTrue("Directory should exist", Files.isDirectory(resolvedPath));
+            assertEquals("Base directory permissions should not be changed", PosixFilePermissions.fromString("rwxr-xr-x"), Files.getPosixFilePermissions(tempBaseDir));
+            assertEquals("Directory permissions should be private", PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(resolvedPath));
+            assertEquals("File permissions should be private", PosixFilePermissions.fromString("rw-------"), directory.getFilePermissions());
+        } finally {
+            deleteRecursively(tempBaseDir);
+        }
+    }
+
+    @Test
+    public void testResolvePerGroupDirectoryUsesGroupPermissions() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("auditSpoolDir");
+        try {
+            Files.setPosixFilePermissions(tempBaseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(tempBaseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERGROUP,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+
+            directory.ensureDirectory();
+
+            Path resolvedPath = new File(directory.getPath()).toPath();
+            assertTrue("Directory should exist", Files.isDirectory(resolvedPath));
+            assertEquals("Base directory permissions should not be changed", PosixFilePermissions.fromString("rwxr-xr-x"), Files.getPosixFilePermissions(tempBaseDir));
+            assertEquals("Directory permissions should be group-scoped", PosixFilePermissions.fromString("rwxrwx---"), Files.getPosixFilePermissions(resolvedPath));
+            assertEquals("File permissions should be group-scoped", PosixFilePermissions.fromString("rw-rw----"), directory.getFilePermissions());
+        } finally {
+            deleteRecursively(tempBaseDir);
+        }
+    }
+
+    @Test(expected = IOException.class)
+    public void testResolveDirectoryRejectsUnsafeExistingPermissions() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("auditSpoolDir");
+        try {
+            Files.setPosixFilePermissions(tempBaseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(tempBaseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERUSER,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+            Path resolvedPath = new File(directory.getPath()).toPath();
+
+            Files.createDirectories(resolvedPath);
+            Files.setPosixFilePermissions(resolvedPath, PosixFilePermissions.fromString("rwxr-xr-x"));
+
+            directory.ensureDirectory();
+        } finally {
+            deleteRecursively(tempBaseDir);
+        }
+    }
+
+    @Test
+    public void testResolvePerUserDirectoryRequiresExistingBaseDirectory() throws Exception {
+        Path tempDir = Files.createTempDirectory("auditSpoolDirParent");
+
+        try {
+            Path baseDir = tempDir.resolve("audit-spool");
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(baseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERUSER,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+
+            try {
+                directory.ensureDirectory();
+                fail("Expected missing base audit spool directory to be rejected");
+            } catch (IOException exception) {
+                assertTrue(exception.getMessage().contains("Base audit spool directory does not exist"));
+            }
+
+            assertFalse(Files.exists(baseDir));
+        } finally {
+            deleteRecursively(tempDir);
+        }
+    }
+
+    @Test
+    public void testResolvePerUserDirectoryRejectsUnsafeBasePermissions() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("auditSpoolDir");
+
+        try {
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(tempBaseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERUSER,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+            Path resolvedPath = new File(directory.getPath()).toPath();
+
+            try {
+                directory.ensureDirectory();
+                fail("Expected unsafe base audit spool permissions to be rejected");
+            } catch (IOException exception) {
+                assertTrue(exception.getMessage().contains("Unsafe permissions on base audit spool directory"));
+            }
+
+            assertFalse(Files.exists(resolvedPath));
+        } finally {
+            deleteRecursively(tempBaseDir);
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testResolveDirectoryRejectsUnknownMode() {
+        AuditFileUtil.resolveDirectory("/tmp/ranger-audit", "unknown", AuditFileUtil.parsePermissions("755"), AuditFileUtil.parsePermissions("644"));
+    }
+
+    private static void deleteRecursively(Path path) throws IOException {
+        if (path == null || !Files.exists(path)) {
+            return;
+        }
+
+        try (java.util.stream.Stream<Path> paths = Files.walk(path)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .forEach(currentPath -> {
+                        try {
+                            Files.deleteIfExists(currentPath);
+                        } catch (IOException ignored) {
                         }
                     });
         }

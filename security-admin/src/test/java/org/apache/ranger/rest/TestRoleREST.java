@@ -26,6 +26,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -814,6 +815,49 @@ public class TestRoleREST {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void test17eGetSecureRangerRolesIfUpdatedAllowedByDownloadGroup() throws Exception {
+        RangerRoles rangerRoles = createRangerRoles();
+        rangerRoles.setRoleVersion(2L);
+
+        String serviceName = "serviceName";
+        String pluginId = "pluginId";
+        String clusterName = "";
+        String pluginCapabilities = "";
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        XXService xxService = new XXService();
+        xxService.setId(1L);
+        xxService.setName(serviceName);
+        xxService.setType(1L);
+
+        XXServiceDef xxServiceDef = new XXServiceDef();
+        xxServiceDef.setId(1L);
+        xxServiceDef.setImplclassname("org.apache.ranger.services.hdfs.RangerServiceHdfs");
+
+        RangerService rangerService = new RangerService();
+        rangerService.setName(serviceName);
+
+        Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+        Mockito.when(daoMgr.getXXService().findByName(serviceName)).thenReturn(xxService);
+        Mockito.when(daoMgr.getXXServiceDef().getById(xxService.getType())).thenReturn(xxServiceDef);
+        Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+        Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+        Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+        Mockito.when(bizUtil.isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS)).thenReturn(false);
+        Mockito.when(bizUtil.isUserInAllowedGroup(rangerService, RoleREST.POLICY_DOWNLOAD_GROUPS)).thenReturn(true);
+        Mockito.when(roleStore.getRoles(serviceName, -1L)).thenReturn(rangerRoles);
+
+        RangerRoles returnedRoles = roleRest.getSecureRangerRolesIfUpdated(serviceName, -1L, 0L, pluginId,
+                clusterName, pluginCapabilities, request);
+
+        Assert.assertNotNull(returnedRoles);
+        Assert.assertEquals(serviceName, returnedRoles.getServiceName());
+        Mockito.verify(bizUtil).isUserAllowed(rangerService, RoleREST.POLICY_DOWNLOAD_USERS);
+        Mockito.verify(bizUtil).isUserInAllowedGroup(rangerService, RoleREST.POLICY_DOWNLOAD_GROUPS);
+        Mockito.verify(roleStore).getRoles(serviceName, -1L);
     }
 
 	// empty request roles (requestParamRoles = 0, dbRoles = 5, return = all dbRoles)

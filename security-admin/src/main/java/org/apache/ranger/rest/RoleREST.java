@@ -98,6 +98,7 @@ public class RoleREST {
     private static List<String> INVALID_USERS = new ArrayList<>();
 
     public static final String POLICY_DOWNLOAD_USERS = "policy.download.auth.users";
+    public static final String POLICY_DOWNLOAD_GROUPS = "policy.download.auth.groups";
     public static final String PARAM_ROLE_NAME = "roleName";
     public static final String PARAM_IMPORT_IN_PROGRESS = "importInProgress";
 
@@ -1057,12 +1058,18 @@ public class RoleREST {
                         isAllowed = true;
                     }else {
                         isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                        if (!isAllowed) {
+                            isAllowed = bizUtil.isUserInAllowedGroup(rangerService, POLICY_DOWNLOAD_GROUPS);
+                        }
                     }
                 }else{
                     if (isAdmin) {
                         isAllowed = true;
                     }else{
                         isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                        if (!isAllowed) {
+                            isAllowed = bizUtil.isUserInAllowedGroup(rangerService, POLICY_DOWNLOAD_GROUPS);
+                        }
                     }
                 }
 

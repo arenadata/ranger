@@ -2113,6 +2113,41 @@ public class TestServiceREST {
 	}
 
 	@Test
+	public void test59aGetSecureServicePoliciesIfUpdatedAllowedByDownloadGroup() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+		Long lastKnownVersion = 1L;
+		String pluginId = "1";
+		XXService xService = xService();
+		XXServiceDef xServiceDef = serviceDef();
+		String serviceName = xService.getName();
+		RangerService rs = rangerService();
+		ServicePolicies sp = servicePolicies();
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+
+		Mockito.when(bizUtil.isAdmin()).thenReturn(false);
+		Mockito.when(bizUtil.isKeyAdmin()).thenReturn(false);
+		Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+		Mockito.when(xServiceDao.findByName(serviceName)).thenReturn(xService);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+		Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rs);
+		Mockito.when(bizUtil.isUserAllowed(rs, ServiceREST.Allowed_User_List_For_Download)).thenReturn(false);
+		Mockito.when(bizUtil.isUserInAllowedGroup(rs, ServiceREST.Allowed_Group_List_For_Download)).thenReturn(true);
+		Mockito.when(svcStore.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(sp);
+
+		ServicePolicies dbServiceSecurePolicies = serviceREST.getSecureServicePoliciesIfUpdated(serviceName,
+				lastKnownVersion, 0L, pluginId, "", "", true, capabilityVector, request);
+
+		Assert.assertNotNull(dbServiceSecurePolicies);
+		Mockito.verify(bizUtil).isUserAllowed(rs, ServiceREST.Allowed_User_List_For_Download);
+		Mockito.verify(bizUtil).isUserInAllowedGroup(rs, ServiceREST.Allowed_Group_List_For_Download);
+		Mockito.verify(bizUtil, Mockito.never()).isUserAllowed(rs, ServiceREST.Allowed_User_List_For_Grant_Revoke);
+		Mockito.verify(svcStore).getServicePoliciesIfUpdated(serviceName, lastKnownVersion, false);
+	}
+
+	@Test
 	public void test60getPolicyFromEventTime() throws Exception {
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 

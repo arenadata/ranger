@@ -137,6 +137,13 @@ public class AuditFileSpool implements Runnable {
 					"755");
 			filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
 			Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
+			AuditFileUtil.ResolvedDirectory resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
+					MiscUtil.getStringProperty(props, propPrefix + ".subdir.mode"),
+					dirPermissions,
+					filePermissions);
+			logFolderProp = resolvedLogDirectory.getPath();
+			dirPermissions = resolvedLogDirectory.getDirPermissions();
+			filePermissions = resolvedLogDirectory.getFilePermissions();
 			logFileNameFormat = MiscUtil.getStringProperty(props,
 					basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
 			String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -161,12 +168,11 @@ public class AuditFileSpool implements Runnable {
 				return false;
 			}
 			logFolder = new File(logFolderProp);
-			if (!logFolder.isDirectory()) {
-				AuditFileUtil.createDirectoryWithPermissions(logFolder, dirPermissions);
-				if (!logFolder.isDirectory()) {
-					logger.error("File Spool folder not found and can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  queueProvider.getName());
-					return false;
-				}
+			try {
+				resolvedLogDirectory.ensureDirectory();
+			} catch (Exception excp) {
+				logger.error("File Spool folder not found, unsafe, or can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  queueProvider.getName(), excp);
+				return false;
 			}
 			logger.info("logFolder={}, queueName={}", logFolder, queueProvider.getName());
 

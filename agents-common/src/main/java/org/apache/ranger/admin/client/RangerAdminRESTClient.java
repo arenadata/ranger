@@ -22,12 +22,12 @@
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.jersey.api.client.ClientResponse;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
@@ -150,17 +150,16 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
-			if (response == null) {
-				LOG.error("Error getting policies; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
-			} else {
-				RESTResponse resp = RESTResponse.fromClientResponse(response);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in policies. secureMode=" + isSecureMode + ", user=" + user
-									  + ", response=" + resp + ", serviceName=" + serviceName
-									  + ", " + "lastKnownVersion=" + lastKnownVersion
-									  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-				}
+		if (response == null) {
+            LOG.error("Error getting policies; Received NULL response!!. secureMode={}, user={}, serviceName={}", isSecureMode, user, serviceName);
+			throw new IOException("Error getting policies; received null response for serviceName=" + serviceName);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No change in policies. secureMode=" + isSecureMode + ", user=" + user
+								  + ", response=" + resp + ", serviceName=" + serviceName
+								  + ", " + "lastKnownVersion=" + lastKnownVersion
+								  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
@@ -176,10 +175,14 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else if (isAccessDenied(response)) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
-			ret = null;
+			throw new IOException("Error getting policies. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -215,17 +218,19 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
-			if (response == null) {
-				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
-			} else {
-				RESTResponse resp = RESTResponse.fromClientResponse(response);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in Roles. secureMode=" + isSecureMode + ", user=" + user
-									  + ", response=" + resp + ", serviceName=" + serviceName
-									  + ", " + "lastKnownRoleVersion=" + lastKnownRoleVersion
-									  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-				}
+		if (response == null) {
+            LOG.error("Error getting Roles; Received NULL response!!. secureMode={}, user={}, serviceName={}", isSecureMode, user, serviceName);
+			throw new IOException("Error getting Roles; received null response for serviceName=" + serviceName);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			if (LOG.isDebugEnabled()) {
+                LOG.debug("No change in Roles. secureMode={}, user={}, response={}, serviceName={}, lastKnownRoleVersion={}, lastActivationTimeInMillis={}",
+                        isSecureMode,
+                        user,
+                        resp,
+                        serviceName,
+                        lastKnownRoleVersion,
+                        lastActivationTimeInMillis);
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
@@ -241,10 +246,14 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else if (isAccessDenied(response)) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting Roles. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting Roles. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
-			ret = null;
+			throw new IOException("Error getting Roles. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -790,17 +799,19 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
-			if (response == null) {
-				LOG.error("Error getting tags; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
-			} else {
-				RESTResponse resp = RESTResponse.fromClientResponse(response);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in tags. secureMode=" + isSecureMode + ", user=" + user
-									  + ", response=" + resp + ", serviceName=" + serviceName
-									  + ", " + "lastKnownVersion=" + lastKnownVersion
-									  + ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-				}
+		if (response == null) {
+            LOG.error("Error getting tags; Received NULL response!!. secureMode={}, user={}, serviceName={}", isSecureMode, user, serviceName);
+			throw new IOException("Error getting tags; received null response for serviceName=" + serviceName);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			if (LOG.isDebugEnabled()) {
+                LOG.debug("No change in tags. secureMode={}, user={}, response={}, serviceName={}, lastKnownVersion={}, lastActivationTimeInMillis={}",
+                        isSecureMode,
+                        user,
+                        resp,
+                        serviceName,
+                        lastKnownVersion,
+                        lastActivationTimeInMillis);
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
@@ -815,10 +826,14 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
 			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else if (isAccessDenied(response)) {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
-			ret = null;
+			throw new IOException("Error getting tags. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1153,6 +1168,12 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			return null;
 		});
+	}
+
+	private boolean isAccessDenied(ClientResponse response) {
+		int status = response == null ? 0 : response.getStatus();
+
+		return status == HttpServletResponse.SC_UNAUTHORIZED || status == HttpServletResponse.SC_FORBIDDEN;
 	}
 
 	private void checkAndResetSessionCookie(ClientResponse response) {
