@@ -37,8 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class PatchForNestedstructureServiceDefUpdate_J10064 extends BaseLoader {
-    private static final Logger logger = LoggerFactory.getLogger(PatchForNestedstructureServiceDefUpdate_J10064.class);
+public class PatchForNestedstructureServiceDefUpdate_J10065 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForNestedstructureServiceDefUpdate_J10065.class);
 
     private static final String SERVICE_DEF_NAME            = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME;
     private static final String POLICY_DOWNLOAD_AUTH_GROUPS = "policy.download.auth.groups";
@@ -53,7 +53,7 @@ public class PatchForNestedstructureServiceDefUpdate_J10064 extends BaseLoader {
         logger.info("main()");
 
         try {
-            PatchForNestedstructureServiceDefUpdate_J10064 loader = (PatchForNestedstructureServiceDefUpdate_J10064) CLIUtil.getBean(PatchForNestedstructureServiceDefUpdate_J10064.class);
+            PatchForNestedstructureServiceDefUpdate_J10065 loader = (PatchForNestedstructureServiceDefUpdate_J10065) CLIUtil.getBean(PatchForNestedstructureServiceDefUpdate_J10065.class);
 
             loader.init();
 
@@ -78,25 +78,25 @@ public class PatchForNestedstructureServiceDefUpdate_J10064 extends BaseLoader {
 
     @Override
     public void execLoad() {
-        logger.info("==> PatchForNestedstructureServiceDefUpdate_J10064.execLoad()");
+        logger.info("==> PatchForNestedstructureServiceDefUpdate_J10065.execLoad()");
 
         try {
             updateNestedstructureServiceDef();
         } catch (Exception e) {
-            logger.error("PatchForNestedstructureServiceDefUpdate_J10064.execLoad(): failed", e);
+            logger.error("PatchForNestedstructureServiceDefUpdate_J10065.execLoad(): failed", e);
             System.exit(1);
         }
 
-        logger.info("<== PatchForNestedstructureServiceDefUpdate_J10064.execLoad()");
+        logger.info("<== PatchForNestedstructureServiceDefUpdate_J10065.execLoad()");
     }
 
     @Override
     public void printStats() {
-        logger.info("PatchForNestedstructureServiceDefUpdate_J10064");
+        logger.info("PatchForNestedstructureServiceDefUpdate_J10065");
     }
 
     private void updateNestedstructureServiceDef() throws Exception {
-        logger.info("==> PatchForNestedstructureServiceDefUpdate_J10064.updateNestedstructureServiceDef()");
+        logger.info("==> PatchForNestedstructureServiceDefUpdate_J10065.updateNestedstructureServiceDef()");
 
         RangerServiceDef embeddedServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICE_DEF_NAME);
 
@@ -138,7 +138,7 @@ public class PatchForNestedstructureServiceDefUpdate_J10064 extends BaseLoader {
         svcDBStore.updateServiceDef(dbServiceDef);
 
         logger.info("Added config [{}] to service-def [{}]", POLICY_DOWNLOAD_AUTH_GROUPS, SERVICE_DEF_NAME);
-        logger.info("<== PatchForNestedstructureServiceDefUpdate_J10064.updateNestedstructureServiceDef()");
+        logger.info("<== PatchForNestedstructureServiceDefUpdate_J10065.updateNestedstructureServiceDef()");
     }
 
     private RangerServiceConfigDef copyConfig(RangerServiceConfigDef config) {
