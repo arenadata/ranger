@@ -4,7 +4,7 @@ services:
       context: ../
       dockerfile: ./resource-mapping-manager/Dockerfile.resource-mapping-manager
       args:
-        - RANGER_VERSION=${RANGER_VERSION:-2.6.0.7-2.2.0-2}
+        - RANGER_VERSION=${RANGER_VERSION:-2.6.0.7-2.2.0-3}
         - RANGER_ADMIN_JAVA_VERSION=8
     depends_on:
       rmm-hive-server2:
