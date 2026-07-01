@@ -55,7 +55,6 @@ public class RangerRolesProvider {
 	private final String            cacheDir;
 	private final RangerLocalDirectory.ResolvedDirectory cacheDirectory;
 	private final Set<PosixFilePermission> cacheFilePerms;
-	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final boolean           disableCacheIfServiceNotFound;
 
 	private long	lastActivationTimeInMillis;
@@ -93,7 +92,6 @@ public class RangerRolesProvider {
 		this.cacheFileName  = cacheFilename;
 		this.cacheDir       = this.cacheDirectory.getPath();
 		this.cacheFilePerms = this.cacheDirectory.getFilePermissions();
-		this.cacheDirPerms  = this.cacheDirectory.getDirPermissions();
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
