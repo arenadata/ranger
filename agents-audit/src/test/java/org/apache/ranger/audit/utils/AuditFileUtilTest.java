@@ -24,8 +24,15 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -191,6 +198,47 @@ public class AuditFileUtilTest {
             assertEquals("Base directory permissions should not be changed", PosixFilePermissions.fromString("rwxr-xr-x"), Files.getPosixFilePermissions(tempBaseDir));
             assertEquals("Directory permissions should be group-scoped", PosixFilePermissions.fromString("rwxrwx---"), Files.getPosixFilePermissions(resolvedPath));
             assertEquals("File permissions should be group-scoped", PosixFilePermissions.fromString("rw-rw----"), directory.getFilePermissions());
+        } finally {
+            deleteRecursively(tempBaseDir);
+        }
+    }
+
+    @Test
+    public void testResolvePerGroupDirectoryHandlesConcurrentCreation() throws Exception {
+        Path tempBaseDir = Files.createTempDirectory("auditSpoolDir");
+
+        try {
+            Files.setPosixFilePermissions(tempBaseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+            final AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(tempBaseDir.toString(),
+                    AuditFileUtil.SUBDIR_MODE_PERGROUP,
+                    AuditFileUtil.parsePermissions("755"),
+                    AuditFileUtil.parsePermissions("644"));
+            int threadCount = 8;
+            ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+
+            try {
+                final CyclicBarrier startBarrier = new CyclicBarrier(threadCount);
+                List<Future<Void>> futures = new ArrayList<>();
+
+                for (int i = 0; i < threadCount; i++) {
+                    futures.add(executorService.submit(() -> {
+                        startBarrier.await(10, TimeUnit.SECONDS);
+                        directory.ensureDirectory();
+                        return null;
+                    }));
+                }
+
+                for (Future<Void> future : futures) {
+                    future.get(10, TimeUnit.SECONDS);
+                }
+            } finally {
+                executorService.shutdownNow();
+                assertTrue("Executor should terminate", executorService.awaitTermination(10, TimeUnit.SECONDS));
+            }
+
+            Path resolvedPath = new File(directory.getPath()).toPath();
+            assertTrue("Directory should exist", Files.isDirectory(resolvedPath));
+            assertEquals("Directory permissions should be group-scoped", PosixFilePermissions.fromString("rwxrwx---"), Files.getPosixFilePermissions(resolvedPath));
         } finally {
             deleteRecursively(tempBaseDir);
         }

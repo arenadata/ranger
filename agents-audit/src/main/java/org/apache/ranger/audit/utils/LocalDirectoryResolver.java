@@ -21,6 +21,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -40,6 +41,8 @@ public final class LocalDirectoryResolver {
     private static final Set<PosixFilePermission> PERUSER_FILE_PERMS  = PosixFilePermissions.fromString("rw-------");
     private static final Set<PosixFilePermission> PERGROUP_DIR_PERMS  = PosixFilePermissions.fromString("rwxrwx---");
     private static final Set<PosixFilePermission> PERGROUP_FILE_PERMS = PosixFilePermissions.fromString("rw-rw----");
+    private static final int DIRECTORY_VALIDATION_RETRY_COUNT = 3;
+    private static final long DIRECTORY_VALIDATION_RETRY_INTERVAL_MS = 50L;
 
     private LocalDirectoryResolver() {
     }
@@ -164,15 +167,27 @@ public final class LocalDirectoryResolver {
                 ensureBaseDirectory();
             }
 
+            boolean createdByAnotherProcess = false;
+
             if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
                 validateDirectory(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
+                return;
             } else if (StringUtils.isNotBlank(basePath)) {
-                Files.createDirectory(directory, PosixFilePermissions.asFileAttribute(dirPermissions));
-                Files.setPosixFilePermissions(directory, dirPermissions);
-                validateDirectory(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
-            } else {
+                try {
+                    Files.createDirectory(directory, PosixFilePermissions.asFileAttribute(dirPermissions));
+                    Files.setPosixFilePermissions(directory, dirPermissions);
+                } catch (FileAlreadyExistsException ignored) {
+                    // Another local process can create the same per-user/per-group subdirectory concurrently.
+                    createdByAnotherProcess = true;
+                }
+            } else if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
                 Files.createDirectories(directory, PosixFilePermissions.asFileAttribute(dirPermissions));
                 Files.setPosixFilePermissions(directory, dirPermissions);
+            }
+
+            if (createdByAnotherProcess) {
+                validateDirectoryAfterConcurrentCreate(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
+            } else {
                 validateDirectory(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
             }
         }
@@ -209,6 +224,31 @@ public final class LocalDirectoryResolver {
                     throw new IOException("Unexpected group on " + ownershipLabel + " " + directory + ": expected " + expectedGroup + ", actual " + attrs.group().getName());
                 }
             }
+        }
+
+        private void validateDirectoryAfterConcurrentCreate(Path directory, Set<PosixFilePermission> expectedPermissions, String expectedOwner, String expectedGroup, String label, String ownershipLabel) throws IOException {
+            IOException lastException = null;
+
+            for (int attempt = 0; attempt < DIRECTORY_VALIDATION_RETRY_COUNT; attempt++) {
+                try {
+                    validateDirectory(directory, expectedPermissions, expectedOwner, expectedGroup, label, ownershipLabel);
+                    return;
+                } catch (IOException exception) {
+                    lastException = exception;
+
+                    if (attempt + 1 < DIRECTORY_VALIDATION_RETRY_COUNT) {
+                        try {
+                            Thread.sleep(DIRECTORY_VALIDATION_RETRY_INTERVAL_MS);
+                        } catch (InterruptedException interruptedException) {
+                            Thread.currentThread().interrupt();
+                            exception.addSuppressed(interruptedException);
+                            throw exception;
+                        }
+                    }
+                }
+            }
+
+            throw lastException;
         }
     }
 }
