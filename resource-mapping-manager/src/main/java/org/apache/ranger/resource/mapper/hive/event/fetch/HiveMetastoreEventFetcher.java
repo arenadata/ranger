@@ -80,6 +80,8 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
     @Getter(PROTECTED)
     private final Long endEventId;
 
+    private boolean metaStoreClientConnected = true;
+
     @lombok.Builder(
         builderClassName = "Builder",
         toBuilder = true
@@ -117,7 +119,7 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
         if (pollStarted.compareAndSet(false, true)) {
             authenticator.login();
             lastHandledEventId = fromEventId;
-            executor.scheduleAtFixedRate(this::pollRecordsBatch,
+            executor.scheduleWithFixedDelay(this::pollRecordsBatch,
                 0L, fetchPeriodMs, TimeUnit.MILLISECONDS);
         }
         return outputQueue;
@@ -138,13 +140,18 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
                 close();
             }
         } catch (Exception exception) {
-            log.error("Exiting HiveMetastoreEventFetcher due to error", exception);
-            close();
+            log.error("Stopped polling HMS events", exception);
         }
     }
 
     private void pollRecordsBatchAction() {
         try {
+            if (!metaStoreClientConnected) {
+                metaStoreClient.reconnect();
+                metaStoreClientConnected = true;
+                log.info("Reconnected to Hive Metastore");
+            }
+
             List<NotificationEvent> events = metaStoreClient.getNextNotification(
                 lastHandledEventId,
                 eventBatchSize,
@@ -166,6 +173,7 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
                 handle(event);
             }
         } catch (Exception e) {
+            metaStoreClientConnected = false;
             throw new RuntimeException("Error polling records batch from Hive Metastore", e);
         }
     }
@@ -348,7 +356,7 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
     @Override
     public void close() {
         if (executor != null) {
-            executor.shutdown();
+            executor.shutdownNow();
         }
 
         try {
