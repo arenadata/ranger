@@ -706,23 +706,33 @@ update_properties() {
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
+		if [[ "${DB_HOST}" == *","* ]]; then
+			pg_target_server_type="targetServerType=primary"
+		else
+			pg_target_server_type=""
+		fi
 
 		if [ "${db_ssl_enabled}" == "true" ]
 		then
-			if test -f $db_ssl_certificate_file; then
-				propertyName=ranger.jpa.jdbc.url
-				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslrootcert=${db_ssl_certificate_file}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			if test -f "${db_ssl_certificate_file}"; then
+				pg_base_url="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslrootcert=${db_ssl_certificate_file}"
 			else
-				propertyName=ranger.jpa.jdbc.url
-				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				pg_base_url="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+			fi
+			if [ -n "${pg_target_server_type}" ]; then
+				newPropertyValue="${pg_base_url}&${pg_target_server_type}"
+			else
+				newPropertyValue="${pg_base_url}"
 			fi
 		else
-			propertyName=ranger.jpa.jdbc.url
-			newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			if [ -n "${pg_target_server_type}" ]; then
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?${pg_target_server_type}"
+			else
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
+			fi
 		fi
+		propertyName=ranger.jpa.jdbc.url
+		updatePropertyToFilePy $propertyName "$newPropertyValue" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
