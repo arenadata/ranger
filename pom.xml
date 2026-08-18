@@ -889,6 +889,7 @@
         <profile>
             <id>ranger-examples</id>
             <modules>
+                <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>intg</module>
@@ -898,6 +899,7 @@
         <profile>
             <id>ranger-admin</id>
             <modules>
+                <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>security-admin</module>
                 <module>ugsync-util</module>

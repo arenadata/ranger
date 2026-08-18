@@ -62,6 +62,7 @@ public class AuditFileSpool implements Runnable {
 	public static final String PROP_FILE_SPOOL_FILE_ROLLOVER = "filespool.file.rollover.sec";
 	public static final String PROP_FILE_SPOOL_INDEX_FILE = "filespool.index.filename";
 	public static final String PROP_FILE_SPOOL_DEST_RETRY_MS = "filespool.destination.retry.ms";
+	public static final String PROP_FILE_SPOOL_SUBDIR_MODE = "filespool.subdir.mode";
 	public static final String CONSUMER = ", consumer=";
 
 	AuditQueue queueProvider = null;
@@ -104,6 +105,7 @@ public class AuditFileSpool implements Runnable {
 	boolean isDestDown = false;
 
 	Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions("644");
+	AuditFileUtil.ResolvedDirectory resolvedLogDirectory = null;
 
 	public AuditFileSpool(AuditQueue queueProvider,
 			AuditHandler consumerProvider) {
@@ -137,8 +139,8 @@ public class AuditFileSpool implements Runnable {
 					"755");
 			filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
 			Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
-			AuditFileUtil.ResolvedDirectory resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
-					MiscUtil.getStringProperty(props, propPrefix + ".subdir.mode"),
+			resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
+					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_SUBDIR_MODE),
 					dirPermissions,
 					filePermissions);
 			logFolderProp = resolvedLogDirectory.getPath();
@@ -187,12 +189,11 @@ public class AuditFileSpool implements Runnable {
 			} else {
 				archiveFolder = new File(archiveFolderProp);
 			}
-			if (!archiveFolder.isDirectory()) {
-				AuditFileUtil.createDirectoryWithPermissions(archiveFolder, dirPermissions);
-				if (!archiveFolder.isDirectory()) {
-					logger.error("File Spool archive folder not found and can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), queueProvider.getName());
-					return false;
-				}
+			try {
+				resolvedLogDirectory.ensureChildDirectory(archiveFolder);
+			} catch (Exception excp) {
+				logger.error("File Spool archive folder not found, unsafe, or can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), queueProvider.getName(), excp);
+				return false;
 			}
 			logger.info("archiveFolder={}, queueName={}", archiveFolder, queueProvider.getName());
 
@@ -214,8 +215,8 @@ public class AuditFileSpool implements Runnable {
 					logger.error("Error creating index file. fileName={}", indexDoneFile.getPath());
 					return false;
 				}
-				AuditFileUtil.setPermissions(indexFile, filePermissions);
 			}
+			resolvedLogDirectory.secureFile(indexFile);
 			logger.info("indexFile={}, queueName={}", indexFile, queueProvider.getName());
 
 			int lastDot = indexFileName.lastIndexOf('.');
@@ -231,8 +232,8 @@ public class AuditFileSpool implements Runnable {
 					logger.error("Error creating index done file. fileName={}", indexDoneFile.getPath());
 					return false;
 				}
-				AuditFileUtil.setPermissions(indexDoneFile, filePermissions);
 			}
+			resolvedLogDirectory.secureFile(indexDoneFile);
 			logger.info("indexDoneFile={}, queueName={}", indexDoneFile, queueProvider.getName());
 
 			// Load index file
@@ -470,7 +471,7 @@ public class AuditFileSpool implements Runnable {
 			boolean created = outLogFile.createNewFile();
 			if (created)
 				try {
-					AuditFileUtil.setPermissions(outLogFile, filePermissions);
+					resolvedLogDirectory.secureFile(outLogFile);
 				} catch (Exception e) {
 					logger.debug("Failed to set permissions on {}", outLogFile, e);
 				}
@@ -589,6 +590,7 @@ public class AuditFileSpool implements Runnable {
 				out.println(MiscUtil.stringify(auditIndexRecord));
 			}
 		}
+		resolvedLogDirectory.secureFile(indexFile);
 	}
 
 	void appendToDoneFile(AuditIndexRecord indexRecord)
@@ -600,6 +602,7 @@ public class AuditFileSpool implements Runnable {
 		out.println(line);
 		out.flush();
 		out.close();
+		resolvedLogDirectory.secureFile(indexDoneFile);
 
 		// Move to archive folder
 		File logFile = null;

@@ -1131,8 +1131,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						cacheDirectory.ensureDirectory();
 						if (!cacheFile.exists()) {
 							Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.filePermissions));
-							Files.setPosixFilePermissions(cacheFile.toPath(), this.filePermissions);
 						}
+						cacheDirectory.secureFile(cacheFile);
 						writer = new FileWriter(cacheFile);
 						JsonUtils.objectToWriter(writer, serviceTags);
 					} catch (Exception excp) {

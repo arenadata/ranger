@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
@@ -62,8 +63,9 @@ public final class LocalDirectoryResolver {
             return new ResolvedDirectory(null, baseDir, null, defaultDirPerms, defaultFilePerms, null, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
         } else if (SUBDIR_MODE_PERUSER.equals(mode)) {
             String user = sanitizePathElement(getCurrentUser(), "user", subdirDescription);
+            String owner = getCurrentProcessUser(subdirDescription);
 
-            return new ResolvedDirectory(baseDir, appendPath(baseDir, user), defaultDirPerms, PERUSER_DIR_PERMS, PERUSER_FILE_PERMS, user, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
+            return new ResolvedDirectory(baseDir, appendPath(baseDir, user), defaultDirPerms, PERUSER_DIR_PERMS, PERUSER_FILE_PERMS, owner, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
         } else if (SUBDIR_MODE_PERGROUP.equals(mode)) {
             String group = sanitizePathElement(getCurrentGroup(subdirDescription), "group", subdirDescription);
 
@@ -110,6 +112,16 @@ public final class LocalDirectoryResolver {
         try {
             UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
 
+            if (ugi != null && ugi.getGroupNames() != null) {
+                String shortUserName = ugi.getShortUserName();
+
+                for (String groupName : ugi.getGroupNames()) {
+                    if (StringUtils.isNotBlank(groupName) && !StringUtils.equals(groupName, shortUserName)) {
+                        return groupName;
+                    }
+                }
+            }
+
             if (ugi != null && StringUtils.isNotBlank(ugi.getPrimaryGroupName())) {
                 return ugi.getPrimaryGroupName();
             }
@@ -117,6 +129,16 @@ public final class LocalDirectoryResolver {
         }
 
         throw new IllegalStateException("Unable to determine current user's primary group for " + subdirDescription + " subdir");
+    }
+
+    private static String getCurrentProcessUser(String subdirDescription) {
+        String ret = StringUtils.trim(System.getProperty("user.name"));
+
+        if (StringUtils.isBlank(ret)) {
+            throw new IllegalStateException("Unable to determine current process user for " + subdirDescription + " subdir");
+        }
+
+        return ret;
     }
 
     public static final class ResolvedDirectory {
@@ -170,11 +192,12 @@ public final class LocalDirectoryResolver {
             boolean createdByAnotherProcess = false;
 
             if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
-                validateDirectory(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
+                validateDirectoryAfterConcurrentCreate(directory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
                 return;
             } else if (StringUtils.isNotBlank(basePath)) {
                 try {
                     Files.createDirectory(directory, PosixFilePermissions.asFileAttribute(dirPermissions));
+                    setGroupOwner(directory, expectedGroup);
                     Files.setPosixFilePermissions(directory, dirPermissions);
                 } catch (FileAlreadyExistsException ignored) {
                     // Another local process can create the same per-user/per-group subdirectory concurrently.
@@ -182,6 +205,7 @@ public final class LocalDirectoryResolver {
                 }
             } else if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) {
                 Files.createDirectories(directory, PosixFilePermissions.asFileAttribute(dirPermissions));
+                setGroupOwner(directory, expectedGroup);
                 Files.setPosixFilePermissions(directory, dirPermissions);
             }
 
@@ -192,6 +216,39 @@ public final class LocalDirectoryResolver {
             }
         }
 
+        public void ensureChildDirectory(File directory) throws IOException {
+            if (directory == null) {
+                return;
+            }
+
+            Path childDirectory = directory.toPath();
+
+            if (!Files.exists(childDirectory, LinkOption.NOFOLLOW_LINKS)) {
+                try {
+                    Files.createDirectories(childDirectory, PosixFilePermissions.asFileAttribute(dirPermissions));
+                } catch (FileAlreadyExistsException ignored) {
+                    // Another local process can create the same child directory concurrently.
+                }
+            }
+
+            setGroupOwner(childDirectory, expectedGroup);
+            Files.setPosixFilePermissions(childDirectory, dirPermissions);
+            validateDirectoryAfterConcurrentCreate(childDirectory, dirPermissions, expectedOwner, expectedGroup, directoryLabel, ownershipLabel);
+        }
+
+        public void secureFile(File file) throws IOException {
+            if (file == null) {
+                return;
+            }
+
+            Path secureFile = file.toPath();
+
+            validateFile(secureFile, null, null, null, "File", ownershipLabel);
+            setGroupOwner(secureFile, expectedGroup);
+            Files.setPosixFilePermissions(secureFile, filePermissions);
+            validateFile(secureFile, filePermissions, expectedOwner, expectedGroup, "File", ownershipLabel);
+        }
+
         private void ensureBaseDirectory() throws IOException {
             Path baseDirectory = Paths.get(basePath);
 
@@ -200,6 +257,20 @@ public final class LocalDirectoryResolver {
             }
 
             validateDirectory(baseDirectory, baseDirPermissions, null, null, baseDirectoryLabel, ownershipLabel);
+        }
+
+        private void setGroupOwner(Path path, String expectedGroup) throws IOException {
+            if (StringUtils.isBlank(expectedGroup)) {
+                return;
+            }
+
+            PosixFileAttributeView view = Files.getFileAttributeView(path, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+
+            if (view != null) {
+                GroupPrincipal group = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByGroupName(expectedGroup);
+
+                view.setGroup(group);
+            }
         }
 
         private void validateDirectory(Path directory, Set<PosixFilePermission> expectedPermissions, String expectedOwner, String expectedGroup, String label, String ownershipLabel) throws IOException {
@@ -222,6 +293,30 @@ public final class LocalDirectoryResolver {
 
                 if (expectedGroup != null && !StringUtils.equals(attrs.group().getName(), expectedGroup)) {
                     throw new IOException("Unexpected group on " + ownershipLabel + " " + directory + ": expected " + expectedGroup + ", actual " + attrs.group().getName());
+                }
+            }
+        }
+
+        private void validateFile(Path file, Set<PosixFilePermission> expectedPermissions, String expectedOwner, String expectedGroup, String label, String ownershipLabel) throws IOException {
+            if (Files.isSymbolicLink(file) || !Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
+                throw new IOException(label + " is not a regular file: " + file);
+            }
+
+            PosixFileAttributeView view = Files.getFileAttributeView(file, PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+
+            if (view != null) {
+                PosixFileAttributes attrs = view.readAttributes();
+
+                if (expectedPermissions != null && !attrs.permissions().equals(expectedPermissions)) {
+                    throw new IOException("Unsafe permissions on " + StringUtils.lowerCase(label) + " " + file + ": expected " + expectedPermissions + ", actual " + attrs.permissions());
+                }
+
+                if (expectedOwner != null && !StringUtils.equals(attrs.owner().getName(), expectedOwner)) {
+                    throw new IOException("Unexpected owner on " + ownershipLabel + " " + file + ": expected " + expectedOwner + ", actual " + attrs.owner().getName());
+                }
+
+                if (expectedGroup != null && !StringUtils.equals(attrs.group().getName(), expectedGroup)) {
+                    throw new IOException("Unexpected group on " + ownershipLabel + " " + file + ": expected " + expectedGroup + ", actual " + attrs.group().getName());
                 }
             }
         }

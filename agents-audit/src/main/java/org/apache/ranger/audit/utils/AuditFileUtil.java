@@ -35,7 +35,7 @@ public class AuditFileUtil {
     public static void setPermissions(File file, Set<PosixFilePermission> perms) throws IOException {
         Path path = file.toPath();
         Files.setPosixFilePermissions(path, perms);
-        }
+    }
 
     public static Set<PosixFilePermission> parsePermissions(String permStr) {
         if (StringUtils.length(permStr) != 3) {
@@ -84,6 +84,14 @@ public class AuditFileUtil {
 
         public void ensureDirectory() throws IOException {
             delegate.ensureDirectory();
+        }
+
+        public void ensureChildDirectory(File directory) throws IOException {
+            delegate.ensureChildDirectory(directory);
+        }
+
+        public void secureFile(File file) throws IOException {
+            delegate.secureFile(file);
         }
     }
 

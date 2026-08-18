@@ -19,13 +19,16 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.PrivilegedExceptionAction;
 import java.util.Comparator;
 
 import static org.junit.Assert.assertEquals;
@@ -58,6 +61,31 @@ public class RangerLocalDirectoryTest {
 	}
 
 	@Test
+	public void testPerUserDirectoryNamedByUgiUserButOwnedByProcessUser() throws Exception {
+		Path baseDir = Files.createTempDirectory("ranger-policy-cache");
+
+		try {
+			Files.setPosixFilePermissions(baseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+			UserGroupInformation user = UserGroupInformation.createRemoteUser("spark_user_test");
+			RangerLocalDirectory.ResolvedDirectory directory = user.doAs((PrivilegedExceptionAction<RangerLocalDirectory.ResolvedDirectory>) () ->
+					RangerLocalDirectory.resolve(baseDir.toString(),
+							RangerLocalDirectory.SUBDIR_MODE_PERUSER,
+							FileUtils.parsePermissions("755"),
+							FileUtils.parsePermissions("644")));
+
+			directory.ensureDirectory();
+
+			Path resolvedPath = Paths.get(directory.getPath());
+			assertEquals("spark_user_test", resolvedPath.getFileName().toString());
+			assertTrue(Files.isDirectory(resolvedPath));
+			assertEquals(System.getProperty("user.name"), Files.getOwner(resolvedPath).getName());
+			assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(resolvedPath));
+		} finally {
+			deleteRecursively(baseDir);
+		}
+	}
+
+	@Test
 	public void testPerGroupDirectoryUsesGroupPermissions() throws Exception {
 		Path baseDir = Files.createTempDirectory("ranger-policy-cache");
 
@@ -75,6 +103,56 @@ public class RangerLocalDirectoryTest {
 			assertEquals(PosixFilePermissions.fromString("rwxr-xr-x"), Files.getPosixFilePermissions(baseDir));
 			assertEquals(PosixFilePermissions.fromString("rwxrwx---"), Files.getPosixFilePermissions(resolvedPath));
 			assertEquals(PosixFilePermissions.fromString("rw-rw----"), directory.getFilePermissions());
+		} finally {
+			deleteRecursively(baseDir);
+		}
+	}
+
+	@Test
+	public void testPerGroupFileAndChildDirectoryUseGroupPermissions() throws Exception {
+		Path baseDir = Files.createTempDirectory("ranger-policy-cache");
+
+		try {
+			Files.setPosixFilePermissions(baseDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+			RangerLocalDirectory.ResolvedDirectory directory = RangerLocalDirectory.resolve(baseDir.toString(),
+					RangerLocalDirectory.SUBDIR_MODE_PERGROUP,
+					FileUtils.parsePermissions("755"),
+					FileUtils.parsePermissions("644"));
+
+			directory.ensureDirectory();
+
+			Path resolvedPath = Paths.get(directory.getPath());
+			Path archivePath  = resolvedPath.resolve("archive");
+			Path cacheFile    = resolvedPath.resolve("policy-cache.json");
+
+			directory.ensureChildDirectory(archivePath.toFile());
+			Files.createFile(cacheFile);
+			directory.secureFile(cacheFile.toFile());
+
+			GroupPrincipal expectedGroup = Files.readAttributes(resolvedPath, java.nio.file.attribute.PosixFileAttributes.class).group();
+
+			assertEquals(PosixFilePermissions.fromString("rwxrwx---"), Files.getPosixFilePermissions(archivePath));
+			assertEquals(PosixFilePermissions.fromString("rw-rw----"), Files.getPosixFilePermissions(cacheFile));
+			assertEquals(expectedGroup.getName(), Files.readAttributes(archivePath, java.nio.file.attribute.PosixFileAttributes.class).group().getName());
+			assertEquals(expectedGroup.getName(), Files.readAttributes(cacheFile, java.nio.file.attribute.PosixFileAttributes.class).group().getName());
+		} finally {
+			deleteRecursively(baseDir);
+		}
+	}
+
+	@Test
+	public void testPerGroupDirectoryPrefersNonPrivateUserGroup() throws Exception {
+		Path baseDir = Files.createTempDirectory("ranger-policy-cache");
+
+		try {
+			UserGroupInformation user = UserGroupInformation.createUserForTesting("spark_user2", new String[] {"spark_user2", "spark_group"});
+			RangerLocalDirectory.ResolvedDirectory directory = user.doAs((PrivilegedExceptionAction<RangerLocalDirectory.ResolvedDirectory>) () ->
+					RangerLocalDirectory.resolve(baseDir.toString(),
+							RangerLocalDirectory.SUBDIR_MODE_PERGROUP,
+							FileUtils.parsePermissions("755"),
+							FileUtils.parsePermissions("644")));
+
+			assertEquals("spark_group", Paths.get(directory.getPath()).getFileName().toString());
 		} finally {
 			deleteRecursively(baseDir);
 		}

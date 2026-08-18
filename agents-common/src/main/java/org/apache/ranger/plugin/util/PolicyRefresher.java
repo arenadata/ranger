@@ -470,8 +470,8 @@ public class PolicyRefresher extends Thread {
 				try {
 					if (!cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
-						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
 					}
+					cacheDirectory.secureFile(cacheFile);
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, policies);
 		        } catch (Exception excp) {
@@ -502,8 +502,8 @@ public class PolicyRefresher extends Thread {
 					try {
 						if (!backupCacheFile.exists()) {
 							Files.createFile(backupCacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
-							Files.setPosixFilePermissions(backupCacheFile.toPath(), this.cacheFilePerms);
 						}
+						cacheDirectory.secureFile(backupCacheFile);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
 					}

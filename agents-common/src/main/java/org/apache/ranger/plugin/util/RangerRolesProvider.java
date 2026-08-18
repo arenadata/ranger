@@ -330,8 +330,8 @@ public class RangerRolesProvider {
 				try {
 					if (!cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
-						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
 					}
+					cacheDirectory.secureFile(cacheFile);
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, roles);
 		        } catch (Exception excp) {

@@ -19,6 +19,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.ranger.audit.utils.LocalDirectoryResolver;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
@@ -56,6 +57,14 @@ public final class RangerLocalDirectory {
 
 		public void ensureDirectory() throws IOException {
 			delegate.ensureDirectory();
+		}
+
+		public void ensureChildDirectory(File directory) throws IOException {
+			delegate.ensureChildDirectory(directory);
+		}
+
+		public void secureFile(File file) throws IOException {
+			delegate.secureFile(file);
 		}
 	}
 }
