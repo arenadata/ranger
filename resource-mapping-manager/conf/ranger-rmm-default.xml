@@ -81,6 +81,16 @@
   </property>
 
   <property>
+    <name>ranger.rmm.hms.reconnect.base.interval.ms</name>
+    <value>1000</value>
+  </property>
+
+  <property>
+    <name>ranger.rmm.hms.reconnect.max.interval.ms</name>
+    <value>300000</value>
+  </property>
+
+  <property>
     <name>ranger.rmm.hms.sync.full</name>
     <value>false</value>
   </property>
