@@ -530,6 +530,90 @@
         </profile>
 
         <profile>
+            <id>docker-image</id>
+            <properties>
+                <docker.ranger.adminJavaVersion>11</docker.ranger.adminJavaVersion>
+                <docker.ranger.baseImage>ranger-base:latest</docker.ranger.baseImage>
+                <docker.ranger.baseJavaVersion>11</docker.ranger.baseJavaVersion>
+                <docker.ranger.contextDir>${docker.ranger.rootDir}/dev-support/ranger-docker</docker.ranger.contextDir>
+                <docker.ranger.distDir>${docker.ranger.contextDir}/dist</docker.ranger.distDir>
+                <docker.ranger.downloadsDir>${docker.ranger.contextDir}/downloads</docker.ranger.downloadsDir>
+                <docker.ranger.rootDir>${basedir}/..</docker.ranger.rootDir>
+                <docker.ranger.runtimeImage>arenadata/ranger-admin:${project.version}</docker.ranger.runtimeImage>
+                <docker.ranger.targetArch>amd64</docker.ranger.targetArch>
+                <docker.ranger.ubuntuVersion>20.04</docker.ranger.ubuntuVersion>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>prepare-docker-image-context</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>verify</phase>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${docker.ranger.distDir}" />
+                                        <mkdir dir="${docker.ranger.downloadsDir}" />
+                                        <copy file="${docker.ranger.rootDir}/target/version" overwrite="true" tofile="${docker.ranger.distDir}/version" />
+                                        <copy file="${docker.ranger.rootDir}/target/ranger-${project.version}-admin.tar.gz" overwrite="true" tofile="${docker.ranger.distDir}/ranger-${project.version}-admin.tar.gz" />
+                                        <get dest="${docker.ranger.downloadsDir}/postgresql-42.2.16.jre7.jar" skipexisting="true" src="https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.16.jre7/postgresql-42.2.16.jre7.jar" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>0.45.1</version>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${docker.ranger.baseImage}</name>
+                                    <build>
+                                        <contextDir>${docker.ranger.contextDir}</contextDir>
+                                        <dockerFile>${docker.ranger.contextDir}/Dockerfile.ranger-base</dockerFile>
+                                        <args>
+                                            <UBUNTU_VERSION>${docker.ranger.ubuntuVersion}</UBUNTU_VERSION>
+                                            <RANGER_BASE_JAVA_VERSION>${docker.ranger.baseJavaVersion}</RANGER_BASE_JAVA_VERSION>
+                                            <TARGETARCH>${docker.ranger.targetArch}</TARGETARCH>
+                                        </args>
+                                    </build>
+                                </image>
+                                <image>
+                                    <name>${docker.ranger.runtimeImage}</name>
+                                    <build>
+                                        <contextDir>${docker.ranger.contextDir}</contextDir>
+                                        <dockerFile>${docker.ranger.contextDir}/Dockerfile.ranger-admin-postgres</dockerFile>
+                                        <args>
+                                            <RANGER_VERSION>${project.version}</RANGER_VERSION>
+                                            <RANGER_ADMIN_JAVA_VERSION>${docker.ranger.adminJavaVersion}</RANGER_ADMIN_JAVA_VERSION>
+                                            <TARGETARCH>${docker.ranger.targetArch}</TARGETARCH>
+                                        </args>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build-ranger-admin-image</id>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                                <phase>verify</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <id>ranger-hdfs-plugin</id>
             <build>
                 <plugins>
