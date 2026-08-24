@@ -18,7 +18,10 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
@@ -32,13 +35,16 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAssetDao;
+import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXResourceDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.entity.XXAsset;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.view.VXPortalUser;
@@ -651,5 +657,39 @@ public class TestRangerBizUtil {
                 Mockito.verify(rangerBizUtilMock).blockAuditorRoleUser();
 
         }
+
+	@Test
+	public void testIsUserInAllowedGroupUsesDaoGroupsForKerberosLogin() {
+		RangerSecurityContext context = new RangerSecurityContext();
+		UserSessionBase       session = new UserSessionBase();
+		XXPortalUser          portalUser = new XXPortalUser();
+
+		portalUser.setLoginId("hive/lapa-adh2-latest-1.ru-central1.internal@RU-CENTRAL1.INTERNAL");
+		session.setXXPortalUser(portalUser);
+		context.setUserSession(session);
+		RangerContextHolder.setSecurityContext(context);
+
+		RangerService service = new RangerService();
+		Map<String, String> configs = new HashMap<>();
+		configs.put("policy.download.auth.groups", "spark_users");
+		service.setConfigs(configs);
+
+		XXUserDao userDao = Mockito.mock(XXUserDao.class);
+		XXGroupDao groupDao = Mockito.mock(XXGroupDao.class);
+		XXUser xUser = new XXUser();
+		xUser.setId(7L);
+		xUser.setName("hive");
+		XXGroup xGroup = new XXGroup();
+		xGroup.setName("spark_users");
+
+		Mockito.when(daoManager.getXXUser()).thenReturn(userDao);
+		Mockito.when(daoManager.getXXGroup()).thenReturn(groupDao);
+		Mockito.when(userDao.findByUserName("hive")).thenReturn(xUser);
+		Mockito.when(groupDao.findByUserId(7L)).thenReturn(Collections.singletonList(xGroup));
+
+		Assert.assertTrue(rangerBizUtil.isUserInAllowedGroup(service, "policy.download.auth.groups"));
+		Mockito.verify(userDao).findByUserName("hive");
+		Mockito.verify(groupDao).findByUserId(7L);
+	}
 
 }

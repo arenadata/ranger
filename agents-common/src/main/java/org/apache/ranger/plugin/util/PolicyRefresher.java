@@ -21,10 +21,8 @@ package org.apache.ranger.plugin.util;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,6 +30,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.RangerAdminClientAccessDeniedException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
@@ -52,6 +51,7 @@ public class PolicyRefresher extends Thread {
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
+	private final RangerLocalDirectory.ResolvedDirectory cacheDirectory;
 	private final Set<PosixFilePermission>      cacheFilePerms;
 	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
@@ -73,12 +73,17 @@ public class PolicyRefresher extends Thread {
 		this.plugIn      = plugIn;
 		this.serviceType = plugIn.getServiceType();
 		this.serviceName = plugIn.getServiceName();
-		this.cacheDir    = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
 		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
-		this.cacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
-
 		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
-		this.cacheDirPerms = FileUtils.parsePermissions(cacheDirPermsString);
+		String baseCacheDir = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
+		this.cacheDirectory = RangerLocalDirectory.resolve(baseCacheDir,
+				pluginConfig.get(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
+				FileUtils.parsePermissions(cacheDirPermsString),
+				FileUtils.parsePermissions(cacheFilePermsString));
+
+		this.cacheDir       = this.cacheDirectory.getPath();
+		this.cacheFilePerms = this.cacheDirectory.getFilePermissions();
+		this.cacheDirPerms  = this.cacheDirectory.getDirPermissions();
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -91,7 +96,7 @@ public class PolicyRefresher extends Thread {
 		RangerPluginContext pluginContext  = plugIn.getPluginContext();
 		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
 		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
-		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
+		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin, baseCacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000L);
 
 		setName("PolicyRefresher(serviceName=" + serviceName + ")-" + getId());
@@ -240,8 +245,8 @@ public class PolicyRefresher extends Thread {
 		}
 
 		try {
-			//load policy from PolicyAdmin
 			ServicePolicies svcPolicies = loadPolicyfromPolicyAdmin();
+			plugIn.getPluginContext().setPolicyDownloadAuthzDenied(false);
 
 			if (svcPolicies == null) {
 				//if Policy fetch from Policy Admin Fails, load from cache
@@ -268,6 +273,9 @@ public class PolicyRefresher extends Thread {
 					serviceDefSetInPlugin = true;
 				}
 			}
+		} catch (RangerAdminClientAccessDeniedException ade) {
+			plugIn.getPluginContext().setPolicyDownloadAuthzDenied(true);
+            LOG.warn("PolicyRefresher(serviceName={}): policy refresh authorization denied. Access checks will fail closed if configured.", serviceName, ade);
 		} catch (RangerServiceNotFoundException snfe) {
 			if (!serviceDefSetInPlugin) {
 				disableCache();
@@ -278,6 +286,20 @@ public class PolicyRefresher extends Thread {
 			}
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);
+			if (!policiesSetInPlugin) {
+				ServicePolicies svcPolicies = loadFromCache();
+
+				if (svcPolicies != null) {
+					plugIn.setPolicies(svcPolicies);
+					policiesSetInPlugin = true;
+					serviceDefSetInPlugin = false;
+					setLastActivationTimeInMillis(System.currentTimeMillis());
+					lastKnownVersion = svcPolicies.getPolicyVersion() != null ? svcPolicies.getPolicyVersion() : -1L;
+				} else if (!serviceDefSetInPlugin) {
+					plugIn.setPolicies(null);
+					serviceDefSetInPlugin = true;
+				}
+			}
 		}
 
 		RangerPerfTracer.log(perf);
@@ -287,7 +309,7 @@ public class PolicyRefresher extends Thread {
 		}
 	}
 
-	private ServicePolicies loadPolicyfromPolicyAdmin() throws RangerServiceNotFoundException {
+	private ServicePolicies loadPolicyfromPolicyAdmin() throws Exception {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadPolicyfromPolicyAdmin()");
@@ -323,11 +345,14 @@ public class PolicyRefresher extends Thread {
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
-			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of policies (" + lastKnownVersion + ")", snfe);
+            LOG.error("PolicyRefresher(serviceName={}): failed to find service. Will clean up local cache of policies ({})", serviceName, lastKnownVersion, snfe);
 			throw snfe;
+		} catch (RangerAdminClientAccessDeniedException ade) {
+            LOG.warn("PolicyRefresher(serviceName={}): failed to refresh policies due to authorization denial ({})", serviceName, lastKnownVersion, ade);
+			throw ade;
 		} catch (Exception excp) {
-			LOG.error("PolicyRefresher(serviceName=" + serviceName + "): failed to refresh policies. Will continue to use last known version of policies (" + lastKnownVersion + ")", excp);
-			svcPolicies = null;
+            LOG.error("PolicyRefresher(serviceName={}): failed to refresh policies. Will continue to use last known version of policies ({})", serviceName, lastKnownVersion, excp);
+			throw excp;
 		}
 
 		RangerPerfTracer.log(perf);
@@ -349,6 +374,13 @@ public class PolicyRefresher extends Thread {
 		}
 
 		File cacheFile = cacheDir == null ? null : new File(cacheDir + File.separator + cacheFileName);
+
+		try {
+			cacheDirectory.ensureDirectory();
+		} catch (Exception excp) {
+            LOG.error("failed to validate cache directory {}", cacheDir, excp);
+			return null;
+		}
 
     	if(cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
     		Reader reader = null;
@@ -411,17 +443,15 @@ public class PolicyRefresher extends Thread {
 				String backupCacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
 				String realCacheFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheFileName : cacheFileName;
 
-				// Create the cacheDir if it doesn't already exist
 				File cacheDirTmp = new File(realCacheDirName);
-				if (cacheDirTmp.exists()) {
-					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-				} else {
-					try {
+				try {
+					cacheDirectory.ensureDirectory();
+					if (!cacheDirTmp.exists()) {
 						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
-						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
-					} catch (Exception ex) {
-						LOG.error("Cannot create cache directory", ex);
 					}
+					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
+				} catch (Exception ex) {
+					LOG.error("Cannot create cache directory", ex);
 				}
 				if (CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
 					backupCacheFile = new File(realCacheDirName + File.separator + backupCacheFileName);
@@ -440,8 +470,8 @@ public class PolicyRefresher extends Thread {
 				try {
 					if (!cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
-						Files.setPosixFilePermissions(cacheFile.toPath(), this.cacheFilePerms);
 					}
+					cacheDirectory.secureFile(cacheFile);
 					writer = new FileWriter(cacheFile);
 					JsonUtils.objectToWriter(writer, policies);
 		        } catch (Exception excp) {
@@ -472,8 +502,8 @@ public class PolicyRefresher extends Thread {
 					try {
 						if (!backupCacheFile.exists()) {
 							Files.createFile(backupCacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
-							Files.setPosixFilePermissions(backupCacheFile.toPath(), this.cacheFilePerms);
 						}
+						cacheDirectory.secureFile(backupCacheFile);
 					} catch (Exception excp) {
 						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
 					}

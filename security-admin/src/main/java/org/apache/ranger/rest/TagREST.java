@@ -89,6 +89,7 @@ public class TagREST {
     private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.TagREST");
 
     public static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
+    public static final String Allowed_Group_List_For_Tag_Download = "tag.download.auth.groups";
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -1494,12 +1495,18 @@ public class TagREST {
         			isAllowed = true;
         		}else {
         			isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+				if (!isAllowed) {
+					isAllowed = bizUtil.isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Tag_Download);
+				}
         		}
         	}else{
         		if (isAdmin) {
         			isAllowed = true;
         		}else{
         			isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+				if (!isAllowed) {
+					isAllowed = bizUtil.isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Tag_Download);
+				}
         		}
         	}
         	if (isAllowed) {

@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.RangerAdminClientAccessDeniedException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -65,9 +66,12 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 			} catch (ClosedByInterruptException closedByInterruptException) {
 				LOG.error("Tag-retriever thread was interrupted while blocked on I/O");
 				throw new InterruptedException();
+			} catch (RangerAdminClientAccessDeniedException ade) {
+				LOG.warn("Tag-retriever encountered authorization denial", ade);
+				throw ade;
 			} catch (Exception e) {
-				LOG.error("Tag-retriever encounterd exception, exception=", e);
-				LOG.error("Returning null service tags");
+				LOG.error("Tag-retriever encountered exception", e);
+				throw e;
 			}
 		}
 
@@ -75,4 +79,3 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 	}
 
 }
-

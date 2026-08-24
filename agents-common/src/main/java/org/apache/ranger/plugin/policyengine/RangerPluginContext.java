@@ -41,6 +41,9 @@ public class RangerPluginContext {
 	private          RangerAuthContext                                                          authContext;
 	private          RangerAuthContextListener                                                  authContextListener;
 	private          RangerAdminClient                                                          adminClient;
+	private volatile boolean                                                                    policyDownloadAuthzDenied;
+	private volatile boolean                                                                    roleDownloadAuthzDenied;
+	private volatile boolean                                                                    tagDownloadAuthzDenied;
 	private	final 	 Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
 	private final    ReentrantReadWriteLock                                                     lock = new ReentrantReadWriteLock(true); // fair lock
 
@@ -123,6 +126,16 @@ public class RangerPluginContext {
 	public void setAuthContext(RangerAuthContext authContext) { this.authContext = authContext; }
 
 	public void setAuthContextListener(RangerAuthContextListener authContextListener) { this.authContextListener = authContextListener; }
+
+	public boolean isPolicyRefreshAuthzDenied() {
+		return policyDownloadAuthzDenied || roleDownloadAuthzDenied || tagDownloadAuthzDenied;
+	}
+
+	public void setPolicyDownloadAuthzDenied(boolean policyDownloadAuthzDenied) { this.policyDownloadAuthzDenied = policyDownloadAuthzDenied; }
+
+	public void setRoleDownloadAuthzDenied(boolean roleDownloadAuthzDenied) { this.roleDownloadAuthzDenied = roleDownloadAuthzDenied; }
+
+	public void setTagDownloadAuthzDenied(boolean tagDownloadAuthzDenied) { this.tagDownloadAuthzDenied = tagDownloadAuthzDenied; }
 
 	public void notifyAuthContextChanged() {
 		RangerAuthContextListener authContextListener = this.authContextListener;

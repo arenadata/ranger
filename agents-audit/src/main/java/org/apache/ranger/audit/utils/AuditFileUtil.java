@@ -28,11 +28,14 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
 public class AuditFileUtil {
+    public static final String SUBDIR_MODE_DISABLED = "disabled";
+    public static final String SUBDIR_MODE_PERUSER  = "peruser";
+    public static final String SUBDIR_MODE_PERGROUP = "pergroup";
 
     public static void setPermissions(File file, Set<PosixFilePermission> perms) throws IOException {
         Path path = file.toPath();
         Files.setPosixFilePermissions(path, perms);
-        }
+    }
 
     public static Set<PosixFilePermission> parsePermissions(String permStr) {
         if (StringUtils.length(permStr) != 3) {
@@ -54,6 +57,42 @@ public class AuditFileUtil {
         Path path = dir.toPath();
         Files.createDirectories(path, attr);
         Files.setPosixFilePermissions(path, perms);
+    }
+
+    public static ResolvedDirectory resolveDirectory(String baseDir, String subdirMode, Set<PosixFilePermission> defaultDirPerms, Set<PosixFilePermission> defaultFilePerms) {
+        return new ResolvedDirectory(LocalDirectoryResolver.resolveAuditSpool(baseDir, subdirMode, defaultDirPerms, defaultFilePerms));
+    }
+
+    public static final class ResolvedDirectory {
+        private final LocalDirectoryResolver.ResolvedDirectory delegate;
+
+        private ResolvedDirectory(LocalDirectoryResolver.ResolvedDirectory delegate) {
+            this.delegate = delegate;
+        }
+
+        public String getPath() {
+            return delegate.getPath();
+        }
+
+        public Set<PosixFilePermission> getDirPermissions() {
+            return delegate.getDirPermissions();
+        }
+
+        public Set<PosixFilePermission> getFilePermissions() {
+            return delegate.getFilePermissions();
+        }
+
+        public void ensureDirectory() throws IOException {
+            delegate.ensureDirectory();
+        }
+
+        public void ensureChildDirectory(File directory) throws IOException {
+            delegate.ensureChildDirectory(directory);
+        }
+
+        public void secureFile(File file) throws IOException {
+            delegate.secureFile(file);
+        }
     }
 
 }

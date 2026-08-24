@@ -76,6 +76,7 @@ public class TestTagREST {
 	private static Long lastKnownVersion = 10L;
 	private static String pluginId = "1";
 	private static String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
+	private static String Allowed_Group_List_For_Tag_Download = "tag.download.auth.groups";
 
 	@InjectMocks
 	TagREST tagREST = new TagREST();
@@ -1847,6 +1848,55 @@ public class TestTagREST {
 			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
 		} catch (Exception e) {
 		}
+	}
+
+	@Test
+	public void test55aGetSecureServiceTagsIfUpdatedAllowedByDownloadGroup() {
+		boolean isAdmin = false;
+		boolean isKeyAdmin = false;
+		ServiceTags oldServiceTag = new ServiceTags();
+		oldServiceTag.setServiceName(serviceName);
+		oldServiceTag.setTagVersion(5L);
+
+		XXService xService = new XXService();
+		xService.setId(id);
+		xService.setName(serviceName);
+		xService.setType(5L);
+
+		XXServiceDef xServiceDef = new XXServiceDef();
+		xServiceDef.setId(id);
+		xServiceDef.setVersion(5L);
+
+		RangerService rangerService = new RangerService();
+		rangerService.setId(id);
+		rangerService.setName(serviceName);
+
+		XXServiceDao xXServiceDao = Mockito.mock(XXServiceDao.class);
+		XXServiceDefDao xXServiceDefDao  = Mockito.mock(XXServiceDefDao.class);
+
+		Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
+		Mockito.when(bizUtil.isKeyAdmin()).thenReturn(isKeyAdmin);
+		Mockito.when(daoManager.getXXService()).thenReturn(xXServiceDao);
+		Mockito.when(xXServiceDao.findByName(serviceName)).thenReturn(xService);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xXServiceDefDao);
+		Mockito.when(xXServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+		} catch (Exception e) {
+		}
+
+		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(false);
+		Mockito.when(bizUtil.isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Tag_Download)).thenReturn(true);
+
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+
+		Assert.assertNotNull(result.getServiceName());
+		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
+		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
+		Mockito.verify(bizUtil).isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
+		Mockito.verify(bizUtil).isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Tag_Download);
 	}
 	
 	@Test

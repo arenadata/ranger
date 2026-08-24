@@ -162,6 +162,7 @@ public class ServiceREST {
 	final static public String PARAM_DELETE_IF_EXISTS = "deleteIfExists";
 	final static public String PARAM_IMPORT_IN_PROGRESS = "importInProgress";
 	public static final String Allowed_User_List_For_Download = "policy.download.auth.users";
+	public static final String Allowed_Group_List_For_Download = "policy.download.auth.groups";
 	public static final String Allowed_User_List_For_Grant_Revoke = "policy.grantrevoke.auth.users";
 
 	public static final String isCSRF_ENABLED = "ranger.rest-csrf.enabled";
@@ -3211,6 +3212,9 @@ public class ServiceREST {
 						if (rangerService != null) {
 							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
 							if (!isAllowed) {
+								isAllowed = bizUtil.isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Download);
+							}
+							if (!isAllowed) {
 								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 							}
 						}
@@ -3222,6 +3226,9 @@ public class ServiceREST {
 					} else {
 						if (rangerService != null) {
 							isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Download);
+							if (!isAllowed) {
+								isAllowed = bizUtil.isUserInAllowedGroup(rangerService, Allowed_Group_List_For_Download);
+							}
 							if (!isAllowed) {
 								isAllowed = bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Grant_Revoke);
 							}
@@ -4642,5 +4649,4 @@ public class ServiceREST {
 		return ret;
 	}
 }
-
 

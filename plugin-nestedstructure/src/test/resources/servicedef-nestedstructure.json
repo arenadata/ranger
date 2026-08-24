@@ -9,7 +9,8 @@
   },
   "configs": [
     { "itemId": 1, "name": "commonNameForCertificate",   "type": "string", "mandatory": false },
-    { "itemId": 2, "name": "policy.download.auth.users", "type": "string", "mandatory": false }
+    { "itemId": 2, "name": "policy.download.auth.users",  "type": "string", "mandatory": false },
+    { "itemId": 3, "name": "policy.download.auth.groups", "type": "string", "mandatory": false }
   ],
   "resources": [
     {

@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1410,6 +1411,67 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
+	}
+
+	public boolean isUserInAllowedGroup(RangerService rangerService, String cfgNameAllowedGroups) {
+		String user = null;
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null) {
+			user = userSession.getLoginId();
+		}
+
+		if (StringUtils.isNotBlank(user)) {
+			return isAnyGroupInConfigParameter(rangerService, cfgNameAllowedGroups, getGroupsForLoginId(user));
+		}
+
+		return false;
+	}
+
+	private Set<String> getGroupsForLoginId(String loginId) {
+		Set<String> groups = new LinkedHashSet<>();
+
+		for (String userName : getUserNameCandidates(loginId)) {
+			if (StringUtils.isBlank(userName)) {
+				continue;
+			}
+
+			XXUser xUser = daoManager != null && daoManager.getXXUser() != null ? daoManager.getXXUser().findByUserName(userName) : null;
+
+			if (xUser != null && daoManager.getXXGroup() != null) {
+				List<XXGroup> userGroups = daoManager.getXXGroup().findByUserId(xUser.getId());
+
+				if (CollectionUtils.isNotEmpty(userGroups)) {
+					for (XXGroup userGroup : userGroups) {
+						if (userGroup != null && StringUtils.isNotBlank(userGroup.getName())) {
+							groups.add(userGroup.getName());
+						}
+					}
+				}
+			}
+
+			if (userMgr != null && userMgr.xUserMgr != null) {
+				Set<String> xUserMgrGroups = userMgr.xUserMgr.getGroupsForUser(userName);
+
+				if (CollectionUtils.isNotEmpty(xUserMgrGroups)) {
+					groups.addAll(xUserMgrGroups);
+				}
+			}
+		}
+
+		return groups;
+	}
+
+	private Set<String> getUserNameCandidates(String loginId) {
+		Set<String> ret = new LinkedHashSet<>();
+		String      userName = StringUtils.trim(loginId);
+
+		if (StringUtils.isNotBlank(userName)) {
+			ret.add(userName);
+			ret.add(StringUtils.substringBefore(userName, "@"));
+			ret.add(StringUtils.substringBefore(StringUtils.substringBefore(userName, "@"), "/"));
+		}
+
+		return ret;
 	}
 
 	public boolean isUserAllowedForGrantRevoke(RangerService rangerService, String userName) {

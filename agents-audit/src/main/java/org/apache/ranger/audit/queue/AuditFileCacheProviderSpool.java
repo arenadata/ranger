@@ -71,6 +71,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public static final String PROP_FILE_SPOOL_INDEX_FILE 				= "filespool.index.filename";
     public static final String PROP_FILE_SPOOL_DEST_RETRY_MS 			= "filespool.destination.retry.ms";
     public static final String PROP_FILE_SPOOL_BATCH_SIZE               = "filespool.buffer.size";
+    public static final String PROP_FILE_SPOOL_SUBDIR_MODE              = "filespool.subdir.mode";
 
     public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
     public static final String FILE_CACHE_PROVIDER_NAME 				= "AuditFileCacheProviderSpool";
@@ -114,6 +115,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     boolean isSpoolingSuccessful = true;
 
     Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions("644");
+    AuditFileUtil.ResolvedDirectory resolvedLogDirectory = null;
 
     public AuditFileCacheProviderSpool(AuditHandler consumerProvider) {
         this.consumerProvider = consumerProvider;
@@ -149,6 +151,13 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     "755");
             filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
             Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
+            resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
+                    MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_SUBDIR_MODE),
+                    dirPermissions,
+                    filePermissions);
+            logFolderProp = resolvedLogDirectory.getPath();
+            dirPermissions = resolvedLogDirectory.getDirPermissions();
+            filePermissions = resolvedLogDirectory.getFilePermissions();
             logFileNameFormat = MiscUtil.getStringProperty(props,
                     basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
             String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -180,12 +189,11 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 return false;
             }
             logFolder = new File(logFolderProp);
-            if (!logFolder.isDirectory()) {
-                AuditFileUtil.createDirectoryWithPermissions(logFolder, dirPermissions);
-                if (!logFolder.isDirectory()) {
-                    logger.error("File Spool folder not found and can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  FILE_CACHE_PROVIDER_NAME);
-                    return false;
-                }
+            try {
+                resolvedLogDirectory.ensureDirectory();
+            } catch (Exception excp) {
+                logger.error("File Spool folder not found, unsafe, or can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  FILE_CACHE_PROVIDER_NAME, excp);
+                return false;
             }
             logger.info("logFolder=" + logFolder + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
@@ -202,12 +210,11 @@ public class AuditFileCacheProviderSpool implements Runnable {
             } else {
                 archiveFolder = new File(archiveFolderProp);
             }
-            if (!archiveFolder.isDirectory()) {
-                AuditFileUtil.createDirectoryWithPermissions(archiveFolder, dirPermissions);
-                if (!archiveFolder.isDirectory()) {
-                    logger.error("File Spool archive folder not found and can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), FILE_CACHE_PROVIDER_NAME);
-                    return false;
-                }
+            try {
+                resolvedLogDirectory.ensureChildDirectory(archiveFolder);
+            } catch (Exception excp) {
+                logger.error("File Spool archive folder not found, unsafe, or can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), FILE_CACHE_PROVIDER_NAME, excp);
+                return false;
             }
             logger.info("archiveFolder=" + archiveFolder + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
@@ -231,8 +238,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             + indexFile.getPath());
                     return false;
                 }
-                AuditFileUtil.setPermissions(indexFile, filePermissions);
             }
+            resolvedLogDirectory.secureFile(indexFile);
             logger.info("indexFile=" + indexFile + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
 
@@ -250,8 +257,8 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             + indexDoneFile.getPath());
                     return false;
                 }
-                AuditFileUtil.setPermissions(indexDoneFile, filePermissions);
             }
+            resolvedLogDirectory.secureFile(indexDoneFile);
             logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
                     + FILE_CACHE_PROVIDER_NAME);
 
@@ -519,7 +526,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             boolean created = outLogFile.createNewFile();
             if (created)
                 try {
-                    AuditFileUtil.setPermissions(outLogFile, filePermissions);
+                    resolvedLogDirectory.secureFile(outLogFile);
                 } catch (Exception e) {
                     logger.debug("Failed to set permissions on {}", outLogFile, e);
                 }
@@ -659,6 +666,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             out.println(MiscUtil.stringify(auditIndexRecord));
         }
         out.close();
+        resolvedLogDirectory.secureFile(indexFile);
         // printIndex();
 
     }
@@ -674,6 +682,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
         out.println(line);
         out.flush();
         out.close();
+        resolvedLogDirectory.secureFile(indexDoneFile);
 
         // After Each file is read and audit events are pushed into pipe, we flush to reach the destination immediate.
         consumerProvider.flush();
