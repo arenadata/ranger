@@ -36,6 +36,7 @@ import org.apache.ranger.resource.mapper.event.DbResourceDiffCollector;
 import org.apache.ranger.resource.mapper.event.ResourceDiffCollector;
 import org.apache.ranger.resource.mapper.event.ResourceDiffHandler;
 import org.apache.ranger.resource.mapper.event.ResourceDiffSource;
+import org.apache.ranger.resource.mapper.event.retry.BackoffRetrySupport;
 import org.apache.ranger.resource.mapper.event.retry.PolicyBasedRetrySupport;
 import org.apache.ranger.resource.mapper.event.retry.ResourceMapperRetryPolicy;
 import org.apache.ranger.resource.mapper.event.retry.RetryPolicyFactory;
@@ -104,8 +105,9 @@ public class HiveResourceMappingManager {
             HiveMetastoreSnapshotFetcher snapshotFetcher =
                 buildSnapshotEventFetcher(hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
 
+            RetrySupport eventFetcherRetrySupport = buildHiveListenerBackoffRetrySupport(config);
             HiveMetastoreEventFetcher eventFetcher = buildHiveMetastoreEventFetcher(
-                hiveMetaStoreClient, retrySupport, hiveAuthenticator, config);
+                hiveMetaStoreClient, eventFetcherRetrySupport, hiveAuthenticator, config);
 
             return CompositeHiveMetastoreFetcher.builder()
                 .metaStoreClient(hiveMetaStoreClient)
@@ -161,6 +163,13 @@ public class HiveResourceMappingManager {
             config.getHiveListenerRetryIntervalMs()
         );
         return new PolicyBasedRetrySupport(retryPolicy, Thread::sleep);
+    }
+
+    private RetrySupport buildHiveListenerBackoffRetrySupport(HiveResourceMappingManagerConfig config) {
+        return new BackoffRetrySupport(
+            config.getHmsReconnectBaseIntervalMs(),
+            config.getHmsReconnectMaxIntervalMs(),
+            Thread::sleep);
     }
 
     private RetrySupport buildEventApplierRetrySupport(

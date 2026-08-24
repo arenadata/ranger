@@ -37,6 +37,12 @@ public class ConfigurationKeys {
     public static final String HMS_MAX_RETRIES = "ranger.rmm.hms.retry.max";
     public static final int HMS_MAX_RETRIES_DEFAULT = 10;
 
+    public static final String HMS_RECONNECT_BASE_INTERVAL_MS = "ranger.rmm.hms.reconnect.base.interval.ms";
+    public static final long HMS_RECONNECT_BASE_INTERVAL_MS_DEFAULT = 1000L;
+
+    public static final String HMS_RECONNECT_MAX_INTERVAL_MS = "ranger.rmm.hms.reconnect.max.interval.ms";
+    public static final long HMS_RECONNECT_MAX_INTERVAL_MS_DEFAULT = 300000L;
+
     public static final String HMS_FULL_SYNC = "ranger.rmm.hms.sync.full";
     public static final boolean HMS_FULL_SYNC_DEFAULT = false;
 }

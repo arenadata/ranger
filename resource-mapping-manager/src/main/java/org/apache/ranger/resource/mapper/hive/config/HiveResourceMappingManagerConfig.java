@@ -27,14 +27,20 @@ import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HM
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_FULL_SYNC_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_MAX_RETRIES;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_MAX_RETRIES_DEFAULT;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RECONNECT_BASE_INTERVAL_MS;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RECONNECT_BASE_INTERVAL_MS_DEFAULT;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RECONNECT_MAX_INTERVAL_MS;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RECONNECT_MAX_INTERVAL_MS_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_INTERVAL_MS;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_INTERVAL_MS_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_STRATEGY;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_STRATEGY_DEFAULT;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.resource.mapper.config.ResourceMappingManagerConfig;
 import org.apache.ranger.resource.mapper.event.retry.RetryStrategy;
 
+@Slf4j
 public class HiveResourceMappingManagerConfig extends ResourceMappingManagerConfig {
     private static final String HIVE_CONFIG_FILE = "hive-site.xml";
 
@@ -58,11 +64,31 @@ public class HiveResourceMappingManagerConfig extends ResourceMappingManagerConf
         return getLong(HMS_RETRY_INTERVAL_MS, HMS_RETRY_INTERVAL_MS_DEFAULT);
     }
 
+    public long getHmsReconnectBaseIntervalMs() {
+        return validate(
+            getLong(HMS_RECONNECT_BASE_INTERVAL_MS, HMS_RECONNECT_BASE_INTERVAL_MS_DEFAULT),
+            HMS_RECONNECT_BASE_INTERVAL_MS_DEFAULT);
+    }
+
+    public long getHmsReconnectMaxIntervalMs() {
+        return validate(
+            getLong(HMS_RECONNECT_MAX_INTERVAL_MS, HMS_RECONNECT_MAX_INTERVAL_MS_DEFAULT),
+            HMS_RECONNECT_MAX_INTERVAL_MS_DEFAULT);
+    }
+
     public int getHiveListenerMaxRetries() {
         return getInt(HMS_MAX_RETRIES, HMS_MAX_RETRIES_DEFAULT);
     }
 
     public boolean isFullMetastoreSync() {
         return getBoolean(HMS_FULL_SYNC, HMS_FULL_SYNC_DEFAULT);
+    }
+
+    private static long validate(long value, long defaultValue) {
+        if (value < 1) {
+            log.warn("Config value {} ms is not valid, using default {} ms instead", value, defaultValue);
+            return defaultValue;
+        }
+        return value;
     }
 }
