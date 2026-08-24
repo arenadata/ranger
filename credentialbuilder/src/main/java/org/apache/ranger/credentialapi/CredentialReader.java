@@ -46,12 +46,15 @@ public class CredentialReader {
 		  crendentialProviderPrefixBcfks=crendentialProviderPrefixBcfks.toLowerCase();
 		  crendentialProviderPrefixLocalBcfks=crendentialProviderPrefixLocalBcfks.toLowerCase();
 
+		  String crendentialProviderPrefixVault = "vault://";
+
 		  CrendentialProviderPath=CrendentialProviderPath.trim();
 		  alias=alias.trim();
 		  if(CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixJceks) ||
 				  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixLocalJceks) ||
 				  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixBcfks) ||
-				  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixLocalBcfks)){
+				  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixLocalBcfks) ||
+				  CrendentialProviderPath.toLowerCase().startsWith(crendentialProviderPrefixVault)){
 			  conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH,
 					   //UserProvider.SCHEME_NAME + ":///," +
 			  CrendentialProviderPath);
