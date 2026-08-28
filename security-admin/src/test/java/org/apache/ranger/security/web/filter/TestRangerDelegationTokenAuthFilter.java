@@ -197,6 +197,6 @@ public class TestRangerDelegationTokenAuthFilter {
 
         filter.doFilter(request, response, chain);
 
-        Mockito.verify(request).setAttribute("delegationTokenEnabled", true);
+        Mockito.verify(request).setAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED, true);
     }
 }

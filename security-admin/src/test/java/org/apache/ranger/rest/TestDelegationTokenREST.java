@@ -34,7 +34,13 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
+import org.apache.ranger.security.web.filter.RangerDelegationTokenAuthFilter;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,6 +69,7 @@ public class TestDelegationTokenREST {
 
     @Before
     public void setup() {
+        RangerContextHolder.resetSecurityContext();
         Mockito.lenient().when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean()))
                 .thenAnswer(invocation -> {
                     int status = invocation.getArgument(0);
@@ -74,6 +81,23 @@ public class TestDelegationTokenREST {
         Mockito.lenient().when(restErrorUtil.create403RESTException(Mockito.anyString()))
                 .thenAnswer(invocation -> new WebApplicationException(
                         javax.ws.rs.core.Response.status(HttpServletResponse.SC_FORBIDDEN).build()));
+    }
+
+    @After
+    public void teardown() {
+        RangerContextHolder.resetSecurityContext();
+    }
+
+    private void setSessionAuthType(int authType) {
+        XXAuthSession authSession = new XXAuthSession();
+        authSession.setAuthType(authType);
+
+        UserSessionBase userSession = new UserSessionBase();
+        userSession.setXXAuthSession(authSession);
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(userSession);
+        RangerContextHolder.setSecurityContext(context);
     }
 
     // --- Get tests ---
@@ -146,6 +170,101 @@ public class TestDelegationTokenREST {
         } catch (WebApplicationException e) {
             assertEquals(HttpServletResponse.SC_BAD_REQUEST, e.getResponse().getStatus());
         }
+    }
+
+    @Test
+    public void testGetDelegationToken_deniedForTokenAuthRequest() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(true);
+
+        try {
+            delegationTokenREST.getDelegationToken("yarn", request);
+            fail("Expected WebApplicationException");
+        } catch (WebApplicationException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
+        }
+        Mockito.verify(secretManager, Mockito.never()).createDelegationToken(Mockito.anyString(), Mockito.anyString());
+    }
+
+    @Test
+    public void testGetDelegationToken_deniedForTokenAuthSession() {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        setSessionAuthType(XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN);
+
+        try {
+            delegationTokenREST.getDelegationToken("yarn", request);
+            fail("Expected WebApplicationException");
+        } catch (WebApplicationException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetDelegationToken_allowedWhenAttributeIsFalse() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(false);
+
+        Token<RangerDelegationTokenIdentifier> mockToken = Mockito.mock(Token.class);
+        Mockito.when(mockToken.encodeToUrlString()).thenReturn("encodedTokenString");
+        Mockito.when(secretManager.createDelegationToken("testUser", "yarn")).thenReturn(mockToken);
+
+        Map<String, String> result = delegationTokenREST.getDelegationToken("yarn", request);
+
+        assertEquals("encodedTokenString", result.get("urlString"));
+    }
+
+    @Test
+    public void testGetDelegationToken_deniedForStringAttributeValue() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn("true");
+
+        try {
+            delegationTokenREST.getDelegationToken("yarn", request);
+            fail("Expected WebApplicationException");
+        } catch (WebApplicationException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
+        }
+        Mockito.verify(secretManager, Mockito.never()).createDelegationToken(Mockito.anyString(), Mockito.anyString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetDelegationToken_allowedWhenSessionHasNoAuthSession() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+
+        Token<RangerDelegationTokenIdentifier> mockToken = Mockito.mock(Token.class);
+        Mockito.when(mockToken.encodeToUrlString()).thenReturn("encodedTokenString");
+        Mockito.when(secretManager.createDelegationToken("testUser", "yarn")).thenReturn(mockToken);
+
+        Map<String, String> result = delegationTokenREST.getDelegationToken("yarn", request);
+
+        assertEquals("encodedTokenString", result.get("urlString"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetDelegationToken_allowedForPasswordAuthSession() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        setSessionAuthType(XXAuthSession.AUTH_TYPE_PASSWORD);
+
+        Token<RangerDelegationTokenIdentifier> mockToken = Mockito.mock(Token.class);
+        Mockito.when(mockToken.encodeToUrlString()).thenReturn("encodedTokenString");
+        Mockito.when(secretManager.createDelegationToken("testUser", "yarn")).thenReturn(mockToken);
+
+        Map<String, String> result = delegationTokenREST.getDelegationToken("yarn", request);
+
+        assertEquals("encodedTokenString", result.get("urlString"));
     }
 
     // --- Renew tests ---
@@ -268,6 +387,59 @@ public class TestDelegationTokenREST {
         }
     }
 
+    @Test
+    public void testRenewDelegationToken_deniedForTokenAuthRequest() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(true);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("token", "someToken");
+
+        try {
+            delegationTokenREST.renewDelegationToken(body, request);
+            fail("Expected WebApplicationException");
+        } catch (WebApplicationException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
+        }
+        Mockito.verify(secretManager, Mockito.never()).renewDelegationToken(Mockito.any(), Mockito.anyString());
+    }
+
+    @Test
+    public void testRenewDelegationToken_deniedForTokenAuthSession() {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        setSessionAuthType(XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("token", "someToken");
+
+        try {
+            delegationTokenREST.renewDelegationToken(body, request);
+            fail("Expected WebApplicationException");
+        } catch (WebApplicationException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testRenewDelegationToken_allowedForPasswordAuthSession() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        setSessionAuthType(XXAuthSession.AUTH_TYPE_PASSWORD);
+        Mockito.when(secretManager.renewDelegationToken(Mockito.any(Token.class), Mockito.eq("testUser")))
+                .thenReturn(1L);
+
+        Token<RangerDelegationTokenIdentifier> fakeToken = new Token<>();
+        Map<String, String> body = new HashMap<>();
+        body.put("token", fakeToken.encodeToUrlString());
+
+        Map<String, Object> result = delegationTokenREST.renewDelegationToken(body, request);
+
+        assertEquals(1L, result.get("expirationTime"));
+    }
+
     // --- Cancel tests ---
 
     @Test
@@ -334,6 +506,21 @@ public class TestDelegationTokenREST {
         } catch (WebApplicationException e) {
             assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
         }
+    }
+
+    @Test
+    public void testCancelDelegationToken_allowedForTokenAuthSession() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
+        setSessionAuthType(XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN);
+
+        Token<RangerDelegationTokenIdentifier> fakeToken = new Token<>();
+        Map<String, String> body = new HashMap<>();
+        body.put("token", fakeToken.encodeToUrlString());
+
+        delegationTokenREST.cancelDelegationToken(body, request);
+
+        Mockito.verify(secretManager).cancelDelegationToken(Mockito.any(Token.class), Mockito.eq("testUser"));
     }
 
     @Test

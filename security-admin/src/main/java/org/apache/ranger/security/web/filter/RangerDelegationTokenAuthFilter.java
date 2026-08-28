@@ -54,6 +54,9 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
     public static final String HEADER_DELEGATION_TOKEN = "X-Delegation-Token-Encoded";
     public static final String PARAM_DELEGATION_TOKEN  = "delegationToken";
 
+    /** Request attribute marking the request as authenticated by a delegation token. */
+    public static final String ATTR_DELEGATION_TOKEN_ENABLED = "delegationTokenEnabled";
+
     private static final String DEFAULT_ROLE = "ROLE_USER";
 
     @Autowired
@@ -105,7 +108,7 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
             ((AbstractAuthenticationToken) authentication).setDetails(webDetails);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            httpRequest.setAttribute("delegationTokenEnabled", true);
+            httpRequest.setAttribute(ATTR_DELEGATION_TOKEN_ENABLED, true);
             httpRequest.getSession(true);
 
             if (LOG.isDebugEnabled()) {

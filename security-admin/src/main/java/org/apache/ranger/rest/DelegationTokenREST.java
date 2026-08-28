@@ -38,8 +38,12 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
+import org.apache.ranger.security.web.filter.RangerDelegationTokenAuthFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +88,8 @@ public class DelegationTokenREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
                     "Authentication required", true);
         }
+
+        ensureNotDelegationTokenAuth(request, authenticatedUser, "issued");
 
         if (renewer != null && renewer.length() > MAX_RENEWER_LENGTH) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST,
@@ -131,6 +137,8 @@ public class DelegationTokenREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
                     "Authentication required", true);
         }
+
+        ensureNotDelegationTokenAuth(request, authenticatedUser, "renewed");
 
         try {
             Token<RangerDelegationTokenIdentifier> token = new Token<>();
@@ -201,5 +209,23 @@ public class DelegationTokenREST {
             LOG.error("Failed to cancel delegation token", e);
             throw restErrorUtil.createRESTException("Internal error during delegation token cancellation");
         }
+    }
+
+    private void ensureNotDelegationTokenAuth(HttpServletRequest request, String user, String operation) {
+        if (isDelegationTokenAuth(request)) {
+            LOG.warn("Delegation token can not be {} by a client authenticated with a delegation token, user={}", operation, user);
+            throw restErrorUtil.create403RESTException(
+                    "Delegation token can not be " + operation + " using delegation token authentication");
+        }
+    }
+
+    private boolean isDelegationTokenAuth(HttpServletRequest request) {
+        if (Boolean.parseBoolean(String.valueOf(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)))) {
+            return true;
+        }
+
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        return userSession != null && userSession.getAuthType() == XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN;
     }
 }

@@ -159,15 +159,19 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 		}
 	}
 
-	private int getAuthType(HttpServletRequest request) {
+	int getAuthType(HttpServletRequest request) {
 		int authType;
 		Object ssoEnabledObj = request.getAttribute("ssoEnabled");
 		Boolean ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+		Object delegationTokenEnabledObj = request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED);
 
-		if (ssoEnabled) {
-			authType = XXAuthSession.AUTH_TYPE_SSO;
-		} else if (request.getAttribute("delegationTokenEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("delegationTokenEnabled")))) {
+		// Must precede the SSO branch: RangerSSOAuthenticationFilter leaves the ssoEnabled
+		// attribute unset for an already-authenticated request, so ssoEnabled falls back to
+		// the global property and would mask delegation token auth in SSO deployments.
+		if (delegationTokenEnabledObj != null && Boolean.valueOf(String.valueOf(delegationTokenEnabledObj))) {
 			authType = XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN;
+		} else if (ssoEnabled) {
+			authType = XXAuthSession.AUTH_TYPE_SSO;
 		} else if (request.getAttribute("spnegoEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("spnegoEnabled")))){
 			if (request.getAttribute("trustedProxyEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("trustedProxyEnabled")))) {
 				if (logger.isDebugEnabled()) {

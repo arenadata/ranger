@@ -85,6 +85,13 @@ public class UserSessionBase implements Serializable {
 		return xXPortalUser;
 	}
 
+	public int getAuthType() {
+		if (xXAuthSession != null) {
+			return xXAuthSession.getAuthType();
+		}
+		return XXAuthSession.AUTH_TYPE_UNKNOWN;
+	}
+
 	public void setXXAuthSession(XXAuthSession gjAuthSession) {
 		this.xXAuthSession = gjAuthSession;
 	}
