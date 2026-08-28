@@ -34,11 +34,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
+import org.apache.ranger.security.web.authentication.RangerDelegationTokenAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -103,13 +103,12 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
             grantedAuths.add(new SimpleGrantedAuthority(DEFAULT_ROLE));
 
             final UserDetails principal = new User(userName, "", grantedAuths);
-            final Authentication authentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+            final Authentication authentication = new RangerDelegationTokenAuthenticationToken(principal, "", grantedAuths);
             WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
             ((AbstractAuthenticationToken) authentication).setDetails(webDetails);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             httpRequest.setAttribute(ATTR_DELEGATION_TOKEN_ENABLED, true);
-            httpRequest.getSession(true);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("<== RangerDelegationTokenAuthFilter: authenticated user={} via delegation token", userName);

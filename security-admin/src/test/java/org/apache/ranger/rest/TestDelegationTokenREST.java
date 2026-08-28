@@ -187,18 +187,25 @@ public class TestDelegationTokenREST {
         Mockito.verify(secretManager, Mockito.never()).createDelegationToken(Mockito.anyString(), Mockito.anyString());
     }
 
+    /**
+     * A stale token auth type on a reused session must not deny a request that
+     * authenticated by other means: the token authentication is never persisted
+     * into the session, so only the request attribute decides.
+     */
     @Test
-    public void testGetDelegationToken_deniedForTokenAuthSession() {
+    @SuppressWarnings("unchecked")
+    public void testGetDelegationToken_allowedForStaleTokenAuthSession() throws Exception {
         Mockito.when(secretManager.isEnabled()).thenReturn(true);
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
         setSessionAuthType(XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN);
 
-        try {
-            delegationTokenREST.getDelegationToken("yarn", request);
-            fail("Expected WebApplicationException");
-        } catch (WebApplicationException e) {
-            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
-        }
+        Token<RangerDelegationTokenIdentifier> mockToken = Mockito.mock(Token.class);
+        Mockito.when(mockToken.encodeToUrlString()).thenReturn("encodedTokenString");
+        Mockito.when(secretManager.createDelegationToken("testUser", "yarn")).thenReturn(mockToken);
+
+        Map<String, String> result = delegationTokenREST.getDelegationToken("yarn", request);
+
+        assertEquals("encodedTokenString", result.get("urlString"));
     }
 
     @Test
@@ -406,20 +413,21 @@ public class TestDelegationTokenREST {
     }
 
     @Test
-    public void testRenewDelegationToken_deniedForTokenAuthSession() {
+    @SuppressWarnings("unchecked")
+    public void testRenewDelegationToken_allowedForStaleTokenAuthSession() throws Exception {
         Mockito.when(secretManager.isEnabled()).thenReturn(true);
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
         setSessionAuthType(XXAuthSession.AUTH_TYPE_DELEGATION_TOKEN);
+        Mockito.when(secretManager.renewDelegationToken(Mockito.any(Token.class), Mockito.eq("testUser")))
+                .thenReturn(1L);
 
+        Token<RangerDelegationTokenIdentifier> fakeToken = new Token<>();
         Map<String, String> body = new HashMap<>();
-        body.put("token", "someToken");
+        body.put("token", fakeToken.encodeToUrlString());
 
-        try {
-            delegationTokenREST.renewDelegationToken(body, request);
-            fail("Expected WebApplicationException");
-        } catch (WebApplicationException e) {
-            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
-        }
+        Map<String, Object> result = delegationTokenREST.renewDelegationToken(body, request);
+
+        assertEquals(1L, result.get("expirationTime"));
     }
 
     @Test

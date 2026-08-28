@@ -40,8 +40,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.Transient;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -198,5 +200,33 @@ public class TestRangerDelegationTokenAuthFilter {
         filter.doFilter(request, response, chain);
 
         Mockito.verify(request).setAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED, true);
+    }
+
+    /**
+     * The authentication must not reach the HTTP session, otherwise the session cookie
+     * becomes a bearer credential that outlives the token. HttpSessionSecurityContextRepository
+     * skips storing an Authentication whose class carries @Transient.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testAuthentication_isNotPersistedIntoSession() throws Exception {
+        Mockito.when(secretManager.isEnabled()).thenReturn(true);
+
+        Token<RangerDelegationTokenIdentifier> fakeToken = new Token<>();
+        Mockito.when(request.getHeader(RangerDelegationTokenAuthFilter.HEADER_DELEGATION_TOKEN))
+                .thenReturn(fakeToken.encodeToUrlString());
+
+        RangerDelegationTokenIdentifier ident = new RangerDelegationTokenIdentifier(
+                new Text("testUser"), new Text("yarn"), new Text("testUser"));
+        Mockito.when(secretManager.verifyToken(Mockito.any(Token.class))).thenReturn(ident);
+
+        filter.doFilter(request, response, chain);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        assertNotNull("expected the filter to authenticate the request", auth);
+        assertNotNull("delegation token authentication must be annotated @Transient",
+                AnnotationUtils.getAnnotation(auth.getClass(), Transient.class));
+        Mockito.verify(request, Mockito.never()).getSession(true);
+        Mockito.verify(request, Mockito.never()).getSession();
     }
 }
