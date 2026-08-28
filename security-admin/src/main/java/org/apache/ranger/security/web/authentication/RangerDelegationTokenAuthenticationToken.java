@@ -26,12 +26,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.Transient;
 
 /**
- * Authentication produced by delegation token verification.
- *
- * {@link Transient} keeps HttpSessionSecurityContextRepository from storing this
- * authentication in the HTTP session: the token must be presented on every request,
- * so a session cookie obtained through token authentication grants nothing on its
- * own and stops outliving the token it came from.
+ * {@link Transient} keeps this out of the HTTP session, so a session cookie obtained
+ * through token authentication cannot outlive or stand in for the token.
  */
 @Transient
 public class RangerDelegationTokenAuthenticationToken extends UsernamePasswordAuthenticationToken {

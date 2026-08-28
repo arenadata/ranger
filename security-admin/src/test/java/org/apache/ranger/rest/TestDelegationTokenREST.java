@@ -22,6 +22,7 @@ package org.apache.ranger.rest;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.apache.ranger.security.web.filter.RangerDelegationTokenAuthFilter;
+import org.apache.ranger.security.web.authentication.RangerDelegationTokenAuthenticationToken;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +49,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TestDelegationTokenREST {
@@ -86,6 +90,19 @@ public class TestDelegationTokenREST {
     @After
     public void teardown() {
         RangerContextHolder.resetSecurityContext();
+        SecurityContextHolder.clearContext();
+    }
+
+    private void setDelegationTokenAuthentication() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new RangerDelegationTokenAuthenticationToken("testUser", "",
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))));
+    }
+
+    private void setOrdinaryAuthentication() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("testUser", "",
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))));
     }
 
     private void setSessionAuthType(int authType) {
@@ -176,7 +193,7 @@ public class TestDelegationTokenREST {
     public void testGetDelegationToken_deniedForTokenAuthRequest() throws Exception {
         Mockito.when(secretManager.isEnabled()).thenReturn(true);
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
-        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(true);
+        setDelegationTokenAuthentication();
 
         try {
             delegationTokenREST.getDelegationToken("yarn", request);
@@ -190,7 +207,7 @@ public class TestDelegationTokenREST {
     /**
      * A stale token auth type on a reused session must not deny a request that
      * authenticated by other means: the token authentication is never persisted
-     * into the session, so only the request attribute decides.
+     * into the session, so only the current request's authentication decides.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -210,10 +227,10 @@ public class TestDelegationTokenREST {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testGetDelegationToken_allowedWhenAttributeIsFalse() throws Exception {
+    public void testGetDelegationToken_allowedForOrdinaryAuthentication() throws Exception {
         Mockito.when(secretManager.isEnabled()).thenReturn(true);
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
-        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(false);
+        setOrdinaryAuthentication();
 
         Token<RangerDelegationTokenIdentifier> mockToken = Mockito.mock(Token.class);
         Mockito.when(mockToken.encodeToUrlString()).thenReturn("encodedTokenString");
@@ -222,21 +239,6 @@ public class TestDelegationTokenREST {
         Map<String, String> result = delegationTokenREST.getDelegationToken("yarn", request);
 
         assertEquals("encodedTokenString", result.get("urlString"));
-    }
-
-    @Test
-    public void testGetDelegationToken_deniedForStringAttributeValue() throws Exception {
-        Mockito.when(secretManager.isEnabled()).thenReturn(true);
-        Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
-        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn("true");
-
-        try {
-            delegationTokenREST.getDelegationToken("yarn", request);
-            fail("Expected WebApplicationException");
-        } catch (WebApplicationException e) {
-            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getResponse().getStatus());
-        }
-        Mockito.verify(secretManager, Mockito.never()).createDelegationToken(Mockito.anyString(), Mockito.anyString());
     }
 
     @Test
@@ -398,7 +400,7 @@ public class TestDelegationTokenREST {
     public void testRenewDelegationToken_deniedForTokenAuthRequest() throws Exception {
         Mockito.when(secretManager.isEnabled()).thenReturn(true);
         Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn("testUser");
-        Mockito.when(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)).thenReturn(true);
+        setDelegationTokenAuthentication();
 
         Map<String, String> body = new HashMap<>();
         body.put("token", "someToken");

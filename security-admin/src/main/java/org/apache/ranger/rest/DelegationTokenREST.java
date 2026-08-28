@@ -40,11 +40,13 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
-import org.apache.ranger.security.web.filter.RangerDelegationTokenAuthFilter;
+import org.apache.ranger.security.web.authentication.RangerDelegationTokenAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +88,7 @@ public class DelegationTokenREST {
                     "Authentication required", true);
         }
 
-        ensureNotDelegationTokenAuth(request, authenticatedUser, "issued");
+        ensureNotDelegationTokenAuth(authenticatedUser, "issued");
 
         if (renewer != null && renewer.length() > MAX_RENEWER_LENGTH) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST,
@@ -135,7 +137,7 @@ public class DelegationTokenREST {
                     "Authentication required", true);
         }
 
-        ensureNotDelegationTokenAuth(request, authenticatedUser, "renewed");
+        ensureNotDelegationTokenAuth(authenticatedUser, "renewed");
 
         try {
             Token<RangerDelegationTokenIdentifier> token = new Token<>();
@@ -208,8 +210,10 @@ public class DelegationTokenREST {
         }
     }
 
-    private void ensureNotDelegationTokenAuth(HttpServletRequest request, String user, String operation) {
-        if (Boolean.parseBoolean(String.valueOf(request.getAttribute(RangerDelegationTokenAuthFilter.ATTR_DELEGATION_TOKEN_ENABLED)))) {
+    private void ensureNotDelegationTokenAuth(String user, String operation) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerDelegationTokenAuthenticationToken) {
             LOG.warn("Delegation token can not be {} by a client authenticated with a delegation token, user={}", operation, user);
             throw restErrorUtil.create403RESTException(
                     "Delegation token can not be " + operation + " using delegation token authentication");

@@ -88,36 +88,37 @@ public class RangerDelegationTokenAuthFilter extends GenericFilterBean {
             LOG.debug("==> RangerDelegationTokenAuthFilter: found delegation token in request for URI={}", httpRequest.getRequestURI());
         }
 
+        String userName;
+
+        // only token verification belongs in here: an exception from further down the chain
+        // must not be reported to the client as a token authentication failure
         try {
             Token<RangerDelegationTokenIdentifier> token = new Token<>();
             token.decodeFromUrlString(tokenEncoded);
 
             RangerDelegationTokenIdentifier ident = secretManager.verifyToken(token);
-            String userName = ident.getUser().getShortUserName();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Delegation token verified for user={}", userName);
-            }
-
-            final List<GrantedAuthority> grantedAuths = new ArrayList<>();
-            grantedAuths.add(new SimpleGrantedAuthority(DEFAULT_ROLE));
-
-            final UserDetails principal = new User(userName, "", grantedAuths);
-            final Authentication authentication = new RangerDelegationTokenAuthenticationToken(principal, "", grantedAuths);
-            WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
-            ((AbstractAuthenticationToken) authentication).setDetails(webDetails);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            httpRequest.setAttribute(ATTR_DELEGATION_TOKEN_ENABLED, true);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerDelegationTokenAuthFilter: authenticated user={} via delegation token", userName);
-            }
-
-            chain.doFilter(request, response);
+            userName = ident.getUser().getShortUserName();
         } catch (Exception e) {
-            LOG.warn("Delegation token authentication failed: {}", e.getMessage());
+            LOG.warn("Delegation token authentication failed", e);
             httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Delegation token authentication failed");
+            return;
         }
+
+        final List<GrantedAuthority> grantedAuths = new ArrayList<>();
+        grantedAuths.add(new SimpleGrantedAuthority(DEFAULT_ROLE));
+
+        final UserDetails principal = new User(userName, "", grantedAuths);
+        final Authentication authentication = new RangerDelegationTokenAuthenticationToken(principal, "", grantedAuths);
+        WebAuthenticationDetails webDetails = new WebAuthenticationDetails(httpRequest);
+        ((AbstractAuthenticationToken) authentication).setDetails(webDetails);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        httpRequest.setAttribute(ATTR_DELEGATION_TOKEN_ENABLED, true);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerDelegationTokenAuthFilter: authenticated user={} via delegation token", userName);
+        }
+
+        chain.doFilter(request, response);
     }
 }

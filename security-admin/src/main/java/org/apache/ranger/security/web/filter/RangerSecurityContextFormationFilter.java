@@ -98,7 +98,9 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				int clientTimeOffset = 0;
 				if (context == null) {
 					context = new RangerSecurityContext();
-					httpSession.setAttribute(AKA_SC_SESSION_KEY, context);
+					if (httpSession != null) {
+						httpSession.setAttribute(AKA_SC_SESSION_KEY, context);
+					}
 				}
 				String userAgent = httpRequest.getHeader(USER_AGENT);
 				clientTimeOffset=RestUtil.getTimeOffset(httpRequest);
