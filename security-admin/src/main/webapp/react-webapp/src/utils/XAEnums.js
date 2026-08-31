@@ -442,6 +442,12 @@ export const AuthType = {
     label: "Trusted Proxy",
     rbkey: "xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY",
     tt: "lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY"
+  },
+  AUTH_TYPE_DELEGATION_TOKEN: {
+    value: 5,
+    label: "Delegation Token",
+    rbkey: "xa.enum.AuthType.AUTH_TYPE_DELEGATION_TOKEN",
+    tt: "lbl.AuthType_AUTH_TYPE_DELEGATION_TOKEN"
   }
 };
 

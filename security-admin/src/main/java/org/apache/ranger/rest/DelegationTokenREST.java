@@ -40,10 +40,13 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerDelegationTokenSecretManager;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.plugin.util.RangerDelegationTokenIdentifier;
+import org.apache.ranger.security.web.authentication.RangerDelegationTokenAuthenticationToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +87,8 @@ public class DelegationTokenREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
                     "Authentication required", true);
         }
+
+        ensureNotDelegationTokenAuth(authenticatedUser, "issued");
 
         if (renewer != null && renewer.length() > MAX_RENEWER_LENGTH) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST,
@@ -131,6 +136,8 @@ public class DelegationTokenREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
                     "Authentication required", true);
         }
+
+        ensureNotDelegationTokenAuth(authenticatedUser, "renewed");
 
         try {
             Token<RangerDelegationTokenIdentifier> token = new Token<>();
@@ -200,6 +207,16 @@ public class DelegationTokenREST {
         } catch (Exception e) {
             LOG.error("Failed to cancel delegation token", e);
             throw restErrorUtil.createRESTException("Internal error during delegation token cancellation");
+        }
+    }
+
+    private void ensureNotDelegationTokenAuth(String user, String operation) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof RangerDelegationTokenAuthenticationToken) {
+            LOG.warn("Delegation token can not be {} by a client authenticated with a delegation token, user={}", operation, user);
+            throw restErrorUtil.create403RESTException(
+                    "Delegation token can not be " + operation + " using delegation token authentication");
         }
     }
 }

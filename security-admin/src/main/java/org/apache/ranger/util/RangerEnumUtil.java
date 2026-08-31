@@ -1990,6 +1990,15 @@ public class RangerEnumUtil {
 
 	vEnum.getElementList().add(vElement);
 
+	vElement = new VEnumElement();
+	vElement.setElementName("AUTH_TYPE_DELEGATION_TOKEN");
+	vElement.setElementValue(5);
+	vElement.setElementLabel("Delegation Token");
+	vElement.setRbKey("xa.enum.AuthType.AUTH_TYPE_DELEGATION_TOKEN");
+	vElement.setEnumName(vEnum.getEnumName());
+
+	vEnum.getElementList().add(vElement);
+
 	///////////////////////////////////
 	// XResponse::ResponseStatus
 	///////////////////////////////////

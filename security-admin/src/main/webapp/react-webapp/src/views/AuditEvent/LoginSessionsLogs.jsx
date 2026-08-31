@@ -334,7 +334,8 @@ function LoginSessions() {
           { value: "1", label: "Username/Password" },
           { value: "2", label: "Kerberos" },
           { value: "3", label: "SingleSignOn" },
-          { value: "4", label: "Trusted Proxy" }
+          { value: "4", label: "Trusted Proxy" },
+          { value: "5", label: "Delegation Token" }
         ];
       }
     },
