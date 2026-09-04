@@ -425,6 +425,7 @@ public class TestBaseClient {
             client.validate("atlas*");
             client.validate("atlas.*");
             client.validate("atlas?");
+            client.validate("ns:table*");
         } catch (Exception e) {
             org.junit.jupiter.api.Assertions.fail("Should not throw exception for valid patterns");
         }

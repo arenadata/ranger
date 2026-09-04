@@ -264,8 +264,8 @@ public abstract class BaseClient {
             LOG.error(msgDesc);
             throw hdpException;
         }
-        if (!pattern.matches("^[a-zA-Z0-9_.*?\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
-            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
+        if (!pattern.matches("^[a-zA-Z0-9_.*?:\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, :, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
             LOG.error(msgDesc);
