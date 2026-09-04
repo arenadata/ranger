@@ -20,7 +20,6 @@
 package org.apache.ranger.services.hive.client;
 
 import org.apache.ranger.plugin.client.HadoopException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,11 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Disabled("Blocked by pre-existing hive-agent/pom.xml conflict: log4j-over-slf4j "
-        + "(test-scope) clashes with slf4j-reload4j, causing NoClassDefFoundError "
-        + "on any test that triggers SLF4J logger init in this module. "
-        + "Not introduced by this PR — this issue will be  tracked separately. "
-        + "Verified manually against a local pom.xml with the conflicting dependency removed.")
 public class JdbcUrlValidatorTest {
 
     @Test
