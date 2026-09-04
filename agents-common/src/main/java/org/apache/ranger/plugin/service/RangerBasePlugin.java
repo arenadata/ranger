@@ -1327,6 +1327,10 @@ public class RangerBasePlugin {
 					}
 				}
 			}
+
+			if (result.getChainedServiceName() != null) { // a chained plugin already decided: between chained plugins deny is sticky, whatever the order
+				overrideResult = result.getIsAllowed() && !chainedResult.getIsAllowed();
+			}
 		}
 
 		if (overrideResult) {
@@ -1336,6 +1340,8 @@ public class RangerBasePlugin {
 			result.setPolicyVersion(chainedResult.getPolicyVersion());
 			result.setPolicyPriority(chainedResult.getPolicyPriority());
 			result.setZoneName(chainedResult.getZoneName());
+			result.setReason(chainedResult.getReason());
+			result.setChainedServiceName(chainedResult.getServiceName());
 
 			if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
 				result.setMaskType(chainedResult.getMaskType());

@@ -1495,7 +1495,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 				auditEvent.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
 				auditEvent.setAccessType(request.getAction());
 				auditEvent.setResourcePath(this.pathToBeValidated);
-				auditEvent.setResultReason(resourcePath);
+				auditEvent.setResultReason(appendChainedDecision(resourcePath, result));
 
 				auditEvent.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
 				auditEvent.setPolicyId(result.getPolicyId());

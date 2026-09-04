@@ -150,7 +150,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
         result.setIsAllowed(true);
         for (RangerAccessResult accessResult : results) {
             if (accessResult.getIsAccessDetermined() && !accessResult.getIsAllowed()) {
-                return accessResult;
+                return withPriority(accessResult);
             }
 
             resultHandler.accept(result, accessResult);
