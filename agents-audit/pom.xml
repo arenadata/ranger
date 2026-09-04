@@ -415,14 +415,6 @@
             <version>${slf4j.version}</version>
         </dependency>
 
-        <!-- Runtime -->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <version>${zookeeper.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
