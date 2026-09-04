@@ -91,7 +91,6 @@ public class PasswordValidator implements Runnable {
                 return;
             }
             if (request == null) {
-                loginAttemptTracker.recordFailure(remoteIp, userName);
                 LOG.warn("Rejected UnixAuth attempt from [{}] - connection closed before sending any data.", remoteIp);
                 writer.println(GENERIC_FAILURE_RESPONSE);
                 writer.flush();
