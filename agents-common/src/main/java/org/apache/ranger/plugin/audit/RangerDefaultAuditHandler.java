@@ -127,6 +127,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setAction(request.getAccessType());
 			ret.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
 			ret.setPolicyId(result.getPolicyId());
+			ret.setResultReason(appendChainedDecision(ret.getResultReason(), result));
 			ret.setAccessType(request.getAction());
 			ret.setClientIP(request.getClientIPAddress());
 			ret.setClientType(request.getClientType());
@@ -273,6 +274,25 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		String addInfojsonStr = JsonUtils.mapToJson(addInfomap);
 		return addInfojsonStr;
 
+	}
+
+	/**
+	 * Appends the chained-plugin attribution to resultReason. When the decision was made by the
+	 * root service, the argument is returned unchanged (same reference), so audit events that do
+	 * not involve a chained plugin stay byte-for-byte identical.
+	 */
+	protected String appendChainedDecision(String resultReason, RangerAccessResult result) {
+		String chainedService = result.getChainedServiceName();
+
+		if (chainedService == null) {
+			return resultReason;
+		}
+
+		String marker = (result.getPolicyId() == -1L && !result.getIsAllowed())
+		                ? "chained_service=" + chainedService + " chained_policy=not_found"
+		                : "chained_service=" + chainedService;
+
+		return StringUtils.isEmpty(resultReason) ? marker : resultReason + " " + marker;
 	}
 
 	private String generateNextAuditEventId() {

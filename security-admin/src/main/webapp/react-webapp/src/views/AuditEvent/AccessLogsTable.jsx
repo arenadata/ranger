@@ -44,6 +44,7 @@ export const AccessLogsTable = ({ data = {} }) => {
     resourcePath,
     resourceType,
     aclEnforcer,
+    resultReason,
     policyVersion,
     accessType,
     agentId,
@@ -183,6 +184,10 @@ export const AccessLogsTable = ({ data = {} }) => {
         <tr>
           <td>Access Enforcer</td>
           <td>{!isEmpty(aclEnforcer) ? aclEnforcer : "--"}</td>
+        </tr>
+        <tr>
+          <td>Result Reason</td>
+          <td>{!isEmpty(resultReason) ? resultReason : "--"}</td>
         </tr>
         <tr>
           <td>Agent Host Name </td>
