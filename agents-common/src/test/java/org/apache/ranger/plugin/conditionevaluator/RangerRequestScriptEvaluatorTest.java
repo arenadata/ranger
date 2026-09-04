@@ -516,6 +516,19 @@ public class RangerRequestScriptEvaluatorTest {
         Assertions.assertTrue(escaped.isEmpty(), "Sandbox escape OS command executed via:\n  " + String.join("\n  ", escaped));
     }
 
+    @Test
+    public void testCollectionMethodsFromScript() {
+        RangerAccessRequest          request   = createRequest("test-user", new HashSet<>(Arrays.asList("test-group1")), Collections.emptySet(),
+                Collections.singletonList(new RangerTag("PII", Collections.singletonMap("attr1", "v1"))));
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
+
+        Assert.assertEquals(Boolean.TRUE, evaluator.evaluateScript("ctx.getUserGroups().contains('test-group1')"));
+        Assert.assertEquals("v1", evaluator.evaluateScript("ctx.getTagAttributes('PII').get('attr1')"));
+        Assert.assertEquals(1, ((Number) evaluator.evaluateScript("ctx.getUserGroups().size()")).intValue());
+        Assert.assertNull(evaluator.evaluateScript("ctx.getUserGroups().getClass()"));
+        Assert.assertNull(evaluator.evaluateScript("ctx.getUserGroups().iterator()"));
+    }
+
     private RangerRequestScriptEvaluator createEvaluator() {
         RangerAccessRequest request = createRequest("test-user", Collections.emptySet(), Collections.emptySet(),
                 Collections.singletonList(new RangerTag("PII", Collections.singletonMap("attr1", "v1"))));

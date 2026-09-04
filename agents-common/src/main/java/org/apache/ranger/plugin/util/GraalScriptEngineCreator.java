@@ -48,6 +48,18 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
             "org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator",
             "org.apache.ranger.plugin.contextenricher.RangerTagForEval"
     };
+    // JDK collection methods scripts may call on values returned by the script API;
+    // resolved through allowAccessInheritance so the runtime class (HashMap, HashSet, ...) does not matter
+    private static final String[][] COLLECTION_API_METHODS = new String[][] {
+            {"java.util.Map", "get", "java.lang.Object"},
+            {"java.util.Map", "containsKey", "java.lang.Object"},
+            {"java.util.Map", "size"},
+            {"java.util.Map", "isEmpty"},
+            {"java.util.Collection", "contains", "java.lang.Object"},
+            {"java.util.Collection", "size"},
+            {"java.util.Collection", "isEmpty"},
+            {"java.util.List", "get", "int"}
+    };
     private final Method createMethod;
     private final Object ctxBuilder;
 
@@ -89,6 +101,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         Class<?> hostAccessCls = Class.forName(CLS_HOST_ACCESS);
         Class<?> haBuilderCls = Class.forName(CLS_HOST_ACCESS_BUILDER);
         Object haBuilder = hostAccessCls.getMethod("newBuilder").invoke(null);
+        haBuilderCls.getMethod("allowAccessInheritance", boolean.class).invoke(haBuilder, true);
         Method allowAccessMethod = haBuilderCls.getMethod("allowAccess", Executable.class);
         for (String className : SCRIPT_API_CLASSES) {
             try {
@@ -100,6 +113,13 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
             } catch (ClassNotFoundException e) {
                 LOG.warn("GraalScriptEngineCreator.buildHostAccess(): class not found: {}", className);
             }
+        }
+        for (String[] spec : COLLECTION_API_METHODS) {
+            Class<?>[] paramTypes = new Class<?>[spec.length - 2];
+            for (int i = 2; i < spec.length; i++) {
+                paramTypes[i - 2] = "int".equals(spec[i]) ? int.class : Class.forName(spec[i]);
+            }
+            allowAccessMethod.invoke(haBuilder, Class.forName(spec[0]).getMethod(spec[1], paramTypes));
         }
         return haBuilderCls.getMethod("build").invoke(haBuilder);
     }
