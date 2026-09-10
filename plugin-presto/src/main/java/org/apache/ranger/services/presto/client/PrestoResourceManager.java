@@ -127,6 +127,7 @@ public class PrestoResourceManager {
 
         if (prestoClient != null) {
           if (catalogName != null && !catalogName.isEmpty()) {
+            catalogName += "*";
             finalCatalogName = catalogName;
             callableObj = new Callable<List<String>>() {
               @Override
@@ -135,6 +136,7 @@ public class PrestoResourceManager {
               }
             };
           } else if (schemaName != null && !schemaName.isEmpty()) {
+            schemaName += "*";
             finalSchemaName = schemaName;
             callableObj = new Callable<List<String>>() {
               @Override
@@ -143,6 +145,7 @@ public class PrestoResourceManager {
               }
             };
           } else if (tableName != null && !tableName.isEmpty()) {
+            tableName += "*";
             finalTableName = tableName;
             callableObj = new Callable<List<String>>() {
               @Override

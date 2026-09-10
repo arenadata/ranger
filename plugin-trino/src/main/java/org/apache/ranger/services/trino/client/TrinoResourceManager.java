@@ -125,6 +125,7 @@ public class TrinoResourceManager
 
                 if (trinoClient != null) {
                     if (catalogName != null && !catalogName.isEmpty()) {
+                        catalogName += "*";
                         finalCatalogName = catalogName;
                         callableObj = new Callable<List<String>>() {
                             @Override
@@ -136,6 +137,7 @@ public class TrinoResourceManager
                         };
                     }
                     else if (schemaName != null && !schemaName.isEmpty()) {
+                        schemaName += "*";
                         finalSchemaName = schemaName;
                         callableObj = new Callable<List<String>>() {
                             @Override
@@ -147,6 +149,7 @@ public class TrinoResourceManager
                         };
                     }
                     else if (tableName != null && !tableName.isEmpty()) {
+                        tableName += "*";
                         finalTableName = tableName;
                         callableObj = new Callable<List<String>>() {
                             @Override
