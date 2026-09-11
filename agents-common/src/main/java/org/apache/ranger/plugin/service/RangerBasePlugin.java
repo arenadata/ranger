@@ -1328,7 +1328,7 @@ public class RangerBasePlugin {
 				}
 			}
 
-			if (result.getChainedServiceName() != null) { // a chained plugin already decided: between chained plugins deny is sticky, whatever the order
+			if (policyType == RangerPolicy.POLICY_TYPE_ACCESS && result.getChainedServiceName() != null) {
 				overrideResult = result.getIsAllowed() && !chainedResult.getIsAllowed();
 			}
 		}

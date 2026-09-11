@@ -77,6 +77,7 @@ public class TestChainedPluginMarking {
     @Before
     public void resetStubs() {
         StubChainedPlugin.nextResults.clear();
+        StubChainedPlugin.nextMaskResults.clear();
         MappingStubChainedPlugin.mappedResults = null;
     }
 
@@ -160,6 +161,22 @@ public class TestChainedPluginMarking {
         assertEquals(CHAINED_A, result.getChainedServiceName());
     }
 
+    /** for masks isAllowed=false only means "no matching mask policy": a second chained service must not strip the mask set by the first */
+    @Test
+    public void chainedMaskSurvivesAnotherChainedServiceWithoutMaskPolicy() {
+        RangerAccessResult mask = chainedResult(CHAINED_A, true, 7L, RangerPolicy.POLICY_PRIORITY_OVERRIDE);
+
+        mask.setMaskType("MASK");
+
+        StubChainedPlugin.nextMaskResults.put(CHAINED_A, mask);
+        StubChainedPlugin.nextMaskResults.put(CHAINED_B, chainedResult(CHAINED_B, false, -1L, RangerPolicy.POLICY_PRIORITY_OVERRIDE));
+
+        RangerAccessResult result = newPlugin(CHAINED_A + "," + CHAINED_B, StubChainedPlugin.class).evalDataMaskPolicies(allowedRequest(), null);
+
+        assertEquals("MASK", result.getMaskType());
+        assertEquals(CHAINED_A, result.getChainedServiceName());
+    }
+
     // ---- one chained plugin, several mapped requests (e.g. hdfs write -> hive UPDATE + CREATE) ----
 
     @Test
@@ -227,7 +244,8 @@ public class TestChainedPluginMarking {
      * ctor - that is what RangerBasePlugin.initChainedPlugins() looks up reflectively.
      */
     public static class StubChainedPlugin extends RangerChainedPlugin {
-        static final Map<String, RangerAccessResult> nextResults = new HashMap<>();
+        static final Map<String, RangerAccessResult> nextResults     = new HashMap<>();
+        static final Map<String, RangerAccessResult> nextMaskResults = new HashMap<>();
 
         public StubChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) {
             super(rootPlugin, "hive", serviceName);
@@ -251,6 +269,11 @@ public class TestChainedPluginMarking {
         @Override
         public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests) {
             return null;
+        }
+
+        @Override
+        public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
+            return nextMaskResults.get(serviceName);
         }
 
         @Override
