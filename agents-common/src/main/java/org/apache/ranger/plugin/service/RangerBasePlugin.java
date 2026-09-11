@@ -115,7 +115,11 @@ public class RangerBasePlugin {
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 		setServiceAdmins(serviceAdmins);
 
-		String authzDeniedMode = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".policy.refresh.authz.denied.mode", "continue");
+		String authzDeniedModeProperty = pluginConfig.getPropertyPrefix() + ".policy.refresh.authz.denied.mode";
+
+		pluginConfig.setIfUnset(authzDeniedModeProperty, "continue");
+
+		String authzDeniedMode = pluginConfig.get(authzDeniedModeProperty);
 		this.failClosedOnPolicyRefreshAuthzDenied = StringUtils.equals(authzDeniedMode, "failclosed");
 
 		String  ugiPrefix = pluginConfig.getPropertyPrefix() + ".ugi";

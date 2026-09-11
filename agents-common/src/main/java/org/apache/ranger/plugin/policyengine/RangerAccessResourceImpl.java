@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -159,6 +160,29 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 					}
 
 					sb.append(getValue(resourceDef.getName()));
+				}
+
+				if(sb.length() > 0) {
+					ret = stringifiedValue = sb.toString();
+				}
+			} else if(serviceDef == null && elements != null) {
+				// The service definition may be unavailable before the first successful policy download.
+				List<String> resourceNames = new ArrayList<>(elements.keySet());
+				resourceNames.remove(null);
+				Collections.sort(resourceNames);
+				StringBuilder sb = new StringBuilder();
+
+				for(String resourceName : resourceNames) {
+					Object value = getValue(resourceName);
+					if(value == null) {
+						continue;
+					}
+
+					if(sb.length() > 0) {
+						sb.append(", ");
+					}
+
+					sb.append(resourceName).append(RESOURCE_NAME_VAL_SEP).append(value);
 				}
 
 				if(sb.length() > 0) {
