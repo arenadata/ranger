@@ -88,7 +88,7 @@ public class AccessAuditsService {
         searchFields.add(new SearchField("resourceType", "resType",
                 SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("reason", "reason",
-                SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+                SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PHRASE));
         searchFields.add(new SearchField("action", "action",
                 SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
