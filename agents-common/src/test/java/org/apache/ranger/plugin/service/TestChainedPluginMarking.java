@@ -40,7 +40,9 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +80,8 @@ public class TestChainedPluginMarking {
     public void resetStubs() {
         StubChainedPlugin.nextResults.clear();
         StubChainedPlugin.nextMaskResults.clear();
-        MappingStubChainedPlugin.mappedResults = null;
+        MappingStubChainedPlugin.mappedResults     = null;
+        MappingStubChainedPlugin.mappedMaskResults = null;
     }
 
     // ---- one chained plugin: the override predicate ----
@@ -195,6 +198,20 @@ public class TestChainedPluginMarking {
         assertEquals(-1L, result.getPolicyId());
     }
 
+    /** for masks isAllowed=false only means "no matching mask policy": the reduction must not boost it to OVERRIDE, or it would wipe the root service's mask */
+    @Test
+    public void mappedMaskNotFoundKeepsNormalPriority() {
+        RangerAccessResult masked = maskResult(true, 7L);
+        masked.setMaskType("MASK");
+
+        MappingStubChainedPlugin.mappedMaskResults = Arrays.asList(masked, maskResult(false, -1L));
+
+        RangerAccessResult result = newPlugin(CHAINED_A, MappingStubChainedPlugin.class).getChainedPlugins().get(0).evalDataMaskPolicies(allowedRequest());
+
+        assertFalse(result.getIsAllowed());
+        assertEquals(RangerPolicy.POLICY_PRIORITY_NORMAL, result.getPolicyPriority());
+    }
+
     private RangerBasePlugin newPlugin(String chainedServices, Class<? extends RangerChainedPlugin> impl) {
         RangerPluginConfig config = new RangerPluginConfig(policies.getServiceDef().getName(), policies.getServiceName(), "hive", "cl1", "on-prem", peOptions);
 
@@ -224,6 +241,14 @@ public class TestChainedPluginMarking {
         ret.setUser("res-user");
         ret.setAccessTime(new Date());
 
+        return ret;
+    }
+
+    private static RangerAccessResult maskResult(boolean isAllowed, long policyId) {
+        RangerAccessResult ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_DATAMASK, CHAINED_A, null, null);
+        ret.setIsAccessDetermined(true);
+        ret.setIsAllowed(isAllowed);
+        ret.setPolicyId(policyId);
         return ret;
     }
 
@@ -293,6 +318,7 @@ public class TestChainedPluginMarking {
      */
     public static class MappingStubChainedPlugin extends ResourceMappingChainedPlugin {
         static List<RangerAccessResult> mappedResults;
+        static List<RangerAccessResult> mappedMaskResults;
 
         public MappingStubChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) {
             super(rootPlugin, "hive", serviceName);
@@ -301,9 +327,16 @@ public class TestChainedPluginMarking {
         @Override
         protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
             return new RangerBasePlugin(new RangerPluginConfig(serviceType, serviceName, appId, "cl1", "on-prem", peOptions)) {
+                private final Iterator<RangerAccessResult> maskResults = mappedMaskResults == null ? Collections.<RangerAccessResult>emptyIterator() : mappedMaskResults.iterator();
+
                 @Override
                 public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
                     return mappedResults;
+                }
+
+                @Override
+                public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+                    return maskResults.next();
                 }
             };
         }
