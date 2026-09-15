@@ -107,7 +107,7 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
             .map(Optional::get);
 
         if (!maybePath.isPresent()) {
-            log.warn("Error extracting path from request {}", request);
+            log.debug("No mappable path in request {}", request);
             return Collections.emptyList();
         }
 
@@ -118,8 +118,12 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
         }
 
         return maybeHiveEntity
-            .map(entity -> toHiveAccessRequests(toHiveResource(entity), request))
+            .map(entity -> toHiveAccessRequests(toHiveResource(entity, request), request))
             .orElseGet(Collections::emptyList);
+    }
+
+    protected RangerHiveResource toHiveResource(HiveEntity entity, RangerAccessRequest request) {
+        return toHiveResource(entity);
     }
 
     protected abstract Optional<String> getPathFromRequest(RangerAccessRequest request);
@@ -139,7 +143,7 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
         );
     }
 
-    private RangerHiveResource toHiveResource(HiveEntity entity) {
+    protected RangerHiveResource toHiveResource(HiveEntity entity) {
         List<String> nameSegments = entity.getNameSegments();
 
         if (entity.getType() == HiveObjectType.DATABASE) {
