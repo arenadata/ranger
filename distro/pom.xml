@@ -392,12 +392,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-yarn-plugin-shim</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
             <artifactId>resource-mapping-manager</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
