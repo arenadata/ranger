@@ -34,6 +34,8 @@ public class RangerAccessResult {
 
 	private static String KEY_FILTER_EXPR = "filterExpr";
 
+	private static String KEY_CHAINED_SERVICE_NAME = "chainedServiceName";
+
 	private final String              serviceName;
 	private final RangerServiceDef    serviceDef;
 	private final RangerAccessRequest request;
@@ -250,6 +252,15 @@ public class RangerAccessResult {
 		if (MapUtils.isNotEmpty(additionalInfo)) {
 			additionalInfo.remove(key);
 		}
+	}
+
+	/** @return chained service that determined this result; null if decided by this service's own policies */
+	public String getChainedServiceName() {
+		return additionalInfo == null ? null : (String) additionalInfo.get(KEY_CHAINED_SERVICE_NAME);
+	}
+
+	public void setChainedServiceName(String chainedServiceName) {
+		addAdditionalInfo(KEY_CHAINED_SERVICE_NAME, chainedServiceName);
 	}
 
 	/**

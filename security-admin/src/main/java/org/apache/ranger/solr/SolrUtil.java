@@ -140,6 +140,8 @@ public class SolrUtil {
 
 					if (searchField.getSearchType() == SEARCH_TYPE.PARTIAL) {
 						fq = setFieldForPartialSearch(fieldName, paramValue);
+					} else if (searchField.getSearchType() == SEARCH_TYPE.PHRASE) {
+						fq = setFieldForPhraseSearch(fieldName, paramValue);
 					}
 
 					if (fq != null) {
@@ -189,6 +191,18 @@ public class SolrUtil {
 			return null;
 		}
 		return fieldName + ":*" + ClientUtils.escapeQueryChars(value.toString().trim().toLowerCase()) + "*";
+	}
+
+	/** tokenized fields: match the tokens as an adjacent phrase, not as an OR of each token */
+	public String setFieldForPhraseSearch(String fieldName, Object value) {
+		if (value == null || value.toString().trim().length() == 0) {
+			return null;
+		}
+		String phrase = value.toString().trim().toLowerCase()
+				.replace("\\", "\\\\")
+				.replace("\"", "\\\"");
+
+		return fieldName + ":\"" + phrase + "\"";
 	}
 
 	public String setField(String fieldName, Object value) {

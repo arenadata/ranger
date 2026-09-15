@@ -53,11 +53,15 @@
 					<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
 					<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-					<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-hdfs-client:jar:${hadoop.version}</include>
 					<include>com.google.code.gson:gson</include>
 					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+					<include>org.eclipse.jetty:jetty-http:jar:${jetty-client.version}</include>
+					<include>org.eclipse.jetty:jetty-io:jar:${jetty-client.version}</include>
+					<include>org.eclipse.jetty:jetty-util:jar:${jetty-client.version}</include>
 					<include>commons-collections:commons-collections</include>
 					<include>org.apache.commons:commons-collections4</include>
+					<include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
 					<include>com.sun.jersey:jersey-bundle</include>
 					<include>commons-logging:commons-logging</include>
 					<include>commons-io:commons-io</include>
@@ -73,6 +77,7 @@
 					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>org.apache.solr:solr-hadoop-auth-framework:jar:${solr.version}</include>
 					<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+					<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
@@ -96,6 +101,7 @@
 					<include>org.apache.orc:orc-shims:jar:${orc.version}</include>
 					<include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
 					<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+					<include>org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_25</include>
 					<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 				</includes>
 			</binaries>

@@ -115,7 +115,11 @@ public class RangerBasePlugin {
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 		setServiceAdmins(serviceAdmins);
 
-		String authzDeniedMode = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".policy.refresh.authz.denied.mode", "continue");
+		String authzDeniedModeProperty = pluginConfig.getPropertyPrefix() + ".policy.refresh.authz.denied.mode";
+
+		pluginConfig.setIfUnset(authzDeniedModeProperty, "continue");
+
+		String authzDeniedMode = pluginConfig.get(authzDeniedModeProperty);
 		this.failClosedOnPolicyRefreshAuthzDenied = StringUtils.equals(authzDeniedMode, "failclosed");
 
 		String  ugiPrefix = pluginConfig.getPropertyPrefix() + ".ugi";
@@ -1327,6 +1331,10 @@ public class RangerBasePlugin {
 					}
 				}
 			}
+
+			if (policyType == RangerPolicy.POLICY_TYPE_ACCESS && result.getChainedServiceName() != null) {
+				overrideResult = result.getIsAllowed() && !chainedResult.getIsAllowed();
+			}
 		}
 
 		if (overrideResult) {
@@ -1336,6 +1344,8 @@ public class RangerBasePlugin {
 			result.setPolicyVersion(chainedResult.getPolicyVersion());
 			result.setPolicyPriority(chainedResult.getPolicyPriority());
 			result.setZoneName(chainedResult.getZoneName());
+			result.setReason(chainedResult.getReason());
+			result.setChainedServiceName(chainedResult.getServiceName());
 
 			if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
 				result.setMaskType(chainedResult.getMaskType());

@@ -632,6 +632,8 @@ public class AssetREST {
 				"Client IP", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourceType",
 				"Resource Type", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "reason",
+				"Result Reason", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request,searchCriteria,"excludeServiceUser",
 				"Exclude Service User",StringUtil.VALIDATION_TEXT);
 

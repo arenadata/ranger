@@ -925,6 +925,12 @@ function Access() {
       }
     },
     {
+      category: "reason",
+      label: "Result Reason",
+      urlLabel: "resultReason",
+      type: "text"
+    },
+    {
       category: "repoName",
       label: "Service Name",
       urlLabel: "serviceName",
