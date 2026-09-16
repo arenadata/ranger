@@ -859,8 +859,8 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
-                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-chained-plugin-starrocks</module>
+                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
@@ -1219,8 +1219,8 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
-                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-chained-plugin-starrocks</module>
+                <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>

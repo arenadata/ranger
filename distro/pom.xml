@@ -146,13 +146,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-chained-plugin-trino</artifactId>
+            <artifactId>ranger-hive-chained-plugin-starrocks</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-hive-chained-plugin-starrocks</artifactId>
+            <artifactId>ranger-hive-chained-plugin-trino</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
