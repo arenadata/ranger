@@ -33,6 +33,9 @@ import org.springframework.transaction.support.TransactionCallback;
  * for other target services by the configured {@link ResourceMappingDeriver}s. Deletions are
  * propagated to the derived mappings as well, so the derived targets stay consistent with the
  * original one.
+ *
+ * <p>A diff and the diffs derived from it are written in one transaction: a derived write failing
+ * on its own would still commit the original, and the fetcher would move past that metastore event.
  */
 @Slf4j
 public class DerivingResourceMappingDiffDao implements ResourceMappingDiffDao {
@@ -47,13 +50,16 @@ public class DerivingResourceMappingDiffDao implements ResourceMappingDiffDao {
 
     @Override
     public void deleteDiffsFor(ResourceMapping mapping) {
-        delegate.deleteDiffsFor(mapping);
-        for (ResourceMappingDeriver deriver : derivers) {
-            for (ResourceMapping derived : deriver.derive(mapping)) {
-                log.debug("Deleting derived mapping {} of {}", derived, mapping);
-                delegate.deleteDiffsFor(derived);
+        delegate.execute(status -> {
+            delegate.deleteDiffsFor(mapping);
+            for (ResourceMappingDeriver deriver : derivers) {
+                for (ResourceMapping derived : deriver.derive(mapping)) {
+                    log.debug("Deleting derived mapping {} of {}", derived, mapping);
+                    delegate.deleteDiffsFor(derived);
+                }
             }
-        }
+            return null;
+        });
     }
 
     @Override
@@ -63,13 +69,16 @@ public class DerivingResourceMappingDiffDao implements ResourceMappingDiffDao {
 
     @Override
     public void insertDiff(ResourceMappingDiff entityDiff) {
-        delegate.insertDiff(entityDiff);
-        for (ResourceMappingDeriver deriver : derivers) {
-            for (ResourceMappingDiff derived : deriver.derive(entityDiff)) {
-                log.debug("Inserting derived diff {} of {}", derived, entityDiff);
-                delegate.insertDiff(derived);
+        delegate.execute(status -> {
+            delegate.insertDiff(entityDiff);
+            for (ResourceMappingDeriver deriver : derivers) {
+                for (ResourceMappingDiff derived : deriver.derive(entityDiff)) {
+                    log.debug("Inserting derived diff {} of {}", derived, entityDiff);
+                    delegate.insertDiff(derived);
+                }
             }
-        }
+            return null;
+        });
     }
 
     @Override
