@@ -102,7 +102,7 @@
         <guava.version>32.0.0-jre</guava.version>
         <guice.version>4.0</guice.version>
         <hadoop-shaded-guava.version>1.6.0.1-4.3.0-0</hadoop-shaded-guava.version>
-        <hadoop.version>3.4.3.1-4.3.0-0</hadoop.version>
+        <hadoop.version>3.4.3.2-4.4.0-0</hadoop.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase-shaded-miscellaneous>4.1.13</hbase-shaded-miscellaneous>
         <hbase-shaded-netty>4.1.13</hbase-shaded-netty>
@@ -215,7 +215,7 @@
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>9.0.117</tomcat.embed.version>
+        <tomcat.embed.version>9.0.121</tomcat.embed.version>
 
         <!-- trino plugin deps -->
         <trino.airlift.version>293</trino.airlift.version>
