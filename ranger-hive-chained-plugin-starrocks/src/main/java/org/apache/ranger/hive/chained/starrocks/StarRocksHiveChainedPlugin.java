@@ -23,11 +23,9 @@ import static org.apache.ranger.hive.chained.starrocks.ConfigMappings.ACCESS_MAP
 import static org.apache.ranger.hive.chained.starrocks.ConfigMappings.COLUMN_ACCESS_MAPPINGS_DEFAULT;
 import static org.apache.ranger.hive.chained.starrocks.ConfigMappings.DATABASE_ACCESS_MAPPINGS_DEFAULT;
 import static org.apache.ranger.hive.chained.starrocks.ConfigMappings.TABLE_ACCESS_MAPPINGS_DEFAULT;
-import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.ANY_ACCESS;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +42,7 @@ import org.apache.ranger.hive.chained.mapping.HiveMappingFetcher;
 import org.apache.ranger.hive.chained.mapping.HiveResourceMappingStore;
 import org.apache.ranger.hive.chained.plugin.HiveChainedPlugin;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 /**
@@ -55,13 +54,6 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
  * policies matched for the mapped resource decide the access to the StarRocks resource.
  * StarRocks resources without a mapping (internal catalog, unmapped catalogs, non-table
  * resources) are left to the native StarRocks policy evaluation.
- *
- * <p>Registration in {@code ranger-starrocks-security.xml}:
- * <pre>
- * ranger.plugin.starrocks.chained.services=hive
- * ranger.plugin.starrocks.chained.services.hive.impl=
- *     org.apache.ranger.hive.chained.starrocks.StarRocksHiveChainedPlugin
- * </pre>
  */
 @Slf4j
 public class StarRocksHiveChainedPlugin extends HiveChainedPlugin {
@@ -71,6 +63,11 @@ public class StarRocksHiveChainedPlugin extends HiveChainedPlugin {
         super(rootPlugin, serviceName);
 
         this.accessTypeMappings = buildAccessTypeMappings(rootPlugin.getConfig());
+    }
+
+    @Override
+    public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
+        return StarRocksDataMasks.translate(super.evalDataMaskPolicies(request), rootPlugin.getServiceDef());
     }
 
     @Override
@@ -117,7 +114,6 @@ public class StarRocksHiveChainedPlugin extends HiveChainedPlugin {
                                                HiveObjectType objectType,
                                                Map<String, HiveAccessType[]> defaultMappings) {
         Map<String, List<HiveAccessType>> mappings = new HashMap<>();
-        mappings.put(ANY_ACCESS, Collections.singletonList(HiveAccessType.USE));
         for (Map.Entry<String, HiveAccessType[]> entry : defaultMappings.entrySet()) {
             mappings.put(entry.getKey(), getAccessMappings(config, objectType, entry.getKey(), entry.getValue()));
         }
