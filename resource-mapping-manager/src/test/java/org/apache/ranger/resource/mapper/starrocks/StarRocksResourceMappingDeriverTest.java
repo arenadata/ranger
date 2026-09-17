@@ -35,9 +35,6 @@ import org.apache.ranger.resource.mapper.hive.model.HiveEntityType;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * A Hive entity is published once more per configured StarRocks external catalog.
@@ -132,12 +129,13 @@ class StarRocksResourceMappingDeriverTest {
 
     // ---- malformed entity names ----
 
-    @ParameterizedTest(name = "name [{0}]")
-    @ValueSource(strings = {"db1", "hive", "hive..t1", "hive.db1.", ".db1.t1", ""})
-    void malformedEntityNamesAreSkipped(String name) {
-        assertTrue(deriver.derive(
-            MetastoreEntityDiffFactory.createEntity(name, HiveEntityType.TABLE, HDFS_LOCATION, 1L)).isEmpty());
-        assertTrue(deriver.derive(mapping(name, HDFS_LOCATION)).isEmpty());
+    @Test
+    void malformedEntityNamesAreSkipped() {
+        for (String name : Arrays.asList("db1", "hive", "hive..t1", "hive.db1.", ".db1.t1", "")) {
+            assertTrue(deriver.derive(MetastoreEntityDiffFactory.createEntity(
+                name, HiveEntityType.TABLE, HDFS_LOCATION, 1L)).isEmpty(), name);
+            assertTrue(deriver.derive(mapping(name, HDFS_LOCATION)).isEmpty(), name);
+        }
     }
 
     /** a rename whose new name cannot be derived must not produce a half-derived diff */
@@ -153,11 +151,12 @@ class StarRocksResourceMappingDeriverTest {
 
     // ---- toStarRocksName ----
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"hive", "hive..t1", ""})
-    void toStarRocksNameRejectsWhatItCannotSplit(String name) {
-        assertFalse(StarRocksResourceMappingDeriver.toStarRocksName("cat", name).isPresent());
+    @Test
+    void toStarRocksNameRejectsWhatItCannotSplit() {
+        for (String name : Arrays.<String>asList(null, "hive", "hive..t1", "")) {
+            assertFalse(StarRocksResourceMappingDeriver.toStarRocksName("cat", name).isPresent(),
+                String.valueOf(name));
+        }
     }
 
     @Test
