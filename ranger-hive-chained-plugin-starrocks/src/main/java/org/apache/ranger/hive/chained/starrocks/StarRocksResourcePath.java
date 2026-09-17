@@ -28,7 +28,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
@@ -36,9 +35,11 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
  * Converts StarRocks resources ({@code catalog.database[.table[.column]]}) to the path form used as
  * a key of the Hive resource mapping store ({@code /catalog/database[/table[/column]]}).
  *
- * <p>Both the RMM mapping locations and the access request resources are normalized the same way
- * (lower-cased, separators unified), so a mapping written by RMM as {@code hive_catalog.db1.t1}
- * matches a StarRocks request for {@code hive_catalog.db1.t1}.
+ * <p>The RMM mapping locations and the access request resources are normalized the same way, so a
+ * mapping written by RMM as {@code hive_catalog.db1.t1} matches a StarRocks request for it. The
+ * catalog segment keeps its case, because StarRocks catalog names are case-sensitive and
+ * {@code Sales} and {@code sales} may be backed by different metastores; the names below it are
+ * matched case-insensitively, as Hive does.
  */
 public final class StarRocksResourcePath {
     public static final String KEY_CATALOG = "catalog";
@@ -47,7 +48,6 @@ public final class StarRocksResourcePath {
     public static final String KEY_COLUMN = "column";
 
     public static final String PATH_SEPARATOR = "/";
-    public static final String NAME_SEPARATOR = ".";
 
     /** StarRocks resource hierarchy handled by the chained plugin, from the top level down. */
     public static final List<String> HIERARCHY = Collections.unmodifiableList(
@@ -56,6 +56,8 @@ public final class StarRocksResourcePath {
     /** Depth of the shortest path that can be mapped to a Hive resource (catalog + database). */
     public static final int MIN_MAPPABLE_DEPTH = 2;
 
+    /** Position of the case-sensitive catalog segment in {@link #HIERARCHY}. */
+    private static final int CATALOG_LEVEL = 0;
     private static final Set<String> SUPPORTED_KEYS = new HashSet<>(HIERARCHY);
     private static final Pattern LOCATION_SPLITTER = Pattern.compile("[./]");
 
@@ -128,8 +130,15 @@ public final class StarRocksResourcePath {
     }
 
     public static String toPath(List<String> segments) {
-        return segments.stream()
-            .map(segment -> segment.trim().toLowerCase(Locale.ENGLISH))
-            .collect(Collectors.joining(PATH_SEPARATOR, PATH_SEPARATOR, ""));
+        StringBuilder path = new StringBuilder();
+        for (int level = 0; level < segments.size(); level++) {
+            path.append(PATH_SEPARATOR).append(normalize(segments.get(level), level));
+        }
+        return path.toString();
+    }
+
+    private static String normalize(String segment, int level) {
+        String trimmed = segment.trim();
+        return level == CATALOG_LEVEL ? trimmed : trimmed.toLowerCase(Locale.ENGLISH);
     }
 }

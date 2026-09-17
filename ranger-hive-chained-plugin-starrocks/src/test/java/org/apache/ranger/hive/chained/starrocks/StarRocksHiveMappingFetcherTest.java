@@ -21,6 +21,7 @@ package org.apache.ranger.hive.chained.starrocks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -32,8 +33,15 @@ import org.apache.ranger.plugin.model.ResourceMapping;
 import org.apache.ranger.plugin.model.ResourceMappingDiff;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+/** What the mapping store holds after the diffs RMM publishes for the StarRocks target are applied. */
 class StarRocksHiveMappingFetcherTest {
+    private static final String CREATE = "CREATE";
+    private static final String UPDATE = "UPDATE";
+    private static final String DELETE = "DELETE";
+
     private TrieHiveResourceMappingStore mappingStore;
     private StarRocksHiveMappingFetcher mappingFetcher;
 
@@ -43,60 +51,116 @@ class StarRocksHiveMappingFetcherTest {
         mappingFetcher = new StarRocksHiveMappingFetcher(null, mappingStore, -1L, -1L, "starrocks");
     }
 
+    // ---- create ----
+
     @Test
-    void testCreateTableMappingIsStoredByStarRocksPath() {
-        mappingFetcher.applyDiff(diff("CREATE", HiveObjectType.TABLE,
-            mapping("hive.db1.t1", "Hive_Catalog.db1.t1"), null));
+    void aTableIsStoredUnderItsStarRocksPath() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
 
-        Optional<HiveEntity> entity = mappingStore.get("/hive_catalog/db1/t1");
-        assertTrue(entity.isPresent());
-        assertEquals(Arrays.asList("hive", "db1", "t1"), entity.get().getNameSegments());
-        assertEquals(HiveObjectType.TABLE, entity.get().getType());
-
-        // a column of the table resolves to the table mapping
-        assertEquals(entity, mappingStore.get("/hive_catalog/db1/t1/c1"));
-        assertFalse(mappingStore.get("/iceberg_catalog/db1/t1").isPresent());
+        HiveEntity entity = required("/hive_catalog/db1/t1");
+        assertEquals(Arrays.asList("hive", "db1", "t1"), entity.getNameSegments());
+        assertEquals(HiveObjectType.TABLE, entity.getType());
     }
 
     @Test
-    void testDatabaseMappingCoversItsTables() {
-        mappingFetcher.applyDiff(diff("CREATE", HiveObjectType.DATABASE,
-            mapping("hive.db1", "hive_catalog.db1"), null));
+    void aTableMappingAlsoCoversItsColumns() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
 
-        Optional<HiveEntity> entity = mappingStore.get("/hive_catalog/db1/unknown_table");
-        assertTrue(entity.isPresent());
-        assertEquals(HiveObjectType.DATABASE, entity.get().getType());
+        assertEquals(mappingStore.get("/hive_catalog/db1/t1"), mappingStore.get("/hive_catalog/db1/t1/c1"));
     }
 
     @Test
-    void testRenameMovesMapping() {
-        mappingFetcher.applyDiff(diff("CREATE", HiveObjectType.TABLE,
-            mapping("hive.db1.t1", "hive_catalog.db1.t1"), null));
-        mappingFetcher.applyDiff(diff("UPDATE", HiveObjectType.TABLE,
+    void aDatabaseMappingCoversTablesItDoesNotName() {
+        apply(CREATE, HiveObjectType.DATABASE, mapping("hive.db1", "hive_catalog.db1"), null);
+
+        HiveEntity entity = required("/hive_catalog/db1/some_view/some_column");
+        assertEquals(HiveObjectType.DATABASE, entity.getType());
+    }
+
+    @ParameterizedTest(name = "location [{0}]")
+    @ValueSource(strings = {"hive_catalog.db1.t1", "/hive_catalog/db1/t1", "hive_catalog/db1.t1",
+        "hive_catalog.DB1.T1", " hive_catalog.db1.t1 "})
+    void everyLocationFormReachesTheSamePath(String location) {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", location), null);
+
+        assertTrue(mappingStore.get("/hive_catalog/db1/t1").isPresent());
+    }
+
+
+    /** two catalogs that differ only in case are different catalogs and must not share a mapping */
+    @Test
+    void catalogsThatDifferInCaseDoNotShareMappings() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "Sales.db1.t1"), null);
+
+        assertTrue(mappingStore.get("/Sales/db1/t1").isPresent());
+        assertFalse(mappingStore.get("/sales/db1/t1").isPresent(),
+            "a lower-cased catalog must not pick up the mapping of the capitalised one");
+    }
+
+    @Test
+    void unmappedResourcesAreNotFound() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
+
+        assertFalse(mappingStore.get("/other_catalog/db1/t1").isPresent());
+        assertFalse(mappingStore.get("/hive_catalog/db2/t1").isPresent());
+        assertFalse(mappingStore.get("/default_catalog/db1/t1").isPresent());
+    }
+
+    // ---- update ----
+
+    @Test
+    void aRenameMovesTheMapping() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
+        apply(UPDATE, HiveObjectType.TABLE,
             mapping("hive.db1.t1", "hive_catalog.db1.t1"),
-            mapping("hive.db1.t2", "hive_catalog.db1.t2")));
+            mapping("hive.db1.t2", "hive_catalog.db1.t2"));
 
         assertFalse(mappingStore.get("/hive_catalog/db1/t1").isPresent());
-        Optional<HiveEntity> entity = mappingStore.get("/hive_catalog/db1/t2");
-        assertTrue(entity.isPresent());
-        assertEquals("hive.db1.t2", entity.get().fullName());
+        assertEquals("hive.db1.t2", required("/hive_catalog/db1/t2").fullName());
+    }
+
+    // ---- delete ----
+
+    @Test
+    void aDropRemovesTheMapping() {
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
+        apply(DELETE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
+
+        assertFalse(mappingStore.get("/hive_catalog/db1/t1").isPresent());
     }
 
     @Test
-    void testDeleteRemovesMapping() {
-        mappingFetcher.applyDiff(diff("CREATE", HiveObjectType.TABLE,
-            mapping("hive.db1.t1", "hive_catalog.db1.t1"), null));
-        mappingFetcher.applyDiff(diff("DELETE", HiveObjectType.TABLE,
-            mapping("hive.db1.t1", "hive_catalog.db1.t1"), null));
+    void droppingATableFallsBackToItsDatabaseMapping() {
+        apply(CREATE, HiveObjectType.DATABASE, mapping("hive.db1", "hive_catalog.db1"), null);
+        apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
+        apply(DELETE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);
 
-        assertFalse(mappingStore.get("/hive_catalog/db1/t1").isPresent());
+        assertEquals(HiveObjectType.DATABASE, required("/hive_catalog/db1/t1").getType());
     }
 
-    private static ResourceMappingDiff diff(String diffType,
-                                            HiveObjectType entityType,
-                                            ResourceMapping oldEntity,
-                                            ResourceMapping newEntity) {
-        return new ResourceMappingDiff(oldEntity, newEntity, entityType.name(), diffType, 1L, "hive", "starrocks");
+    // ---- malformed input ----
+
+    @ParameterizedTest(name = "location [{0}]")
+    @ValueSource(strings = {"", "   ", "hive_catalog..t1", "."})
+    void aMalformedLocationIsRejected(String location) {
+        assertThrows(IllegalArgumentException.class,
+            () -> apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", location), null));
+    }
+
+    // ---- helpers ----
+
+    private HiveEntity required(String path) {
+        Optional<HiveEntity> entity = mappingStore.get(path);
+        assertTrue(entity.isPresent(), "no mapping for " + path);
+        return entity.get();
+    }
+
+    private void apply(String diffType,
+                       HiveObjectType entityType,
+                       ResourceMapping oldEntity,
+                       ResourceMapping newEntity) {
+        mappingFetcher.applyDiff(new ResourceMappingDiff(
+            oldEntity, newEntity, entityType.name(), diffType, 1L, "hive", "starrocks"));
     }
 
     private static ResourceMapping mapping(String name, String location) {
