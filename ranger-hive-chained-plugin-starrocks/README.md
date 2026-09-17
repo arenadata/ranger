@@ -82,6 +82,13 @@ Hive access types (`_any` is accepted as a synonym of `USE`), e.g.
 Access types not listed in the table above (`grant`, `node`, `operate`, `impersonate`, ...) are not
 mapped: the request falls back to the native StarRocks policies.
 
+## Data masks and row filters
+
+Hive data-mask policies apply to the mapped columns. `MASK_SHOW_LAST_4`, `MASK_SHOW_FIRST_4` and
+`MASK_HASH` are rewritten into `CUSTOM` StarRocks expressions because the FE cannot apply them, and
+any other mask type its service definition lacks becomes `MASK_NULL`. Row filters and Hive `CUSTOM`
+masks are forwarded as they are, so their expression has to be valid StarRocks SQL.
+
 ## Configuration
 
 ### RMM
