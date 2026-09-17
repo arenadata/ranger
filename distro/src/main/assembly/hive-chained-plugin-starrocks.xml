@@ -1,0 +1,74 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!--
+  Hive chained plugin for the StarRocks FE Ranger plugin. The archive contains only the chained
+  plugin jars: the Ranger agent libraries (ranger-plugins-common, ranger-plugins-audit, ...) are
+  already bundled with the StarRocks FE Ranger plugin.
+-->
+<assembly>
+    <id>starrocks-hive-chained-plugin</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <baseDirectory>${project.parent.name}-${project.version}-starrocks-hive-chained-plugin</baseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <moduleSets>
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes>
+                <include>org.apache.ranger:ranger-hive-chained-plugin-starrocks</include>
+            </includes>
+            <binaries>
+                <outputDirectory>lib</outputDirectory>
+                <includeDependencies>true</includeDependencies>
+                <unpack>false</unpack>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <includes>
+                    <include>org.apache.ranger:ranger-hive-chained-plugin-starrocks</include>
+                    <include>org.apache.ranger:ranger-hive-chained-plugin-base</include>
+                    <include>org.apache.ranger:ranger-hive-plugin</include>
+                </includes>
+            </binaries>
+        </moduleSet>
+    </moduleSets>
+
+    <fileSets>
+        <fileSet>
+            <outputDirectory></outputDirectory>
+            <directory>../ranger-hive-chained-plugin-starrocks</directory>
+            <includes>
+                <include>README.md</include>
+            </includes>
+            <fileMode>644</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>conf</outputDirectory>
+            <directory>../ranger-hive-chained-plugin-starrocks/conf</directory>
+            <fileMode>644</fileMode>
+        </fileSet>
+        <!-- version file -->
+        <fileSet>
+            <outputDirectory></outputDirectory>
+            <directory>${project.build.outputDirectory}</directory>
+            <includes>
+                <include>version</include>
+            </includes>
+            <fileMode>444</fileMode>
+        </fileSet>
+    </fileSets>
+</assembly>

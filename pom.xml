@@ -859,6 +859,7 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
+                <module>ranger-hive-chained-plugin-starrocks</module>
                 <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
@@ -1138,6 +1139,21 @@
             </modules>
         </profile>
         <profile>
+            <id>ranger-starrocks-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>hive-agent</module>
+                <module>ranger-hive-chained-plugin-base</module>
+                <module>ranger-hive-chained-plugin-starrocks</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+            </modules>
+        </profile>
+        <profile>
             <id>ranger-nestedstructure-plugin</id>
             <modules>
                 <module>agents-audit</module>
@@ -1203,6 +1219,7 @@
                 <module>ranger-hive-chained-plugin-base</module>
                 <module>ranger-hive-chained-plugin-hdfs</module>
                 <module>ranger-hive-chained-plugin-ozone</module>
+                <module>ranger-hive-chained-plugin-starrocks</module>
                 <module>ranger-hive-chained-plugin-trino</module>
                 <module>ranger-hive-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
