@@ -19,6 +19,8 @@
 
 package org.apache.ranger.hive.chained.starrocks;
 
+import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.ANY_ACCESS;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,7 +34,9 @@ import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
  * Every mapping can be overridden with the property
  * {@code ranger.plugin.starrocks.hive.<database|table|column>.access.mappings.<access type>}
  * where spaces in the access type are replaced with underscores, e.g.
- * {@code ranger.plugin.starrocks.hive.database.access.mappings.create_table=create}.
+ * {@code ranger.plugin.starrocks.hive.database.access.mappings.create_table=create}. The
+ * {@code _any} access type StarRocks sends for "any privilege on this object" checks is mapped
+ * like every other one and can be overridden the same way.
  */
 public final class ConfigMappings {
     public static final String ACCESS_MAPPINGS_KEY_TEMPLATE = ".hive.%s.access.mappings.%s";
@@ -63,6 +67,7 @@ public final class ConfigMappings {
 
     private static Map<String, HiveAccessType[]> createDefaultDatabaseMappings() {
         Map<String, HiveAccessType[]> map = new LinkedHashMap<>();
+        map.put(ANY_ACCESS, types(HiveAccessType.USE));
         map.put(USAGE, types(HiveAccessType.USE));
         map.put(CREATE_TABLE, types(HiveAccessType.CREATE));
         map.put(CREATE_VIEW, types(HiveAccessType.CREATE));
@@ -75,6 +80,7 @@ public final class ConfigMappings {
 
     private static Map<String, HiveAccessType[]> createDefaultTableMappings() {
         Map<String, HiveAccessType[]> map = new LinkedHashMap<>();
+        map.put(ANY_ACCESS, types(HiveAccessType.USE));
         map.put(SELECT, types(HiveAccessType.SELECT));
         map.put(EXPORT, types(HiveAccessType.SELECT));
         map.put(REFRESH, types(HiveAccessType.SELECT));
@@ -89,6 +95,7 @@ public final class ConfigMappings {
 
     private static Map<String, HiveAccessType[]> createDefaultColumnMappings() {
         Map<String, HiveAccessType[]> map = new LinkedHashMap<>();
+        map.put(ANY_ACCESS, types(HiveAccessType.USE));
         map.put(SELECT, types(HiveAccessType.SELECT));
         return Collections.unmodifiableMap(map);
     }
