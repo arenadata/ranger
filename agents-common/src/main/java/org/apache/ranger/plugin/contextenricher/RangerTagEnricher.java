@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.admin.client.RangerAdminClientAccessDeniedException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -38,6 +39,8 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourc
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.DownloaderTask;
+import org.apache.ranger.plugin.util.FileUtils;
+import org.apache.ranger.plugin.util.RangerLocalDirectory;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
@@ -55,6 +58,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -87,6 +93,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private EnrichedServiceTags                enrichedServiceTags;
 	private boolean                            disableCacheIfServiceNotFound = true;
 	private boolean                            dedupStrings                  = true;
+	private Set<PosixFilePermission>            cacheFilePerms;
 
 	private final BlockingQueue<DownloadTrigger> tagDownloadQueue = new LinkedBlockingQueue<>();
 	private Timer                              tagDownloadTimer;
@@ -110,6 +117,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);
 		serviceDefHelper           = new RangerServiceDefHelper(serviceDef, false);
 
+		String cacheFilePermsString = StringUtils.trim(getConfig(propertyPrefix + ".policy.cache.file.perms", "644"));
+		Set<PosixFilePermission> configuredCacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
+
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
 			try {
@@ -131,12 +141,18 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (tagRetriever != null) {
 				disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 				String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
+				String cacheDirPermsString = StringUtils.trim(getConfig(propertyPrefix + ".policy.cache.dir.perms", "755"));
+				RangerLocalDirectory.ResolvedDirectory cacheDirectory = RangerLocalDirectory.resolve(cacheDir,
+						getConfig(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
+						FileUtils.parsePermissions(cacheDirPermsString),
+						configuredCacheFilePerms);
 				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
 
 				cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
 				cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
 
-				String cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
+				this.cacheFilePerms = cacheDirectory.getFilePermissions();
+				String cacheFile = cacheDirectory.getPath() == null ? null : (cacheDirectory.getPath() + File.separator + cacheFilename);
 
 				createLock();
 
@@ -147,7 +163,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.setPluginContext(getPluginContext());
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
-				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile);
+				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheDirectory, cacheFile, cacheFilePerms);
 				LOG.info("Created RangerTagRefresher Thread(" + tagRefresher.getName() + ")");
 
 				try {
@@ -882,16 +898,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		private long lastKnownVersion;
 		private final BlockingQueue<DownloadTrigger> tagDownloadQueue;
 		private long lastActivationTimeInMillis;
-
+		private final  Set<PosixFilePermission> filePermissions;
+		private final RangerLocalDirectory.ResolvedDirectory cacheDirectory;
 		private final String cacheFile;
 		private boolean      hasProvidedTagsToReceiver;
 
-		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, String cacheFile) {
+		RangerTagRefresher(RangerTagRetriever tagRetriever, RangerTagEnricher tagEnricher, long lastKnownVersion, BlockingQueue<DownloadTrigger> tagDownloadQueue, RangerLocalDirectory.ResolvedDirectory cacheDirectory, String cacheFile, Set<PosixFilePermission> filePermissions) {
 			this.tagRetriever = tagRetriever;
 			this.tagEnricher = tagEnricher;
 			this.lastKnownVersion = lastKnownVersion;
 			this.tagDownloadQueue = tagDownloadQueue;
+			this.cacheDirectory = cacheDirectory;
 			this.cacheFile = cacheFile;
+			this.filePermissions = filePermissions;
 			setName("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ")-" + getId());
 		}
 
@@ -946,6 +965,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 				try {
 					serviceTags = tagRetriever.retrieveTags(lastKnownVersion, lastActivationTimeInMillis);
+					tagEnricher.getPluginContext().setTagDownloadAuthzDenied(false);
 
 					if (serviceTags == null) {
 						if (!hasProvidedTagsToReceiver) {
@@ -980,10 +1000,23 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						setLastActivationTimeInMillis(System.currentTimeMillis());
 						lastKnownVersion = -1L;
 					}
+				} catch (RangerAdminClientAccessDeniedException ade) {
+                    LOG.warn("RangerTagRefresher(serviceName={}).populateTags(): tag refresh authorization denied. Access checks will fail closed if configured.", tagRetriever.getServiceName(), ade);
+					tagEnricher.getPluginContext().setTagDownloadAuthzDenied(true);
 				} catch (InterruptedException interruptedException) {
 					throw interruptedException;
 				} catch (Exception e) {
-					LOG.error("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ").populateTags(): Encountered unexpected exception. Ignoring", e);
+                    LOG.error("RangerTagRefresher(serviceName={}).populateTags(): Encountered unexpected exception. Ignoring", tagRetriever.getServiceName(), e);
+					if (!hasProvidedTagsToReceiver) {
+						ServiceTags cachedServiceTags = loadFromCache();
+
+						if (cachedServiceTags != null) {
+							tagEnricher.setServiceTags(cachedServiceTags);
+							hasProvidedTagsToReceiver = true;
+							lastKnownVersion = cachedServiceTags.getTagVersion() == null ? -1L : cachedServiceTags.getTagVersion();
+							setLastActivationTimeInMillis(System.currentTimeMillis());
+						}
+					}
 				}
 
 			} else {
@@ -1048,6 +1081,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
 
+			try {
+				cacheDirectory.ensureDirectory();
+			} catch (Exception excp) {
+				LOG.error("failed to validate service-tags cache directory", excp);
+				return null;
+			}
+
 			if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
 				Reader reader = null;
 
@@ -1095,6 +1135,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					Writer writer = null;
 
 					try {
+						cacheDirectory.ensureDirectory();
+						if (!cacheFile.exists()) {
+							Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.filePermissions));
+						}
+						cacheDirectory.secureFile(cacheFile);
 						writer = new FileWriter(cacheFile);
 
 						JsonUtils.objectToWriter(writer, serviceTags);

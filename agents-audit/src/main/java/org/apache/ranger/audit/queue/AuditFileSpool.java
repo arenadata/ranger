@@ -27,21 +27,25 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuditIndexRecord;
 import org.apache.ranger.audit.model.SPOOL_FILE_STATUS;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.audit.utils.AuditFileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -52,6 +56,8 @@ import org.slf4j.MDC;
  * overloaded or down
  */
 public class AuditFileSpool implements Runnable {
+	public static final String PROP_FILE_SPOOL_PERMS = "filespool.perms";
+	public static final String PROP_FILE_SPOOL_DIR_PERMS = "filespool.dir.perms";
 	private static final Logger logger = LoggerFactory.getLogger(AuditFileSpool.class);
 
 	public static final String PROP_FILE_SPOOL_LOCAL_DIR = "filespool.dir";
@@ -62,6 +68,7 @@ public class AuditFileSpool implements Runnable {
 	public static final String PROP_FILE_SPOOL_FILE_ROLLOVER = "filespool.file.rollover.sec";
 	public static final String PROP_FILE_SPOOL_INDEX_FILE = "filespool.index.filename";
 	public static final String PROP_FILE_SPOOL_DEST_RETRY_MS = "filespool.destination.retry.ms";
+	public static final String PROP_FILE_SPOOL_SUBDIR_MODE = "filespool.subdir.mode";
 	public static final String CONSUMER = ", consumer=";
 
 	AuditQueue queueProvider = null;
@@ -103,6 +110,8 @@ public class AuditFileSpool implements Runnable {
 	boolean isDrain = false;
 	boolean isDestDown = false;
 
+	Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions("644");
+	AuditFileUtil.ResolvedDirectory resolvedLogDirectory = null;
 	public AuditFileSpool(AuditQueue queueProvider,
 			AuditHandler consumerProvider) {
 		this.queueProvider = queueProvider;
@@ -127,6 +136,21 @@ public class AuditFileSpool implements Runnable {
 			// Initial folder and file properties
 			String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
 					+ "." + PROP_FILE_SPOOL_LOCAL_DIR);
+			String spoolFilePerms = StringUtils.defaultIfEmpty(StringUtils.trim(
+					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS)),
+					"644");
+			String spoolDirPerms = StringUtils.defaultIfEmpty(StringUtils.trim(
+							MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS)),
+					"755");
+			filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
+			Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
+			resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
+					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_SUBDIR_MODE),
+					dirPermissions,
+					filePermissions);
+			logFolderProp = resolvedLogDirectory.getPath();
+			dirPermissions = resolvedLogDirectory.getDirPermissions();
+			filePermissions = resolvedLogDirectory.getFilePermissions();
 			logFileNameFormat = MiscUtil.getStringProperty(props,
 					basePropertyName + "." + PROP_FILE_SPOOL_LOCAL_FILE_NAME);
 			String archiveFolderProp = MiscUtil.getStringProperty(props,
@@ -151,12 +175,11 @@ public class AuditFileSpool implements Runnable {
 				return false;
 			}
 			logFolder = new File(logFolderProp);
-			if (!logFolder.isDirectory()) {
-				logFolder.mkdirs();
-				if (!logFolder.isDirectory()) {
-					logger.error("File Spool folder not found and can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  queueProvider.getName());
-					return false;
-				}
+			try {
+				resolvedLogDirectory.ensureDirectory();
+			} catch (Exception excp) {
+				logger.error("File Spool folder not found, unsafe, or can't be created. folder={}, queueName={}", logFolder.getAbsolutePath(),  queueProvider.getName(), excp);
+				return false;
 			}
 			logger.info("logFolder={}, queueName={}", logFolder, queueProvider.getName());
 
@@ -171,12 +194,11 @@ public class AuditFileSpool implements Runnable {
 			} else {
 				archiveFolder = new File(archiveFolderProp);
 			}
-			if (!archiveFolder.isDirectory()) {
-				archiveFolder.mkdirs();
-				if (!archiveFolder.isDirectory()) {
-					logger.error("File Spool archive folder not found and can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), queueProvider.getName());
-					return false;
-				}
+			try {
+				resolvedLogDirectory.ensureChildDirectory(archiveFolder);
+			} catch (Exception excp) {
+				logger.error("File Spool archive folder not found, unsafe, or can't be created. folder={}, queueName={}", archiveFolder.getAbsolutePath(), queueProvider.getName(), excp);
+				return false;
 			}
 			logger.info("archiveFolder={}, queueName={}", archiveFolder, queueProvider.getName());
 
@@ -199,6 +221,7 @@ public class AuditFileSpool implements Runnable {
 					return false;
 				}
 			}
+			resolvedLogDirectory.secureFile(indexFile);
 			logger.info("indexFile={}, queueName={}", indexFile, queueProvider.getName());
 
 			int lastDot = indexFileName.lastIndexOf('.');
@@ -215,6 +238,7 @@ public class AuditFileSpool implements Runnable {
 					return false;
 				}
 			}
+			resolvedLogDirectory.secureFile(indexDoneFile);
 			logger.info("indexDoneFile={}, queueName={}", indexDoneFile, queueProvider.getName());
 
 			// Load index file
@@ -449,6 +473,13 @@ public class AuditFileSpool implements Runnable {
 			}
 			fileName = newFileName;
 			logger.info("Creating new file. queueName={}, filename={}",queueProvider.getName(), fileName);
+			boolean created = outLogFile.createNewFile();
+			if (created)
+				try {
+					resolvedLogDirectory.secureFile(outLogFile);
+				} catch (Exception e) {
+					logger.debug("Failed to set permissions on {}", outLogFile, e);
+				}
 			// Open the file
 			logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
 					outLogFile)));
@@ -564,6 +595,7 @@ public class AuditFileSpool implements Runnable {
 				out.println(MiscUtil.stringify(auditIndexRecord));
 			}
 		}
+		resolvedLogDirectory.secureFile(indexFile);
 	}
 
 	void appendToDoneFile(AuditIndexRecord indexRecord)
@@ -575,6 +607,7 @@ public class AuditFileSpool implements Runnable {
 		out.println(line);
 		out.flush();
 		out.close();
+		resolvedLogDirectory.secureFile(indexDoneFile);
 
 		// Move to archive folder
 		File logFile = null;

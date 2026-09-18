@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
@@ -826,6 +827,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (response == null) {
 				policyDownloadSessionId = null;
 				LOG.error("Error getting policies; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading ServicePolicies for service " + serviceName);
 			} else {
 				setCookieReceivedFromCredSession(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -849,9 +851,12 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
 		} else {
 			policyDownloadSessionId = null;
-			ret       = null;
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading ServicePolicies. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -877,6 +882,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				policyDownloadSessionId = null;
 				isValidPolicyDownloadSessionCookie = false;
 				LOG.error("Error getting policies; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading ServicePolicies for service " + serviceName);
 			} else {
 				checkAndResetSessionCookie(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -902,9 +908,12 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		} else {
 			policyDownloadSessionId = null;
 			isValidPolicyDownloadSessionCookie = false;
-			ret = null;
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting policies. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading ServicePolicies. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -961,6 +970,12 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return ret;
 	}
 
+	private boolean isAccessDenied(ClientResponse response) {
+		int status = response == null ? 0 : response.getStatus();
+
+		return status == HttpServletResponse.SC_UNAUTHORIZED || status == HttpServletResponse.SC_FORBIDDEN;
+	}
+
 	private void checkAndResetSessionCookie(ClientResponse response) {
 		List<NewCookie> respCookieList = response.getCookies();
 		for (NewCookie respCookie : respCookieList) {
@@ -1004,6 +1019,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (response == null) {
 				tagDownloadSessionId = null;
 				LOG.error("Error getting tags; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading ServiceTags for service " + serviceName);
 			} else {
 				setCookieReceivedFromTagDownloadSession(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -1033,7 +1049,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			tagDownloadSessionId = null;
-			ret = null;
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading ServiceTags. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1059,6 +1078,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				tagDownloadSessionId = null;
 				isValidTagDownloadSessionCookie = false;
 				LOG.error("Error getting tags; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading ServiceTags for service " + serviceName);
 			} else {
 				checkAndResetTagDownloadSessionCookie(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -1090,7 +1110,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.warn("Error getting tags. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			tagDownloadSessionId = null;
 			isValidTagDownloadSessionCookie = false;
-			ret = null;
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading ServiceTags. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1186,6 +1209,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (response == null) {
 				roleDownloadSessionId = null;
 				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading Roles for service " + serviceName);
 			} else {
 				setCookieReceivedFromRoleDownloadSession(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -1216,7 +1240,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.warn("Error getting Roles. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			roleDownloadSessionId = null;
-			ret = null;
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading Roles. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1242,6 +1269,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				roleDownloadSessionId = null;
 				isValidRoleDownloadSessionCookie = false;
 				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+				throw new IOException("Null response downloading Roles for service " + serviceName);
 			} else {
 				checkAndResetRoleDownloadSessionCookie(response);
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -1272,7 +1300,10 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.warn("Error getting Roles. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
 			roleDownloadSessionId = null;
 			isValidRoleDownloadSessionCookie = false;
-			ret = null;
+			if (isAccessDenied(response)) {
+				throw new RangerAdminClientAccessDeniedException(response.getStatus(), resp.getMessage());
+			}
+			throw new IOException("Error downloading Roles. response=" + resp + ", serviceName=" + serviceName);
 		}
 
 		if (LOG.isDebugEnabled()) {

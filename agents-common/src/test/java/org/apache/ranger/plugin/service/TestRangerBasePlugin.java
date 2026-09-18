@@ -60,6 +60,73 @@ public class TestRangerBasePlugin {
         runTestsFromResourceFile("/plugin/test_base_plugin_hive.json");
     }
 
+    @Test
+    public void testPolicyRefreshAuthzDeniedFailsClosedWhenConfigured() {
+        RangerBasePluginTestCase testCase = readTestCase(new InputStreamReader(this.getClass().getResourceAsStream("/plugin/test_base_plugin_hive.json")));
+        TestData                 test     = testCase.tests.get(0);
+        RangerPluginConfig       config   = new RangerPluginConfig(testCase.policies.getServiceDef().getName(), testCase.policies.getServiceName(), "hive", "cl1", "on-prem", peOptions);
+
+        config.set(config.getPropertyPrefix() + ".policy.refresh.authz.denied.mode", "failclosed");
+
+        RangerBasePlugin plugin = new RangerBasePlugin(config, testCase.policies, testCase.tags, testCase.roles, testCase.userStore);
+
+        RangerAccessResult allowedResult = plugin.isAccessAllowed(test.request);
+        assertNotNull(allowedResult);
+        assertTrue(allowedResult.getIsAllowed());
+
+        plugin.getPluginContext().setPolicyDownloadAuthzDenied(true);
+
+        RangerAccessResult deniedResult = plugin.isAccessAllowed(test.request);
+        assertNotNull(deniedResult);
+        assertFalse(deniedResult.getIsAllowed());
+        assertTrue(deniedResult.getIsAccessDetermined());
+        assertEquals("Policy refresh authorization denied by Ranger Admin", deniedResult.getReason());
+
+        plugin.getPluginContext().setPolicyDownloadAuthzDenied(false);
+
+        RangerAccessResult restoredResult = plugin.isAccessAllowed(test.request);
+        assertNotNull(restoredResult);
+        assertTrue(restoredResult.getIsAllowed());
+    }
+
+    @Test
+    public void testPolicyRefreshAuthzDeniedBeforeFirstDownloadHasResourceDescription() {
+        RangerPluginConfig config = new RangerPluginConfig("spark", "spark_test", "sparkSql", "cl1", "on-prem", peOptions);
+        config.set(config.getPropertyPrefix() + ".policy.refresh.authz.denied.mode", "failclosed");
+
+        RangerBasePlugin plugin = new RangerBasePlugin(config);
+        plugin.getPluginContext().setPolicyDownloadAuthzDenied(true);
+
+        RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
+        resource.setValue("database", "ranger_cache_test");
+        resource.setServiceDef(plugin.getServiceDef());
+        RangerAccessRequest request = new RangerAccessRequestImpl(resource, "create", "spark_user6", Collections.emptySet(), null);
+
+        Collection<RangerAccessResult> results = plugin.isAccessAllowed(Collections.singletonList(request));
+
+        assertNull(plugin.getServiceDef());
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        RangerAccessResult result = results.iterator().next();
+        assertFalse(result.getIsAllowed());
+        assertTrue(result.getIsAccessDetermined());
+        assertEquals("Policy refresh authorization denied by Ranger Admin", result.getReason());
+        assertSame(request, result.getAccessRequest());
+        assertEquals("database=ranger_cache_test", result.getAccessRequest().getResource().getAsString());
+    }
+
+    @Test
+    public void testDefaultRefreshDenialModeRemainsContinue() {
+        RangerPluginConfig config = new RangerPluginConfig("spark", "spark_test", "sparkSql", "cl1", "on-prem", peOptions);
+        String property = config.getPropertyPrefix() + ".policy.refresh.authz.denied.mode";
+        config.unset(property);
+        RangerBasePlugin plugin = new RangerBasePlugin(config);
+        plugin.getPluginContext().setPolicyDownloadAuthzDenied(true);
+
+        assertEquals("continue", plugin.getConfig().get(property));
+        assertFalse(plugin.isPolicyRefreshAuthzDenied());
+    }
+
     private void runTestsFromResourceFile(String resourceFile) {
         InputStream       inStream = this.getClass().getResourceAsStream(resourceFile);
         InputStreamReader reader   = new InputStreamReader(inStream);
