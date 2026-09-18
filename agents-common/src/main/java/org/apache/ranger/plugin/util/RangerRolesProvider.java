@@ -83,12 +83,12 @@ public class RangerRolesProvider {
 
 		String propertyPrefix = config.getPropertyPrefix();
 		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
-		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.file.perms")), "644");
-		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(config.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
+		String cacheFilePermsString = StringUtils.trimToNull(config.get(propertyPrefix + ".policy.cache.file.perms"));
+		String cacheDirPermsString = StringUtils.trimToNull(config.get(propertyPrefix + ".policy.cache.dir.perms"));
 		this.cacheDirectory = RangerLocalDirectory.resolve(cacheDir,
 				config.get(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
-				FileUtils.parsePermissions(cacheDirPermsString),
-				FileUtils.parsePermissions(cacheFilePermsString));
+				cacheDirPermsString == null ? null : FileUtils.parsePermissions(cacheDirPermsString),
+				cacheFilePermsString == null ? null : FileUtils.parsePermissions(cacheFilePermsString));
 		this.cacheFileName  = cacheFilename;
 		this.cacheDir       = this.cacheDirectory.getPath();
 		this.cacheFilePerms = this.cacheDirectory.getFilePermissions();
@@ -328,7 +328,7 @@ public class RangerRolesProvider {
 				Writer writer = null;
 
 				try {
-					if (!cacheFile.exists()) {
+					if (cacheFilePerms != null && !cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
 					}
 					cacheDirectory.secureFile(cacheFile);

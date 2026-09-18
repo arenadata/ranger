@@ -312,6 +312,95 @@ public class AuditFileUtilTest {
         }
     }
 
+    @Test
+    public void testDisabledModeWithoutPermissionsPreservesLegacySymlinks() throws Exception {
+        Path root = Files.createTempDirectory("auditLegacyPaths");
+
+        try {
+            Path target = Files.createDirectory(root.resolve("target"));
+            Path link = Files.createSymbolicLink(root.resolve("spool"), target);
+            Path file = Files.createFile(target.resolve("events.json"));
+            Files.setPosixFilePermissions(file, AuditFileUtil.parsePermissions("600"));
+            Path fileLink = Files.createSymbolicLink(target.resolve("events-link.json"), file);
+            AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(link.toString(), null, null, null);
+
+            directory.ensureDirectory();
+            directory.ensureChildDirectory(link.toFile());
+            directory.secureFile(fileLink.toFile());
+
+            assertTrue(Files.isSymbolicLink(link));
+            assertTrue(Files.isSymbolicLink(fileLink));
+            assertEquals(AuditFileUtil.parsePermissions("600"), Files.getPosixFilePermissions(file));
+        } finally {
+            deleteRecursively(root);
+        }
+    }
+
+    @Test
+    public void testIsolatedModesWithoutConfiguredPermissionsRemainStrict() throws Exception {
+        for (String mode : new String[] {AuditFileUtil.SUBDIR_MODE_PERUSER, AuditFileUtil.SUBDIR_MODE_PERGROUP}) {
+            Path baseDir = Files.createTempDirectory("auditIsolatedPermissions");
+
+            try {
+                Files.setPosixFilePermissions(baseDir, AuditFileUtil.parsePermissions("755"));
+                AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(baseDir.toString(), mode, null, null);
+                directory.ensureDirectory();
+                Path child = new File(directory.getPath()).toPath();
+                Path file = Files.createFile(child.resolve("events.json"));
+                directory.secureFile(file.toFile());
+                boolean perUser = AuditFileUtil.SUBDIR_MODE_PERUSER.equals(mode);
+
+                assertEquals(AuditFileUtil.parsePermissions(perUser ? "700" : "770"), Files.getPosixFilePermissions(child));
+                assertEquals(AuditFileUtil.parsePermissions(perUser ? "600" : "660"), Files.getPosixFilePermissions(file));
+
+                Files.setPosixFilePermissions(child, AuditFileUtil.parsePermissions("777"));
+                try {
+                    directory.ensureDirectory();
+                    fail("Expected unsafe permissions to be rejected in " + mode);
+                } catch (IOException expected) {
+                    assertTrue(expected.getMessage().contains("Unsafe permissions"));
+                }
+            } finally {
+                deleteRecursively(baseDir);
+            }
+        }
+    }
+
+    @Test
+    public void testIsolatedModesWithoutConfiguredPermissionsRejectSymlinks() throws Exception {
+        for (String mode : new String[] {AuditFileUtil.SUBDIR_MODE_PERUSER, AuditFileUtil.SUBDIR_MODE_PERGROUP}) {
+            Path baseDir = Files.createTempDirectory("auditIsolatedSymlinks");
+
+            try {
+                Files.setPosixFilePermissions(baseDir, AuditFileUtil.parsePermissions("755"));
+                AuditFileUtil.ResolvedDirectory directory = AuditFileUtil.resolveDirectory(baseDir.toString(), mode, null, null);
+                Path child = new File(directory.getPath()).toPath();
+                Path target = Files.createDirectory(baseDir.resolve("target"));
+                Files.createSymbolicLink(child, target);
+
+                try {
+                    directory.ensureDirectory();
+                    fail("Expected a directory symlink to be rejected in " + mode);
+                } catch (IOException expected) {
+                    assertTrue(expected.getMessage().contains("not a regular directory"));
+                }
+
+                Files.delete(child);
+                directory.ensureDirectory();
+                Path file = Files.createFile(target.resolve("events.json"));
+                Path link = Files.createSymbolicLink(child.resolve("events.json"), file);
+                try {
+                    directory.secureFile(link.toFile());
+                    fail("Expected a file symlink to be rejected in " + mode);
+                } catch (IOException expected) {
+                    assertTrue(expected.getMessage().contains("not a regular file"));
+                }
+            } finally {
+                deleteRecursively(baseDir);
+            }
+        }
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testResolveDirectoryRejectsUnknownMode() {
         AuditFileUtil.resolveDirectory("/tmp/ranger-audit", "unknown", AuditFileUtil.parsePermissions("755"), AuditFileUtil.parsePermissions("644"));

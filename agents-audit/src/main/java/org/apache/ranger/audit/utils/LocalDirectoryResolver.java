@@ -38,6 +38,7 @@ public final class LocalDirectoryResolver {
     public static final String SUBDIR_MODE_PERUSER  = "peruser";
     public static final String SUBDIR_MODE_PERGROUP = "pergroup";
 
+    private static final Set<PosixFilePermission> DEFAULT_BASE_DIR_PERMS = PosixFilePermissions.fromString("rwxr-xr-x");
     private static final Set<PosixFilePermission> PERUSER_DIR_PERMS   = PosixFilePermissions.fromString("rwx------");
     private static final Set<PosixFilePermission> PERUSER_FILE_PERMS  = PosixFilePermissions.fromString("rw-------");
     private static final Set<PosixFilePermission> PERGROUP_DIR_PERMS  = PosixFilePermissions.fromString("rwxrwx---");
@@ -58,6 +59,7 @@ public final class LocalDirectoryResolver {
 
     private static ResolvedDirectory resolve(String baseDir, String subdirMode, Set<PosixFilePermission> defaultDirPerms, Set<PosixFilePermission> defaultFilePerms, String subdirDescription, String directoryLabel, String baseDirectoryLabel, String ownershipLabel) {
         String mode = StringUtils.defaultIfBlank(subdirMode, SUBDIR_MODE_DISABLED).trim().toLowerCase();
+        Set<PosixFilePermission> baseDirPerms = defaultDirPerms != null ? defaultDirPerms : DEFAULT_BASE_DIR_PERMS;
 
         if (SUBDIR_MODE_DISABLED.equals(mode)) {
             return new ResolvedDirectory(null, baseDir, null, defaultDirPerms, defaultFilePerms, null, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
@@ -65,11 +67,11 @@ public final class LocalDirectoryResolver {
             String user = sanitizePathElement(getCurrentUser(), "user", subdirDescription);
             String owner = getCurrentProcessUser(subdirDescription);
 
-            return new ResolvedDirectory(baseDir, appendPath(baseDir, user), defaultDirPerms, PERUSER_DIR_PERMS, PERUSER_FILE_PERMS, owner, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
+            return new ResolvedDirectory(baseDir, appendPath(baseDir, user), baseDirPerms, PERUSER_DIR_PERMS, PERUSER_FILE_PERMS, owner, null, directoryLabel, baseDirectoryLabel, ownershipLabel);
         } else if (SUBDIR_MODE_PERGROUP.equals(mode)) {
             String group = sanitizePathElement(getCurrentGroup(subdirDescription), "group", subdirDescription);
 
-            return new ResolvedDirectory(baseDir, appendPath(baseDir, group), defaultDirPerms, PERGROUP_DIR_PERMS, PERGROUP_FILE_PERMS, null, group, directoryLabel, baseDirectoryLabel, ownershipLabel);
+            return new ResolvedDirectory(baseDir, appendPath(baseDir, group), baseDirPerms, PERGROUP_DIR_PERMS, PERGROUP_FILE_PERMS, null, group, directoryLabel, baseDirectoryLabel, ownershipLabel);
         }
 
         throw new IllegalArgumentException("Unsupported " + subdirDescription + " subdir mode: " + subdirMode);
@@ -183,6 +185,11 @@ public final class LocalDirectoryResolver {
                 return;
             }
 
+            if (dirPermissions == null) {
+                ensureLegacyDirectory(new File(path));
+                return;
+            }
+
             Path directory = Paths.get(path);
 
             if (StringUtils.isNotBlank(basePath)) {
@@ -221,6 +228,11 @@ public final class LocalDirectoryResolver {
                 return;
             }
 
+            if (dirPermissions == null) {
+                ensureLegacyDirectory(directory);
+                return;
+            }
+
             Path childDirectory = directory.toPath();
 
             if (!Files.exists(childDirectory, LinkOption.NOFOLLOW_LINKS)) {
@@ -237,7 +249,7 @@ public final class LocalDirectoryResolver {
         }
 
         public void secureFile(File file) throws IOException {
-            if (file == null) {
+            if (file == null || filePermissions == null) {
                 return;
             }
 
@@ -247,6 +259,13 @@ public final class LocalDirectoryResolver {
             setGroupOwner(secureFile, expectedGroup);
             Files.setPosixFilePermissions(secureFile, filePermissions);
             validateFile(secureFile, filePermissions, expectedOwner, expectedGroup, "File", ownershipLabel);
+        }
+
+        private void ensureLegacyDirectory(File directory) throws IOException {
+            // With isolation disabled, unset permissions preserve existing paths and the process umask.
+            if (!directory.isDirectory() && !directory.mkdirs() && !directory.isDirectory()) {
+                throw new IOException(directoryLabel + " cannot be created: " + directory);
+            }
         }
 
         private void ensureBaseDirectory() throws IOException {

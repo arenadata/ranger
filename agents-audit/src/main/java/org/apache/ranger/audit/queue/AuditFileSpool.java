@@ -110,7 +110,7 @@ public class AuditFileSpool implements Runnable {
 	boolean isDrain = false;
 	boolean isDestDown = false;
 
-	Set<PosixFilePermission> filePermissions = AuditFileUtil.parsePermissions("644");
+	Set<PosixFilePermission> filePermissions;
 	AuditFileUtil.ResolvedDirectory resolvedLogDirectory = null;
 	public AuditFileSpool(AuditQueue queueProvider,
 			AuditHandler consumerProvider) {
@@ -136,14 +136,10 @@ public class AuditFileSpool implements Runnable {
 			// Initial folder and file properties
 			String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
 					+ "." + PROP_FILE_SPOOL_LOCAL_DIR);
-			String spoolFilePerms = StringUtils.defaultIfEmpty(StringUtils.trim(
-					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS)),
-					"644");
-			String spoolDirPerms = StringUtils.defaultIfEmpty(StringUtils.trim(
-							MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS)),
-					"755");
-			filePermissions = AuditFileUtil.parsePermissions(spoolFilePerms);
-			Set<PosixFilePermission> dirPermissions = AuditFileUtil.parsePermissions(spoolDirPerms);
+			String spoolFilePerms = StringUtils.trimToNull(MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_PERMS));
+			String spoolDirPerms = StringUtils.trimToNull(MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_DIR_PERMS));
+			filePermissions = spoolFilePerms == null ? null : AuditFileUtil.parsePermissions(spoolFilePerms);
+			Set<PosixFilePermission> dirPermissions = spoolDirPerms == null ? null : AuditFileUtil.parsePermissions(spoolDirPerms);
 			resolvedLogDirectory = AuditFileUtil.resolveDirectory(logFolderProp,
 					MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_SPOOL_SUBDIR_MODE),
 					dirPermissions,

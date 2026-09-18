@@ -117,8 +117,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);
 		serviceDefHelper           = new RangerServiceDefHelper(serviceDef, false);
 
-		String cacheFilePermsString = StringUtils.trim(getConfig(propertyPrefix + ".policy.cache.file.perms", "644"));
-		Set<PosixFilePermission> configuredCacheFilePerms = FileUtils.parsePermissions(cacheFilePermsString);
+		String cacheFilePermsString = StringUtils.trimToNull(getConfig(propertyPrefix + ".policy.cache.file.perms", null));
+		Set<PosixFilePermission> configuredCacheFilePerms = cacheFilePermsString == null ? null : FileUtils.parsePermissions(cacheFilePermsString);
 
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
@@ -141,10 +141,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (tagRetriever != null) {
 				disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 				String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
-				String cacheDirPermsString = StringUtils.trim(getConfig(propertyPrefix + ".policy.cache.dir.perms", "755"));
+				String cacheDirPermsString = StringUtils.trimToNull(getConfig(propertyPrefix + ".policy.cache.dir.perms", null));
 				RangerLocalDirectory.ResolvedDirectory cacheDirectory = RangerLocalDirectory.resolve(cacheDir,
 						getConfig(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
-						FileUtils.parsePermissions(cacheDirPermsString),
+						cacheDirPermsString == null ? null : FileUtils.parsePermissions(cacheDirPermsString),
 						configuredCacheFilePerms);
 				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
 
@@ -1136,7 +1136,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 					try {
 						cacheDirectory.ensureDirectory();
-						if (!cacheFile.exists()) {
+						if (filePermissions != null && !cacheFile.exists()) {
 							Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.filePermissions));
 						}
 						cacheDirectory.secureFile(cacheFile);

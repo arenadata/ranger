@@ -53,7 +53,6 @@ public class PolicyRefresher extends Thread {
 	private final String                         cacheDir;
 	private final RangerLocalDirectory.ResolvedDirectory cacheDirectory;
 	private final Set<PosixFilePermission>      cacheFilePerms;
-	private final Set<PosixFilePermission>      cacheDirPerms;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -73,17 +72,16 @@ public class PolicyRefresher extends Thread {
 		this.plugIn      = plugIn;
 		this.serviceType = plugIn.getServiceType();
 		this.serviceName = plugIn.getServiceName();
-		String cacheFilePermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms")), "644");
-		String cacheDirPermsString = StringUtils.defaultIfEmpty(StringUtils.trim(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms")), "755");
+		String cacheFilePermsString = StringUtils.trimToNull(pluginConfig.get(propertyPrefix + ".policy.cache.file.perms"));
+		String cacheDirPermsString = StringUtils.trimToNull(pluginConfig.get(propertyPrefix + ".policy.cache.dir.perms"));
 		String baseCacheDir = pluginConfig.get(propertyPrefix + ".policy.cache.dir");
 		this.cacheDirectory = RangerLocalDirectory.resolve(baseCacheDir,
 				pluginConfig.get(propertyPrefix + ".policy.cache.subdir.mode", RangerLocalDirectory.SUBDIR_MODE_DISABLED),
-				FileUtils.parsePermissions(cacheDirPermsString),
-				FileUtils.parsePermissions(cacheFilePermsString));
+				cacheDirPermsString == null ? null : FileUtils.parsePermissions(cacheDirPermsString),
+				cacheFilePermsString == null ? null : FileUtils.parsePermissions(cacheFilePermsString));
 
 		this.cacheDir       = this.cacheDirectory.getPath();
 		this.cacheFilePerms = this.cacheDirectory.getFilePermissions();
-		this.cacheDirPerms  = this.cacheDirectory.getDirPermissions();
 
 		String appId         = StringUtils.isEmpty(plugIn.getAppId()) ? serviceType : plugIn.getAppId();
 		String cacheFilename = String.format("%s_%s.json", appId, serviceName);
@@ -447,7 +445,7 @@ public class PolicyRefresher extends Thread {
 				try {
 					cacheDirectory.ensureDirectory();
 					if (!cacheDirTmp.exists()) {
-						FileUtils.createDirectoryWithPermissions(cacheDirTmp, cacheDirPerms);
+						cacheDirectory.ensureChildDirectory(cacheDirTmp);
 					}
 					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} catch (Exception ex) {
@@ -469,7 +467,7 @@ public class PolicyRefresher extends Thread {
 				Writer writer = null;
 	
 				try {
-					if (!cacheFile.exists()) {
+					if (cacheFilePerms != null && !cacheFile.exists()) {
 						Files.createFile(cacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
 					}
 					cacheDirectory.secureFile(cacheFile);
@@ -501,7 +499,7 @@ public class PolicyRefresher extends Thread {
 						perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
 					}
 					try {
-						if (!backupCacheFile.exists()) {
+						if (cacheFilePerms != null && !backupCacheFile.exists()) {
 							Files.createFile(backupCacheFile.toPath(), PosixFilePermissions.asFileAttribute(this.cacheFilePerms));
 						}
 						cacheDirectory.secureFile(backupCacheFile);
