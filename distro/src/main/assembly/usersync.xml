@@ -56,6 +56,7 @@
 							<include>org.apache.ranger:ranger-plugins-cred</include>
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+							<include>org.apache.httpcomponents:httpcore</include>
 							<include>commons-codec:commons-codec</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
 							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
@@ -64,6 +65,14 @@
 							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+							<include>io.netty:netty-handler:jar:${netty-all.version}</include>
+							<include>io.netty:netty-common:jar:${netty-all.version}</include>
+							<include>io.netty:netty-buffer:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport:jar:${netty-all.version}</include>
+							<include>io.netty:netty-codec:jar:${netty-all.version}</include>
+							<include>io.netty:netty-resolver:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport-native-unix-common:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport-classes-epoll:jar:${netty-all.version}</include>
 							<include>org.apache.ranger:ugsync-util</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
