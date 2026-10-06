@@ -99,6 +99,14 @@
 							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+							<include>io.netty:netty-handler:jar:${netty-all.version}</include>
+							<include>io.netty:netty-common:jar:${netty-all.version}</include>
+							<include>io.netty:netty-buffer:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport:jar:${netty-all.version}</include>
+							<include>io.netty:netty-codec:jar:${netty-all.version}</include>
+							<include>io.netty:netty-resolver:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport-native-unix-common:jar:${netty-all.version}</include>
+							<include>io.netty:netty-transport-classes-epoll:jar:${netty-all.version}</include>
                                                         <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 						</includes>
 					</dependencySet>
