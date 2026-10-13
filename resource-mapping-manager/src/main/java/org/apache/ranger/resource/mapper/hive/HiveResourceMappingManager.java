@@ -20,6 +20,8 @@
 package org.apache.ranger.resource.mapper.hive;
 
 import com.zaxxer.hikari.HikariDataSource;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.LockSupport;
 import javax.sql.DataSource;
@@ -31,6 +33,7 @@ import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.resource.mapper.config.ResourceMappingManagerConfig;
 import org.apache.ranger.resource.mapper.dao.DefaultResourceMappingDiffDao;
+import org.apache.ranger.resource.mapper.dao.DerivingResourceMappingDiffDao;
 import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDao;
 import org.apache.ranger.resource.mapper.event.DbResourceDiffCollector;
 import org.apache.ranger.resource.mapper.event.ResourceDiffCollector;
@@ -49,6 +52,7 @@ import org.apache.ranger.resource.mapper.hive.event.DbHiveIntermediateEventsReso
 import org.apache.ranger.resource.mapper.hive.event.fetch.CompositeHiveMetastoreFetcher;
 import org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreEventFetcher;
 import org.apache.ranger.resource.mapper.hive.event.fetch.HiveMetastoreSnapshotFetcher;
+import org.apache.ranger.resource.mapper.starrocks.StarRocksResourceMappingDeriver;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 
 @Slf4j
@@ -68,13 +72,28 @@ public class HiveResourceMappingManager {
     }
 
     private ResourceDiffHandler buildEventHandler(HiveResourceMappingManagerConfig config, DataSource dataSource) {
-        ResourceMappingDiffDao diffDao = new DefaultResourceMappingDiffDao(dataSource);
+        ResourceMappingDiffDao diffDao = withDerivedTargets(
+            new DefaultResourceMappingDiffDao(dataSource), config);
         RetryPolicyFactory retryPolicyFactory = new RetryPolicyFactory();
 
         return new ResourceDiffHandler(
             buildEventFetcher(retryPolicyFactory, config),
             buildResourceDiffCollector(retryPolicyFactory, config, diffDao, dataSource),
             diffDao
+        );
+    }
+
+    private ResourceMappingDiffDao withDerivedTargets(ResourceMappingDiffDao diffDao,
+                                                      HiveResourceMappingManagerConfig config) {
+        List<String> starRocksCatalogs = config.getStarRocksCatalogs();
+        if (starRocksCatalogs.isEmpty()) {
+            return diffDao;
+        }
+
+        log.info("Publishing Hive resource mappings for StarRocks catalogs {}", starRocksCatalogs);
+        return new DerivingResourceMappingDiffDao(
+            diffDao,
+            Collections.singletonList(new StarRocksResourceMappingDeriver(starRocksCatalogs))
         );
     }
 

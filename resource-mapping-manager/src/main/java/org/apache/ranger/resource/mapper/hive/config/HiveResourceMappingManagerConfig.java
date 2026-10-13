@@ -35,7 +35,10 @@ import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HM
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_INTERVAL_MS_DEFAULT;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_STRATEGY;
 import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.HMS_RETRY_STRATEGY_DEFAULT;
+import static org.apache.ranger.resource.mapper.hive.config.ConfigurationKeys.STARROCKS_CATALOGS;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.resource.mapper.config.ResourceMappingManagerConfig;
 import org.apache.ranger.resource.mapper.event.retry.RetryStrategy;
@@ -82,6 +85,12 @@ public class HiveResourceMappingManagerConfig extends ResourceMappingManagerConf
 
     public boolean isFullMetastoreSync() {
         return getBoolean(HMS_FULL_SYNC, HMS_FULL_SYNC_DEFAULT);
+    }
+
+    public List<String> getStarRocksCatalogs() {
+        return getTrimmedStringCollection(STARROCKS_CATALOGS).stream()
+            .distinct()
+            .collect(Collectors.toList());
     }
 
     private static long validate(long value, long defaultValue) {

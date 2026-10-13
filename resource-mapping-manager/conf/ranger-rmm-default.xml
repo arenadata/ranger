@@ -94,4 +94,8 @@
     <name>ranger.rmm.hms.sync.full</name>
     <value>false</value>
   </property>
+  <property>
+    <name>ranger.rmm.starrocks.catalogs</name>
+    <value></value>
+  </property>
 </configuration>

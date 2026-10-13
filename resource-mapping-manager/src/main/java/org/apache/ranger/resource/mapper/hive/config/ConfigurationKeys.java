@@ -45,4 +45,6 @@ public class ConfigurationKeys {
 
     public static final String HMS_FULL_SYNC = "ranger.rmm.hms.sync.full";
     public static final boolean HMS_FULL_SYNC_DEFAULT = false;
+
+    public static final String STARROCKS_CATALOGS = "ranger.rmm.starrocks.catalogs";
 }
