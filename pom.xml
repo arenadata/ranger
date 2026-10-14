@@ -798,7 +798,7 @@
     <repositories>
         <repository>
             <id>arenadata</id>
-            <url>https://maven.pkg.github.com/arenadata/*</url>
+            <url>https://maven.arenadata.io/arenadata</url>
         </repository>
         <repository>
             <id>jetbrains-pty4j</id>
@@ -810,7 +810,7 @@
         <repository>
             <id>arenadata</id>
             <name>GitHub arenadata Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/arenadata/ranger</url>
+            <url>https://maven.arenadata.io/arenadata/org/apache/ranger</url>
         </repository>
     </distributionManagement>
     <profiles>
