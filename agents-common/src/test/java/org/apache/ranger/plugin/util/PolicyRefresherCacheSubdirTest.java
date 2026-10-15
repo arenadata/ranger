@@ -377,7 +377,7 @@ public class PolicyRefresherCacheSubdirTest {
 		@Override
 		public RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMillis) throws Exception {
 			if (mode == Mode.UNREACHABLE) {
-				throw new IOException("connection refused");
+				throw new IOException("Connection refused");
 			}
 			if (mode == Mode.DENY_ROLES) {
 				throw new RangerAdminClientAccessDeniedException(403, "User doesn't have permission to download UserGroupRoles");
