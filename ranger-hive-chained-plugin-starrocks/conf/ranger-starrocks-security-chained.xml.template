@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<!--
+  Properties to add to ranger-starrocks-security.xml of the StarRocks FE Ranger plugin in order to
+  enable the Hive chained plugin. Replace <hive service name> with the name of the Hive service
+  in Ranger Admin.
+-->
+<configuration>
+  <property>
+    <name>ranger.plugin.starrocks.chained.services</name>
+    <value>&lt;hive service name&gt;</value>
+  </property>
+  <property>
+    <name>ranger.plugin.starrocks.chained.services.&lt;hive service name&gt;.impl</name>
+    <value>org.apache.ranger.hive.chained.starrocks.StarRocksHiveChainedPlugin</value>
+  </property>
+  <!-- Local copy of the Hive resource mappings, must be writable by the FE process -->
+  <property>
+    <name>ranger.plugin.starrocks.hive.resource.mappings.file.location</name>
+    <value>/opt/starrocks/fe/ranger/hive-resource-mappings</value>
+  </property>
+  <!-- How often the mapping changes are polled from Ranger Admin -->
+  <property>
+    <name>ranger.plugin.starrocks.hive.resource.mappings.refresh.interval.ms</name>
+    <value>30000</value>
+  </property>
+  <!-- How often the local copy of the mappings is flushed to disk -->
+  <property>
+    <name>ranger.plugin.starrocks.hive.resource.mappings.file.flush.interval.ms</name>
+    <value>60000</value>
+  </property>
+  <!-- Chained plugin decisions override the StarRocks policies of the same priority -->
+  <property>
+    <name>ranger.plugin.starrocks.chained.plugin.result.priority.high</name>
+    <value>true</value>
+  </property>
+</configuration>

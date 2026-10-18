@@ -150,7 +150,7 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
         result.setIsAllowed(true);
         for (RangerAccessResult accessResult : results) {
             if (accessResult.getIsAccessDetermined() && !accessResult.getIsAllowed()) {
-                return accessResult.getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS ? withPriority(accessResult) : accessResult;
+                return withPriority(accessResult);
             }
 
             resultHandler.accept(result, accessResult);
@@ -165,7 +165,16 @@ public abstract class ResourceMappingChainedPlugin extends RangerChainedPlugin {
         return new RangerDefaultAuditHandler(plugin.getConfig());
     }
 
+    /**
+     * Raises the result to the chained-plugin priority so that it can override the root plugin.
+     * A data-mask or row-filter result that is not allowed only means "no matching policy in the
+     * chained service"; raising it would erase the mask the root service defined for the resource.
+     */
     private RangerAccessResult withPriority(RangerAccessResult result) {
+        if (result.getPolicyType() != RangerPolicy.POLICY_TYPE_ACCESS && !result.getIsAllowed()) {
+            return result;
+        }
+
         result.setPolicyPriority(resultPolicyPriority);
         return result;
     }
