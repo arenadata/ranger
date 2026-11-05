@@ -593,6 +593,7 @@
                         <exclude>.git/**</exclude>
                         <exclude>.gitattributes/**</exclude>
                         <exclude>.github/pull_request_template.md</exclude>
+                        <exclude>.readiness/**</exclude>
                         <exclude>.pc/**</exclude>
                         <exclude>debian/**</exclude>
                         <exclude>.gitignore/**</exclude>

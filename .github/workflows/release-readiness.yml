@@ -1,0 +1,69 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+name: Release readiness
+run-name: ${{ inputs.mode == 'inspect' && 'line' || inputs.mode == 'dependencies' && 'dependencies' || inputs.mode == 'history' && 'history' || 'publication' }} / ${{ inputs.request_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      mode: { type: choice, options: [check, inspect, dependencies, history], default: check, required: false }
+      request_id: { type: string, required: true }
+      generation: { type: string, required: true }
+      product_version: { type: string, required: true }
+      expected_checker_sha: { type: string, required: true }
+      target_tag: { type: string, required: false, default: '' }        # mode=check
+      target_sha: { type: string, required: false, default: '' }        # mode=check
+      target_version: { type: string, required: false, default: '' }    # mode=check
+      line_version: { type: string, required: false, default: '' }      # mode=inspect, mode=dependencies, mode=history
+      expected_head_sha: { type: string, required: false, default: '' } # mode=inspect, mode=dependencies, mode=history
+      compare_refs: { type: string, required: false, default: '' }      # mode=history: `<branch>@<sha>` per line
+
+permissions:
+  contents: read
+  packages: read
+concurrency:
+  group: ${{ inputs.mode == 'inspect' && 'line' || inputs.mode == 'dependencies' && 'dependencies' || inputs.mode == 'history' && 'history' || 'publication' }}-${{ inputs.request_id }}
+  cancel-in-progress: false
+
+jobs:
+  publication:
+    uses: arenadata/adrm-checks/.github/workflows/publication-readiness.yml@1e0cfbd8e03ee73c94739ceaaba3a85b7d9775f2
+    with:
+      mode: ${{ inputs.mode }}
+      request_id: ${{ inputs.request_id }}
+      generation: ${{ inputs.generation }}
+      product_version: ${{ inputs.product_version }}
+      expected_checker_sha: ${{ inputs.expected_checker_sha }}
+      target_tag: ${{ inputs.target_tag }}
+      target_sha: ${{ inputs.target_sha }}
+      target_version: ${{ inputs.target_version }}
+      line_version: ${{ inputs.line_version }}
+      expected_head_sha: ${{ inputs.expected_head_sha }}
+      compare_refs: ${{ inputs.compare_refs }}
+      # mode=dependencies: static values of this project, copied from its publisher workflow (flags and profiles
+      # only, no goals or tasks). Maven: the publisher's JDK (JDK-activated profiles change the graph). Gradle: the
+      # highest JDK the publisher uses (graph resolution does not depend on it). maven_server_ids: the server ids of
+      # the repositories the build resolves from; each gets the workflow token in ~/.m2/settings.xml.
+      build_tool: maven
+      build_command: mvn
+      java_version: '11'
+      java_distribution: temurin
+      maven_server_ids: arenadata
+      build_args: |
+        -DskipTests=true -Dcheckstyle.skip=true -Djacoco.skip=true -Dpmd.skip=true -Drat.skip=true -Dspotbugs.skip=true -Denunciate.skip=true
+      # mode=history: the upstream repository whose release tags bound the comparison (default: the root of the fork
+      # network, e.g. apache/hadoop for arenadata/hadoop) and paths that differ between line branches by design
+      # (.github/ and .readiness/ always do). Set them only when the defaults are wrong.
