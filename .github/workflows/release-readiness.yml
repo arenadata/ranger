@@ -40,7 +40,7 @@ concurrency:
 
 jobs:
   publication:
-    uses: arenadata/adrm-checks/.github/workflows/publication-readiness.yml@1e0cfbd8e03ee73c94739ceaaba3a85b7d9775f2
+    uses: arenadata/adrm-checks/.github/workflows/publication-readiness.yml@2342bc825d74fa179f9f0e894d838d57258e8dd6
     with:
       mode: ${{ inputs.mode }}
       request_id: ${{ inputs.request_id }}
@@ -55,8 +55,10 @@ jobs:
       compare_refs: ${{ inputs.compare_refs }}
       # mode=dependencies: static values of this project, copied from its publisher workflow (flags and profiles
       # only, no goals or tasks). Maven: the publisher's JDK (JDK-activated profiles change the graph). Gradle: the
-      # highest JDK the publisher uses (graph resolution does not depend on it). maven_server_ids: the server ids of
-      # the repositories the build resolves from; each gets the workflow token in ~/.m2/settings.xml.
+      # highest JDK the publisher uses. The build runs in eclipse-temurin:<java_version>-jdk (java_distribution:
+      # temurin only). maven_server_ids: the ids of the repositories the build reads from GitHub Packages; they get the
+      # workflow token and resolve from https://maven.pkg.github.com/<owner>/*. maven_mirrors (`<id> <https url>` per
+      # line) points other ids at one registry, for an id that names two hosts across the modules.
       build_tool: maven
       build_command: mvn
       java_version: '11'
