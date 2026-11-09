@@ -52,14 +52,16 @@ public class PaimonAuditCompactor {
     private final String tableName;
     private final String catalogType;
     private final String catalogUri;
+    private final String hadoopConfDir;
 
     public PaimonAuditCompactor(String warehouse, String database, String tableName,
-                                String catalogType, String catalogUri) {
+                                String catalogType, String catalogUri, String hadoopConfDir) {
         this.warehouse = warehouse;
         this.database = database;
         this.tableName = tableName;
         this.catalogType = catalogType;
         this.catalogUri = catalogUri;
+        this.hadoopConfDir = hadoopConfDir;
     }
 
     public int compactOnce() throws Exception {
@@ -102,7 +104,7 @@ public class PaimonAuditCompactor {
 
     private Catalog openCatalog() {
         return CatalogFactory.createCatalog(CatalogContext.create(
-                PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri)));
+                PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri, hadoopConfDir)));
     }
 
     private FileStoreTable openTable() throws Exception {
@@ -113,19 +115,20 @@ public class PaimonAuditCompactor {
 
     /**
      * Standalone entry point for timer-based deployments:
-     * main &lt;warehouse&gt; &lt;database&gt; &lt;table&gt; [catalogType] [catalogUri] [olderThanMillis]
+     * main &lt;warehouse&gt; &lt;database&gt; &lt;table&gt; [catalogType] [catalogUri] [hadoopConfDir] [olderThanMillis]
      */
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-            System.err.println("usage: main <warehouse> <database> <table> [catalogType] [catalogUri] [olderThanMillis]");
+            System.err.println("usage: main <warehouse> <database> <table> [catalogType] [catalogUri] [hadoopConfDir] [olderThanMillis]");
             System.exit(1);
         }
         String catalogType = args.length > 3 ? args[3] : null;
         String catalogUri = args.length > 4 ? args[4] : null;
-        long olderThanMillis = args.length > 5 ? Long.parseLong(args[5]) : 24 * 3600_000L;
+        String hadoopConfDir = args.length > 5 ? args[5] : null;
+        long olderThanMillis = args.length > 6 ? Long.parseLong(args[6]) : 24 * 3600_000L;
 
         PaimonAuditCompactor compactor =
-                new PaimonAuditCompactor(args[0], args[1], args[2], catalogType, catalogUri);
+                new PaimonAuditCompactor(args[0], args[1], args[2], catalogType, catalogUri, hadoopConfDir);
         int tasks = compactor.compactOnce();
         long orphans = compactor.cleanOrphans(olderThanMillis);
         System.out.println("compacted=" + tasks + " orphanDeleted=" + orphans);

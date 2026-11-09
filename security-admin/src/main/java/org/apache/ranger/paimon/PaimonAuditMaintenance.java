@@ -123,7 +123,8 @@ public class PaimonAuditMaintenance {
                 PropertiesUtil.getProperty(PaimonAccessAuditsService.PROP_TABLE,
                         PaimonAuditSchema.DEFAULT_TABLE),
                 PropertiesUtil.getProperty(PaimonAccessAuditsService.PROP_CATALOG_TYPE),
-                PropertiesUtil.getProperty(PaimonAccessAuditsService.PROP_CATALOG_URI));
+                PropertiesUtil.getProperty(PaimonAccessAuditsService.PROP_CATALOG_URI),
+                PropertiesUtil.getProperty(PaimonAccessAuditsService.PROP_HADOOP_CONF_DIR));
         int tasks;
         long orphans;
         try {

@@ -95,7 +95,8 @@ public final class PaimonAuditSchema {
     private PaimonAuditSchema() {
     }
 
-    public static Options catalogOptions(String warehouse, String catalogType, String catalogUri) {
+    public static Options catalogOptions(String warehouse, String catalogType, String catalogUri,
+                                         String hadoopConfDir) {
         Options options = new Options();
         options.set("warehouse", warehouse);
         if (catalogType != null && !catalogType.isEmpty()
@@ -104,6 +105,11 @@ public final class PaimonAuditSchema {
             if (catalogUri != null && !catalogUri.isEmpty()) {
                 options.set("uri", catalogUri);
             }
+        }
+        // paimon native option: loads every hadoop client config (core-site,
+        // hdfs-site, ozone-site, s3a coresite, ...) from the directory
+        if (hadoopConfDir != null && !hadoopConfDir.isEmpty()) {
+            options.set("hadoop-conf-dir", hadoopConfDir);
         }
         return options;
     }

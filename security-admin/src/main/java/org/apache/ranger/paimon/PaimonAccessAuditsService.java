@@ -85,6 +85,7 @@ public class PaimonAccessAuditsService extends AccessAuditsService {
     public static final String PROP_TABLE = "ranger.paimon.audit.table";
     public static final String PROP_CATALOG_TYPE = "ranger.paimon.audit.catalog.type";
     public static final String PROP_CATALOG_URI = "ranger.paimon.audit.catalog.uri";
+    public static final String PROP_HADOOP_CONF_DIR = "ranger.paimon.audit.hadoop.conf.dir";
 
     private static final int MAX_HEAP_CAPACITY = 10_000;
 
@@ -98,6 +99,7 @@ public class PaimonAccessAuditsService extends AccessAuditsService {
     private String tableName = PaimonAuditSchema.DEFAULT_TABLE;
     private String catalogType;
     private String catalogUri;
+    private String hadoopConfDir;
     private boolean configLoaded;
 
     public void init(Properties props) {
@@ -106,6 +108,7 @@ public class PaimonAccessAuditsService extends AccessAuditsService {
         this.tableName = props.getProperty(PROP_TABLE, PaimonAuditSchema.DEFAULT_TABLE);
         this.catalogType = props.getProperty(PROP_CATALOG_TYPE);
         this.catalogUri = props.getProperty(PROP_CATALOG_URI);
+        this.hadoopConfDir = props.getProperty(PROP_HADOOP_CONF_DIR);
         this.configLoaded = true;
         this.table = null;
     }
@@ -278,7 +281,7 @@ public class PaimonAccessAuditsService extends AccessAuditsService {
             try {
                 loadConfig();
                 Catalog catalog = CatalogFactory.createCatalog(CatalogContext.create(
-                        PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri)));
+                        PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri, hadoopConfDir)));
                 try {
                     this.table = catalog.getTable(Identifier.create(database, tableName));
                     this.errorMessage = null;
@@ -303,6 +306,7 @@ public class PaimonAccessAuditsService extends AccessAuditsService {
         this.tableName = PropertiesUtil.getProperty(PROP_TABLE, PaimonAuditSchema.DEFAULT_TABLE);
         this.catalogType = PropertiesUtil.getProperty(PROP_CATALOG_TYPE);
         this.catalogUri = PropertiesUtil.getProperty(PROP_CATALOG_URI);
+        this.hadoopConfDir = PropertiesUtil.getProperty(PROP_HADOOP_CONF_DIR);
         this.configLoaded = true;
     }
 

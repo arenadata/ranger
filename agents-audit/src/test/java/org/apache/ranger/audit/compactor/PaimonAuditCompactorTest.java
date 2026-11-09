@@ -65,7 +65,7 @@ public class PaimonAuditCompactorTest {
         assertTrue("expected several small data files before compaction", logicalBefore > 3);
 
         PaimonAuditCompactor compactor = new PaimonAuditCompactor(
-                warehouseUri, "audit", "access_audit", null, null);
+                warehouseUri, "audit", "access_audit", null, null, null);
         compactor.compactOnce();
 
         // physical files linger until snapshot expiry; the compaction commit
@@ -96,7 +96,7 @@ public class PaimonAuditCompactorTest {
         Files.write(freshOrphan, new byte[] {1});
 
         PaimonAuditCompactor compactor = new PaimonAuditCompactor(
-                warehouseUri, "audit", "access_audit", null, null);
+                warehouseUri, "audit", "access_audit", null, null, null);
         compactor.cleanOrphans(24 * 3600_000L);
 
         assertFalse(Files.exists(staleOrphan));

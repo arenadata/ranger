@@ -64,6 +64,7 @@ public class PaimonAuditDestination extends AuditDestination {
     public static final String PROP_TABLE = "table";
     public static final String PROP_CATALOG_TYPE = "catalog.type";
     public static final String PROP_CATALOG_URI = "catalog.uri";
+    public static final String PROP_HADOOP_CONF_DIR = "hadoop.conf.dir";
     public static final String PROP_COMMIT_INTERVAL_MS = "commit.interval.ms";
     public static final String PROP_PARTITION_EXPIRATION = "partition.expiration";
     public static final String PROP_MAX_BUFFERED_EVENTS = "max.buffered.events";
@@ -108,6 +109,7 @@ public class PaimonAuditDestination extends AuditDestination {
             String tableNameProp = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_TABLE);
             String catalogType = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_CATALOG_TYPE);
             String catalogUri = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_CATALOG_URI);
+            String hadoopConfDirProp = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_HADOOP_CONF_DIR);
             String interval = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_COMMIT_INTERVAL_MS);
             String partitionExpirationProp =
                     MiscUtil.getStringProperty(props, propPrefix + "." + PROP_PARTITION_EXPIRATION);
@@ -130,7 +132,8 @@ public class PaimonAuditDestination extends AuditDestination {
                 this.maxBufferedEvents = Long.parseLong(maxBufferedProp.trim());
             }
 
-            this.catalogOptions = PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri);
+            String hadoopConfDir = hadoopConfDirProp == null ? null : hadoopConfDirProp.trim();
+            this.catalogOptions = PaimonAuditSchema.catalogOptions(warehouse, catalogType, catalogUri, hadoopConfDir);
         } catch (Throwable t) {
             // never fail host-service startup on a bad destination config: stay
             // degraded instead, log() keeps refusing events so the spool retains them
