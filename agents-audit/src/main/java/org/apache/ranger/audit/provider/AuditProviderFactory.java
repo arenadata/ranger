@@ -427,6 +427,8 @@ public class AuditProviderFactory {
 				provider = new KafkaAuditProvider();
 			} else if (providerName.equalsIgnoreCase("log4j")) {
 				provider = new Log4JAuditDestination();
+			} else if (providerName.equalsIgnoreCase("paimon")) {
+				provider = new PaimonAuditDestination();
 			} else if (providerName.equalsIgnoreCase("batch")) {
 				provider = getAuditProvider(props, propPrefix, consumer);
 			} else if (providerName.equalsIgnoreCase("async")) {

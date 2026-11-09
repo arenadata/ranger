@@ -180,6 +180,7 @@
         <org.bouncycastle.bcprov-jdk18on>1.82</org.bouncycastle.bcprov-jdk18on>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <ozone.version>1.4.1</ozone.version>
+        <paimon-bundle.version>2.0.0.1-4.4.0-0</paimon-bundle.version>
         <paranamer.version>2.3</paranamer.version>
         <poi.version>5.2.2</poi.version>
         <!-- presto plugin deps -->
