@@ -26,6 +26,7 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.elasticsearch.ElasticSearchAccessAuditsService;
+import org.apache.ranger.paimon.PaimonAccessAuditsService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
@@ -41,6 +42,9 @@ public class XAuditMgr extends XAuditMgrBase {
 
 	@Autowired
 	SolrAccessAuditsService solrAccessAuditsService;
+
+	@Autowired
+	PaimonAccessAuditsService paimonAccessAuditsService;
 
 	@Autowired
 	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
@@ -119,7 +123,9 @@ public class XAuditMgr extends XAuditMgrBase {
 	@Override
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 		String auditDBType = rangerBizUtil.getAuditDBType();
-		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
+		if (RangerBizUtil.AUDIT_STORE_PAIMON.equalsIgnoreCase(auditDBType)) {
+			return paimonAccessAuditsService.searchXAccessAudits(searchCriteria);
+		} else if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
 		} else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
 			return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
@@ -133,7 +139,9 @@ public class XAuditMgr extends XAuditMgrBase {
 	@Override
 	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
 		String auditDBType = rangerBizUtil.getAuditDBType();
-		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
+		if (RangerBizUtil.AUDIT_STORE_PAIMON.equalsIgnoreCase(auditDBType)) {
+			return paimonAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+		} else if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
 			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
 			return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);

@@ -61,6 +61,7 @@ import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.*;
+import org.apache.ranger.paimon.PaimonAccessAuditsService;
 import org.apache.ranger.solr.SolrAccessAuditsService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
@@ -101,6 +102,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	RangerBizUtil xaBizUtil;
+
+	@Autowired
+	PaimonAccessAuditsService paimonAccessAuditsService;
 
 	@Autowired
 	RangerTrxLogV2Service xTrxLogService;
@@ -1137,7 +1141,9 @@ public class AssetMgr extends AssetMgrBase {
 			}
         }
 
-        if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+        if (RangerBizUtil.AUDIT_STORE_PAIMON.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return paimonAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);

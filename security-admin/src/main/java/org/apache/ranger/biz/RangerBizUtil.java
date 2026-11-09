@@ -112,6 +112,7 @@ public class RangerBizUtil {
 	private static char[] PATH_CHAR_SET = PATH_CHARS.toCharArray();
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
 	public static final String AUDIT_STORE_RDBMS = "DB";
+	public static final String AUDIT_STORE_PAIMON        = "paimon";
 	public static final String AUDIT_STORE_SOLR           = "solr";
 	public static final String  AUDIT_STORE_ELASTIC_SEARCH = "elasticSearch";
 	public static final String  AUDIT_STORE_CLOUD_WATCH = "cloudwatch";
