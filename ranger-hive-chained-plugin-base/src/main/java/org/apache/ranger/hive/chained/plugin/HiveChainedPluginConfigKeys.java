@@ -28,4 +28,11 @@ public class HiveChainedPluginConfigKeys {
 
     public static final String MAPPINGS_PERSIST_INTERVAL_POSTFIX = ".hive.resource.mappings.file.flush.interval.ms";
     public static final long MAPPINGS_PERSIST_INTERVAL_DEFAULT = 60000L;
+
+    /**
+     * If enabled, read access to table data is allowed when the user is allowed to SELECT at least one
+     * column of the table.
+     */
+    public static final String TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX = ".hive.table.column.scoped.read.enabled";
+    public static final boolean TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT = false;
 }
