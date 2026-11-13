@@ -83,6 +83,11 @@ public class OzoneHiveChainedPlugin extends HiveChainedPlugin {
     }
 
     @Override
+    protected boolean isColumnScopedReadSupported() {
+        return true;
+    }
+
+    @Override
     protected Optional<String> getPathFromRequest(RangerAccessRequest request) {
         RangerAccessResource ozoneResource = request.getResource();
         String volume = (String) ozoneResource.getValue(KEY_RESOURCE_VOLUME);

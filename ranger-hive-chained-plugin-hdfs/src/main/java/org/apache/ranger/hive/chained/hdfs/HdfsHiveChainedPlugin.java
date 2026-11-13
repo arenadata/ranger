@@ -66,6 +66,11 @@ public class HdfsHiveChainedPlugin extends HiveChainedPlugin {
     }
 
     @Override
+    protected boolean isColumnScopedReadSupported() {
+        return true;
+    }
+
+    @Override
     protected Optional<String> getPathFromRequest(RangerAccessRequest request) {
         Optional<String> maybePath = Optional.ofNullable(request.getResource())
             .map(resource -> resource.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH))

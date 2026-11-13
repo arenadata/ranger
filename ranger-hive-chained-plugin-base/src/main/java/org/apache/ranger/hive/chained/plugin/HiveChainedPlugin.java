@@ -21,7 +21,9 @@ package org.apache.ranger.hive.chained.plugin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.authorization.hive.authorizer.HiveAccessType;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
+import org.apache.ranger.authorization.hive.authorizer.RangerHiveAccessRequest;
 import org.apache.ranger.authorization.hive.authorizer.RangerHiveResource;
 import org.apache.ranger.hive.chained.mapping.HiveEntity;
 import org.apache.ranger.hive.chained.mapping.HiveMappingFetcher;
@@ -44,6 +46,8 @@ import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_PERSIST_INTERVAL_POSTFIX;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_DEFAULT;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_POSTFIX;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX;
 
 @Slf4j
 public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
@@ -51,6 +55,7 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
 
     private final HiveResourceMappingStore resourceMappingsStore;
     private final ResourceMappingFetcher resourceMappingFetcher;
+    private final boolean tableColumnScopedReadEnabled;
 
     protected HiveChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) throws IOException {
         super(rootPlugin, HIVE_SERVICE_TYPE, serviceName);
@@ -78,6 +83,10 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
             mappingsPersistInterval,
             rootPlugin.getServiceType()
         );
+
+        this.tableColumnScopedReadEnabled = rootPlugin.getConfig().getBoolean(
+            rootPlugin.getConfig().getPropertyPrefix()
+                + TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX, TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT);
     }
 
     @Override
@@ -124,6 +133,36 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
 
     protected RangerHiveResource toHiveResource(HiveEntity entity, RangerAccessRequest request) {
         return toHiveResource(entity);
+    }
+
+    /**
+     * If enabled and supported, makes a table-level SELECT request match column-level policies too:
+     * it's allowed if SELECT is allowed on any column of the table. Column-level denies are ignored,
+     * as the policy engine does by default for descendant matches (like Hive's table-level "any access"
+     * checks, e.g. SHOW TABLES), so it never restricts access compared to the table-level check.
+     * Only SELECT is widened, column-level write policies don't grant write access to table data.
+     */
+    @Override
+    protected RangerHiveAccessRequest newHiveAccessRequest(RangerHiveResource hiveResource,
+                                                           RangerAccessRequest srcRequest,
+                                                           HiveAccessType accessType) {
+        RangerHiveAccessRequest request = super.newHiveAccessRequest(hiveResource, srcRequest, accessType);
+
+        if (tableColumnScopedReadEnabled
+            && isColumnScopedReadSupported()
+            && accessType == HiveAccessType.SELECT
+            && hiveResource.getObjectType() == HiveObjectType.TABLE) {
+            request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
+        }
+        return request;
+    }
+
+    /**
+     * Returns true if table-level SELECT requests may be matched against column-level policies when
+     * {@link HiveChainedPluginConfigKeys#TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX} is enabled.
+     */
+    protected boolean isColumnScopedReadSupported() {
+        return false;
     }
 
     protected abstract Optional<String> getPathFromRequest(RangerAccessRequest request);

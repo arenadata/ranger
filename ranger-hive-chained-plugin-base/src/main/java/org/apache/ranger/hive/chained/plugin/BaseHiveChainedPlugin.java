@@ -52,17 +52,23 @@ public abstract class BaseHiveChainedPlugin extends ResourceMappingChainedPlugin
     {
         return getHiveAccessTypes(hiveResource, srcRequest)
                 .stream()
-                .map(accessType -> new RangerHiveAccessRequest(
-                        hiveResource,
-                        srcRequest.getUser(),
-                        srcRequest.getUserGroups(),
-                        srcRequest.getUserRoles(),
-                        getActionDescription(srcRequest, accessType),
-                        accessType,
-                        null,
-                        null
-                ))
+                .map(accessType -> newHiveAccessRequest(hiveResource, srcRequest, accessType))
                 .collect(Collectors.toList());
+    }
+
+    protected RangerHiveAccessRequest newHiveAccessRequest(RangerHiveResource hiveResource,
+            RangerAccessRequest srcRequest, HiveAccessType accessType)
+    {
+        return new RangerHiveAccessRequest(
+                hiveResource,
+                srcRequest.getUser(),
+                srcRequest.getUserGroups(),
+                srcRequest.getUserRoles(),
+                getActionDescription(srcRequest, accessType),
+                accessType,
+                null,
+                null
+        );
     }
 
     protected String getActionDescription(RangerAccessRequest srcRequest, HiveAccessType hiveAccessType)
