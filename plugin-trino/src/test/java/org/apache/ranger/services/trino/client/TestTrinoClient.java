@@ -22,6 +22,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import javax.security.auth.Subject;
 
 import java.lang.reflect.Field;
@@ -67,7 +68,7 @@ public class TestTrinoClient {
     @Test
     public void test01_getCatalogList_normalOperation() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             DatabaseMetaData metadata = mock(DatabaseMetaData.class);
             ResultSet rs = mock(ResultSet.class);
@@ -76,7 +77,7 @@ public class TestTrinoClient {
             when(metadata.getCatalogs()).thenReturn(rs);
             when(rs.next()).thenReturn(true, true, false);
             when(rs.getString("TABLE_CAT")).thenReturn("catalog1", "catalog2");
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -91,7 +92,7 @@ public class TestTrinoClient {
     @Test
     public void test02_getCatalogList_withExcludeList() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             DatabaseMetaData metadata = mock(DatabaseMetaData.class);
             ResultSet rs = mock(ResultSet.class);
@@ -100,7 +101,7 @@ public class TestTrinoClient {
             when(metadata.getCatalogs()).thenReturn(rs);
             when(rs.next()).thenReturn(true, true, false);
             when(rs.getString("TABLE_CAT")).thenReturn("catalog1", "catalog2");
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -115,13 +116,13 @@ public class TestTrinoClient {
     @Test
     public void test03_getCatalogList_timeoutThrowsHadoopException() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             DatabaseMetaData metadata = mock(DatabaseMetaData.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
             when(mockCon.getMetaData()).thenReturn(metadata);
             when(metadata.getCatalogs()).thenThrow(SQLTimeoutException.class);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -135,10 +136,10 @@ public class TestTrinoClient {
     @Test
     public void test04_validateSqlIdentifier_rejectsSqlInjection() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -161,10 +162,10 @@ public class TestTrinoClient {
     @Test
     public void test05_validateSqlIdentifier_rejectsSpecialCharacters() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -187,10 +188,10 @@ public class TestTrinoClient {
     @Test
     public void test06_schemaValidation_rejectsSqlInjection() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -210,10 +211,10 @@ public class TestTrinoClient {
     @Test
     public void test07_tableValidation_rejectsSqlInjection() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -230,10 +231,10 @@ public class TestTrinoClient {
     @Test
     public void test08_columnValidation_rejectsSqlInjection() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             dmStatic.when(() -> DriverManager.getConnection(anyString(), any())).thenReturn(mockCon);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -250,7 +251,7 @@ public class TestTrinoClient {
     @Test
     public void test09_catalogName_validateInList() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             DatabaseMetaData metadata = mock(DatabaseMetaData.class);
             ResultSet rs = mock(ResultSet.class);
@@ -258,7 +259,7 @@ public class TestTrinoClient {
             when(mockCon.getMetaData()).thenReturn(metadata);
             when(metadata.getSchemas(anyString(), anyString())).thenReturn(rs);
             when(rs.next()).thenReturn(false);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -278,7 +279,7 @@ public class TestTrinoClient {
     @Test
     public void test10_schemaName_validateInList() throws Exception {
         try (MockedStatic<DriverManager> dmStatic = Mockito.mockStatic(DriverManager.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Connection mockCon = mock(Connection.class);
             DatabaseMetaData metadata = mock(DatabaseMetaData.class);
             ResultSet rs = mock(ResultSet.class);
@@ -286,7 +287,7 @@ public class TestTrinoClient {
             when(mockCon.getMetaData()).thenReturn(metadata);
             when(metadata.getTables(anyString(), anyString(), anyString(), any())).thenReturn(rs);
             when(rs.next()).thenReturn(false);
-            subjectStatic.when(() -> Subject.doAs(any(), any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(any(), any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();

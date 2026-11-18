@@ -812,6 +812,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 								List<HivePrivilegeObject> outputHObjs,
 								HiveAuthzContext          context)
 			throws HiveAuthzPluginException, HiveAccessControlException {
+		// The Hive service definition has no catalog resource. Never silently skip
+		// authorization for operations introduced by Hive's multi-catalog support.
+		switch (hiveOpType) {
+			case CREATECATALOG:
+			case DROPCATALOG:
+			case ALTERCATALOG_LOCATION:
+			case ALTERCATALOG_PROPERTIES:
+			case SHOWCATALOGS:
+			case DESCCATALOG:
+			case SWITCHCATALOG:
+				throw new HiveAccessControlException("Unsupported Hive catalog operation "
+						+ hiveOpType + ": Ranger Hive authorization has no catalog resource");
+			default:
+				break;
+		}
+
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
@@ -1767,6 +1783,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						case ALTERPARTITION_SERDEPROPERTIES:
 						case ALTERPARTITION_SERIALIZER:
 						case ALTERTABLE_ADDCOLS:
+						case ALTERTABLE_DROPCOL:
+						case ALTERTABLE_DROP_COL_STATS:
+						case ALTERTABLE_RENAMEBRANCH:
+						case ALTERTABLE_REPLACESNAPSHOTREF:
+						case ALTERTABLE_SET_WRITE_ORDER:
 						case ALTERTABLE_ADDPARTS:
 						case ALTERTABLE_ARCHIVE:
 						case ALTERTABLE_BUCKETNUM:

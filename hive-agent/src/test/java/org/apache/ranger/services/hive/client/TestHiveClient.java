@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.thrift.TException;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -38,7 +39,10 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.Permission;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -53,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -141,6 +146,24 @@ public class TestHiveClient {
         fHM.set(client, hms);
         List<String> out = client.getTableList("tbl*", Collections.singletonList("db1"), Collections.singletonList("t2"));
         assertEquals(Collections.singletonList("t1"), out);
+    }
+
+    @Test
+    public void test06_getTableList_wrapsMetastoreTransportFailure() throws Exception {
+        NoopHiveClient client = new NoopHiveClient("svc", new HashMap<>());
+        Field fFlag = HiveClient.class.getDeclaredField("enableHiveMetastoreLookup");
+        fFlag.setAccessible(true);
+        fFlag.set(client, true);
+        Field fHM = HiveClient.class.getDeclaredField("hiveClient");
+        fHM.setAccessible(true);
+        HiveMetaStoreClient hms = Mockito.mock(HiveMetaStoreClient.class);
+        TException failure = new TException("metastore transport unavailable");
+        when(hms.getTables("db1", "tbl*")).thenThrow(failure);
+        fHM.set(client, hms);
+
+        HadoopException exception = assertThrows(HadoopException.class,
+                () -> client.getTableList("tbl*", Collections.singletonList("db1"), Collections.emptyList()));
+        assertEquals(failure, exception.getCause());
     }
 
     @Test
@@ -315,22 +338,24 @@ public class TestHiveClient {
     }
 
     @Test
-    public void test19_main_noArgs_printsUsageAndExits() {
-        PrintStream           origErr = System.err;
-        ByteArrayOutputStream berr    = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(berr));
-        SecurityManager              prev = System.getSecurityManager();
-        ExitInterceptSecurityManager sm   = new ExitInterceptSecurityManager(prev);
-        System.setSecurityManager(sm);
+    public void test19_main_noArgs_printsUsageAndExits() throws Exception {
+        Path output = Files.createTempFile("ranger-hive-client-usage", ".log");
+        Process process = null;
         try {
-            assertThrows(SecurityException.class, () -> HiveClient.main(new String[] {}));
-            assertEquals(Integer.valueOf(1), sm.status);
-            String err = berr.toString();
-            assertNotNull(err);
-            assertTrue(err.contains("USAGE: java"));
+            String java = Paths.get(System.getProperty("java.home"), "bin", "java").toString();
+            String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+            process = new ProcessBuilder(java, "-cp", classpath, HiveClient.class.getName())
+                    .redirectErrorStream(true)
+                    .redirectOutput(output.toFile())
+                    .start();
+            assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Hive client usage process did not exit");
+            assertEquals(1, process.exitValue());
+            assertTrue(new String(Files.readAllBytes(output), StandardCharsets.UTF_8).contains("USAGE: java"));
         } finally {
-            System.setErr(origErr);
-            System.setSecurityManager(prev);
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
+            Files.deleteIfExists(output);
         }
     }
 
@@ -653,28 +678,6 @@ public class TestHiveClient {
         @Override
         protected Subject getLoginSubject() {
             return new Subject();
-        }
-    }
-
-    private static class ExitInterceptSecurityManager extends SecurityManager {
-        private final SecurityManager original;
-        public        Integer         status;
-
-        ExitInterceptSecurityManager(SecurityManager original) {
-            this.original = original;
-        }
-
-        @Override
-        public void checkPermission(Permission perm) {
-            if (original != null) {
-                original.checkPermission(perm);
-            }
-        }
-
-        @Override
-        public void checkExit(int status) {
-            this.status = status;
-            throw new SecurityException("exit");
         }
     }
 
