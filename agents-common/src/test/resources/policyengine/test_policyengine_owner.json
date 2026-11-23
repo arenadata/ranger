@@ -52,6 +52,43 @@
 
       ]
     }
+    ,
+    {"id":4,"name":"read for everyone in the owner's home /home/{OWNER}","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/home/{OWNER}"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+    ,
+    {"id":5,"name":"only the owner may write under /shared","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/shared"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":[],"groups":["employees"],"delegateAdmin":false}
+      ],
+      "denyPolicyItems":[
+        {"accesses":[{"type":"write","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ],
+      "denyExceptions":[
+        {"accesses":[{"type":"write","isAllowed":true}],"users":["{OWNER}"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+    ,
+    {"id":6,"name":"owners may not rewrite their archive","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/archive"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ],
+      "denyPolicyItems":[
+        {"accesses":[{"type":"write","isAllowed":true}],"users":["{OWNER}"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+    ,
+    {"id":7,"name":"read for analysts under /data","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/data"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["analysts"],"delegateAdmin":false}
+      ]
+    }
   ],
 
   "tests":[
@@ -142,6 +179,78 @@
         "accessType":"read","user":"user1","userGroups":["employees"],"requestData":"write /public/partners/vendors.db, user=user1, group=employees; owner=user1"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+    ,
+    {"name":"ALLOW 'read /home/user1/notes.txt' for user=user2, owner=user1; ",
+      "request":{
+        "resource":{"elements":{"path":"/home/user1/notes.txt"}, "ownerUser":"user1"},
+        "accessType":"read","user":"user2","userGroups":[],"requestData":"read /home/user1/notes.txt, user=user2, owner=user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":4}
+    }
+    ,
+    {"name":"DENY 'read /home/user1/notes.txt' for user=user2, owner=user2; ",
+      "request":{
+        "resource":{"elements":{"path":"/home/user1/notes.txt"}, "ownerUser":"user2"},
+        "accessType":"read","user":"user2","userGroups":[],"requestData":"read /home/user1/notes.txt, user=user2, owner=user2"
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+    ,
+    {"name":"DENY 'read /home/user1/notes.txt' for user=user2, no owner; ",
+      "request":{
+        "resource":{"elements":{"path":"/home/user1/notes.txt"}},
+        "accessType":"read","user":"user2","userGroups":[],"requestData":"read /home/user1/notes.txt, user=user2, no owner"
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+    ,
+    {"name":"DENY 'read /home/user1/notes.txt' for user=user2, empty owner; ",
+      "request":{
+        "resource":{"elements":{"path":"/home/user1/notes.txt"}, "ownerUser":""},
+        "accessType":"read","user":"user2","userGroups":[],"requestData":"read /home/user1/notes.txt, user=user2, empty owner"
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+    ,
+    {"name":"ALLOW 'write /shared/plan.doc' for user=user1, group=employees, owner=user1; ",
+      "request":{
+        "resource":{"elements":{"path":"/shared/plan.doc"}, "ownerUser":"user1"},
+        "accessType":"write","user":"user1","userGroups":["employees"],"requestData":"write /shared/plan.doc, user=user1, group=employees, owner=user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+    }
+    ,
+    {"name":"DENY 'write /shared/plan.doc' for user=user1, group=employees, owner=user2; ",
+      "request":{
+        "resource":{"elements":{"path":"/shared/plan.doc"}, "ownerUser":"user2"},
+        "accessType":"write","user":"user1","userGroups":["employees"],"requestData":"write /shared/plan.doc, user=user1, group=employees, owner=user2"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":5}
+    }
+    ,
+    {"name":"ALLOW 'read /shared/plan.doc' for user=user1, group=employees, owner=user2; ",
+      "request":{
+        "resource":{"elements":{"path":"/shared/plan.doc"}, "ownerUser":"user2"},
+        "accessType":"read","user":"user1","userGroups":["employees"],"requestData":"read /shared/plan.doc, user=user1, group=employees, owner=user2"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+    }
+    ,
+    {"name":"DENY 'write /archive/2025.log' for user=user1, owner=user1; ",
+      "request":{
+        "resource":{"elements":{"path":"/archive/2025.log"}, "ownerUser":"user1"},
+        "accessType":"write","user":"user1","userGroups":[],"requestData":"write /archive/2025.log, user=user1, owner=user1"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":6}
+    }
+    ,
+    {"name":"ALLOW 'write /archive/2025.log' for user=user1, owner=user2; ",
+      "request":{
+        "resource":{"elements":{"path":"/archive/2025.log"}, "ownerUser":"user2"},
+        "accessType":"write","user":"user1","userGroups":[],"requestData":"write /archive/2025.log, user=user1, owner=user2"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":6}
     }
   ]
 }
