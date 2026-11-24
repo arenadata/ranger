@@ -165,7 +165,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		Set<String> userGroups = request.getUserGroups();
 
 		RangerAccessResource accessedResource = request.getResource();
-		String resourceOwner = accessedResource != null ? accessedResource.getOwnerUser() : null;
+		String resourceOwner = hasResourceOwner && accessedResource != null ? accessedResource.getOwnerUser() : null;
 
 		if (!ret) {
 			Set<String> roles = null;
