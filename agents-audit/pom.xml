@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.6.0.9-2.4.0-0</version>
+        <version>2.6.0.9-2.4.0-1</version>
         <relativePath>..</relativePath>
     </parent>
     <artifactId>ranger-plugins-audit</artifactId>
@@ -41,6 +41,12 @@
             <groupId>com.carrotsearch</groupId>
             <artifactId>hppc</artifactId>
             <version>${hppc.version}</version>
+        </dependency>
+        <!-- ORC's protobuf runtime is required despite the explicit exclusions on orc-core. -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf-java.version}</version>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>

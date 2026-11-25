@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.6.0.9-2.4.0-0</version>
+        <version>2.6.0.9-2.4.0-1</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -138,6 +138,18 @@
                 <exclusion>
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-jcl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client-runtime</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

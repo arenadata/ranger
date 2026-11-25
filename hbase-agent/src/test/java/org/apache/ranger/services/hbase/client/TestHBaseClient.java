@@ -20,6 +20,7 @@
 package org.apache.ranger.services.hbase.client;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.authentication.util.SubjectUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.TableName;
@@ -104,12 +105,12 @@ public class TestHBaseClient {
 
         try (MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class);
                 MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -131,12 +132,12 @@ public class TestHBaseClient {
 
         try (MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class);
                 MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -159,12 +160,12 @@ public class TestHBaseClient {
 
         try (MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class);
                 MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -187,12 +188,12 @@ public class TestHBaseClient {
 
         try (MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class);
                 MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -215,12 +216,12 @@ public class TestHBaseClient {
 
         try (MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class);
                 MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -242,13 +243,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -285,13 +286,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -374,9 +375,9 @@ public class TestHBaseClient {
 
             Mockito.doReturn(null).when(conf).get(Mockito.anyString());
             Mockito.doReturn("different").when(conf).get("x");
-            try (MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+            try (MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                     MockedStatic<HBaseAdmin> adminStatic = Mockito.mockStatic(HBaseAdmin.class)) {
-                subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                         .thenAnswer(inv -> {
                             PrivilegedAction<?> action = inv.getArgument(1);
                             return action.run();
@@ -396,12 +397,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -421,12 +422,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -451,12 +452,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -480,12 +481,12 @@ public class TestHBaseClient {
         Map<String, String> props = new HashMap<>();
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -506,12 +507,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -538,11 +539,11 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenThrow(new SecurityException("sec"));
 
             HBaseClient client = new TestableHBaseClient("svc", props, Mockito.mock(Subject.class));
@@ -557,12 +558,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> a = inv.getArgument(1);
                         return a.run();
@@ -594,13 +595,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -628,13 +629,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -672,13 +673,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -711,12 +712,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -742,12 +743,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -772,12 +773,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -803,12 +804,12 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();
@@ -835,13 +836,13 @@ public class TestHBaseClient {
         props.put("username", "user");
 
         try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
-                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<SubjectUtil> subjectStatic = Mockito.mockStatic(SubjectUtil.class);
                 MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
             Configuration conf = Mockito.mock(Configuration.class);
             confStatic.when(HBaseConfiguration::create).thenReturn(conf);
 
             Subject subject = Mockito.mock(Subject.class);
-            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+            subjectStatic.when(() -> SubjectUtil.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
                     .thenAnswer(inv -> {
                         PrivilegedAction<?> action = inv.getArgument(1);
                         return action.run();

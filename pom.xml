@@ -24,7 +24,7 @@
     </parent>
     <groupId>org.apache.ranger</groupId>
     <artifactId>ranger</artifactId>
-    <version>2.6.0.9-2.4.0-0</version>
+    <version>2.6.0.9-2.4.0-1</version>
     <packaging>pom</packaging>
     <name>ranger</name>
     <description>Security for Enforcing Enterprise Policies</description>
@@ -79,8 +79,8 @@
         <commons.net.version>3.9.0</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
         <commons.text.version>1.10.0</commons.text.version>
-        <curator.test.version>5.9.0.1-4.3.0-0</curator.test.version>
-        <curator.version>5.9.0.1-4.3.0-0</curator.version>
+        <curator.test.version>5.9.0.3-4.5.0-2</curator.test.version>
+        <curator.version>5.9.0.3-4.5.0-2</curator.version>
         <derby.version>10.14.2.0</derby.version>
         <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
         <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
@@ -101,27 +101,27 @@
         <gson.version>2.9.0</gson.version>
         <guava.version>32.0.0-jre</guava.version>
         <guice.version>4.0</guice.version>
-        <hadoop-shaded-guava.version>1.6.0.1-4.3.0-0</hadoop-shaded-guava.version>
-        <hadoop.version>3.4.3.2-4.4.0-0</hadoop.version>
+        <hadoop-shaded-guava.version>1.6.0.2-4.5.0-0</hadoop-shaded-guava.version>
+        <hadoop.version>3.4.3.3-4.5.0-1</hadoop.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <hbase-shaded-miscellaneous>4.1.13</hbase-shaded-miscellaneous>
-        <hbase-shaded-netty>4.1.13</hbase-shaded-netty>
-        <hbase-shaded-protobuf>4.1.13</hbase-shaded-protobuf>
-        <hbase.version>2.6.5.1-4.3.0-0</hbase.version>
-        <hive.storage-api.version>4.0.1</hive.storage-api.version>
-        <hive.version>4.0.1</hive.version>
+        <hbase-shaded-miscellaneous>4.1.14.2-4.5.0-0</hbase-shaded-miscellaneous>
+        <hbase-shaded-netty>4.1.14.2-4.5.0-0</hbase-shaded-netty>
+        <hbase-shaded-protobuf>4.1.14.2-4.5.0-0</hbase-shaded-protobuf>
+        <hbase.version>2.6.5.3-4.5.0-1</hbase.version>
+        <hive.storage-api.version>4.3.0.3-4.5.0-1</hive.storage-api.version>
+        <hive.version>4.3.0.3-4.5.0-1</hive.version>
         <hppc.version>0.8.0</hppc.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpasyncclient.version>4.1.4</httpcomponents.httpasyncclient.version>
         <httpcomponents.httpclient.version>4.5.13</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.14</httpcomponents.httpcore.version>
         <httpcomponents.httpmime.version>4.5.13</httpcomponents.httpmime.version>
-        <io.opentelemetry-semconv.version>1.26.0-alpha</io.opentelemetry-semconv.version>
-        <io.opentelemetry.version>1.40.0</io.opentelemetry.version>
+        <io.opentelemetry-semconv.version>1.29.0-alpha</io.opentelemetry-semconv.version>
+        <io.opentelemetry.version>1.49.0</io.opentelemetry.version>
         <io.reactivex.rxjava.version>1.3.8</io.reactivex.rxjava.version>
 
         <!-- JaCoCo Properties -->
-        <jacoco.version>0.8.7</jacoco.version>
+        <jacoco.version>0.8.14</jacoco.version>
         <java.version.required>11</java.version.required>
         <javac.source.version>11</javac.source.version>
         <javac.target.version>11</javac.target.version>
@@ -168,6 +168,7 @@
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <maven.version.required>3.6.3</maven.version.required>
         <metrics.core.version>3.0.2</metrics.core.version>
+        <mockito.bytebuddy.version>1.17.6</mockito.bytebuddy.version>
         <mockito.version>3.12.4</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
@@ -176,10 +177,10 @@
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.9.8</orc.core.version>
         <orc.version>1.9.8</orc.version>
-        <org.bouncycastle.bcpkix-jdk18on>1.82</org.bouncycastle.bcpkix-jdk18on>
-        <org.bouncycastle.bcprov-jdk18on>1.82</org.bouncycastle.bcprov-jdk18on>
+        <org.bouncycastle.bcpkix-jdk18on>1.85</org.bouncycastle.bcpkix-jdk18on>
+        <org.bouncycastle.bcprov-jdk18on>1.85</org.bouncycastle.bcprov-jdk18on>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
-        <ozone.version>1.4.1</ozone.version>
+        <ozone.version>2.1.2.1-4.5.0-1</ozone.version>
         <paranamer.version>2.3</paranamer.version>
         <poi.version>5.2.2</poi.version>
         <!-- presto plugin deps -->
@@ -191,8 +192,8 @@
         <presto.version>333</presto.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>3.25.9</protobuf-java.version>
-        <ratis-thirdparty.version>1.0.6</ratis-thirdparty.version>
-        <ratis.version>3.1.1</ratis.version>
+        <ratis-thirdparty.version>1.1.0</ratis-thirdparty.version>
+        <ratis.version>3.3.1</ratis.version>
         <reload4j.version>1.2.19</reload4j.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.version>2.12.10</scala.version>
@@ -215,17 +216,17 @@
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>9.0.121</tomcat.embed.version>
+        <tomcat.embed.version>9.0.123</tomcat.embed.version>
 
         <!-- trino plugin deps -->
-        <trino.airlift.version>293</trino.airlift.version>
+        <trino.airlift.version>424.1-4.5.0-0</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
         <trino.guice.version>7.0.0</trino.guice.version>
         <trino.re2j.version>1.1</trino.re2j.version>
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
-        <trino.version>468</trino.version>
+        <trino.version>481.3-4.5.0-2</trino.version>
         <velocity.version>2.3</velocity.version>
-        <zookeeper.version>3.9.5.1-4.3.0-0</zookeeper.version>
+        <zookeeper.version>3.9.5.3-4.5.0-2</zookeeper.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -383,6 +384,21 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <dependencies>
+        <!-- Mockito 3 keeps its API while its test-only instrumentation supports JDK 21/25. -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${mockito.bytebuddy.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>${mockito.bytebuddy.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <build>
         <pluginManagement>
             <plugins>
