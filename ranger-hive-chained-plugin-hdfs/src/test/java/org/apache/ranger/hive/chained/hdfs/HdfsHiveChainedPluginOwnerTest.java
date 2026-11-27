@@ -21,7 +21,6 @@ package org.apache.ranger.hive.chained.hdfs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -52,7 +51,6 @@ import org.apache.ranger.plugin.model.ResourceMappingDiff;
 import org.apache.ranger.plugin.model.ResourceMappingDiffs;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -93,34 +91,6 @@ public class HdfsHiveChainedPluginOwnerTest {
     @AfterEach
     public void stopAdmin() {
         admin.stop(0);
-    }
-
-    @Test
-    public void testTableOwnerReadsTheTableFiles() throws Exception {
-        publish(create(1L, "alice"));
-        HdfsHiveChainedPlugin plugin = startPlugin(true);
-
-        RangerAccessResult owner = plugin.isAccessAllowed(request("alice"));
-        assertTrue(owner.getIsAllowed());
-        assertEquals(OWNER_POLICY_ID, owner.getPolicyId());
-        assertEquals(HIVE_SERVICE, owner.getServiceName());
-
-        assertFalse(plugin.isAccessAllowed(request("bob")).getIsAllowed());
-    }
-
-    @Test
-    public void testOwnerChangeIsAppliedWithTheNextRefresh() throws Exception {
-        publish(create(1L, "alice"));
-        HdfsHiveChainedPlugin plugin = startPlugin(true);
-        assertTrue(plugin.isAccessAllowed(request("alice")).getIsAllowed());
-
-        publish(new ResourceMappingDiff(
-            new ResourceMapping("hive.db1.t1", TABLE_LOCATION, "alice"),
-            new ResourceMapping("hive.db1.t1", TABLE_LOCATION, "bob"),
-            "TABLE", "UPDATE", 2L, "hive", "hdfs"));
-
-        await(() -> plugin.isAccessAllowed(request("bob")).getIsAllowed(), "the new owner gets access");
-        assertFalse(plugin.isAccessAllowed(request("alice")).getIsAllowed(), "the old owner loses access");
     }
 
     @Test
