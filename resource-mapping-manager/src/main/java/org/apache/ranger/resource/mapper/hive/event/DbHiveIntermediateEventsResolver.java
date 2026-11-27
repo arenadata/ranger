@@ -106,6 +106,7 @@ public class DbHiveIntermediateEventsResolver implements HiveIntermediateEventsR
             diff.getNewEntity().getName(),
             HiveEntityType.valueOf(diff.getEntityType()),
             diff.getNewEntity().getLocation(),
+            diff.getNewEntity().getOwner(),
             diff.getId()
         );
         handleCreate(createDiff);

@@ -37,6 +37,8 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     private static final String OLD_LOCATION_FIELD = "old_location";
     private static final String NEW_NAME_FIELD = "new_name";
     private static final String NEW_LOCATION_FIELD = "new_location";
+    private static final String OLD_OWNER_FIELD = "old_owner";
+    private static final String NEW_OWNER_FIELD = "new_owner";
     private static final String ENTITY_TYPE_FIELD = "entity_type";
     private static final String DIFF_TYPE_FIELD = "diff_type";
     private static final String SOURCE_SERVICE_FIELD = "source_service";
@@ -68,13 +70,15 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
     public void insertDiff(ResourceMappingDiff entityDiff) {
         jdbcTemplate.update(
             "INSERT INTO x_resource_mapping_diff" +
-                "(external_id, old_name, old_location, new_name, new_location, entity_type, diff_type, source_service, target_service)" +
+                "(external_id, old_name, old_location, old_owner, new_name, new_location, new_owner, entity_type, diff_type, source_service, target_service)" +
                 " VALUES (" +
                 ":external_id, " +
                 ":old_name, " +
                 ":old_location, " +
+                ":old_owner, " +
                 ":new_name, " +
                 ":new_location, " +
+                ":new_owner, " +
                 ":entity_type, " +
                 ":diff_type, " +
                 ":source_service, " +
@@ -104,12 +108,15 @@ public class DefaultResourceMappingDiffDao implements ResourceMappingDiffDao {
 
         source.addValue(OLD_NAME_FIELD, entityDiff.getOldEntity().getName());
         source.addValue(OLD_LOCATION_FIELD, entityDiff.getOldEntity().getLocation());
+        source.addValue(OLD_OWNER_FIELD, entityDiff.getOldEntity().getOwner());
 
         Optional<ResourceMapping> newEntityOpt = Optional.ofNullable(entityDiff.getNewEntity());
         source.addValue(NEW_NAME_FIELD,
             newEntityOpt.map(ResourceMapping::getName).orElse(null));
         source.addValue(NEW_LOCATION_FIELD,
             newEntityOpt.map(ResourceMapping::getLocation).orElse(null));
+        source.addValue(NEW_OWNER_FIELD,
+            newEntityOpt.map(ResourceMapping::getOwner).orElse(null));
 
         source.addValue(ENTITY_TYPE_FIELD, entityDiff.getEntityType());
         source.addValue(DIFF_TYPE_FIELD, entityDiff.getDiffType());

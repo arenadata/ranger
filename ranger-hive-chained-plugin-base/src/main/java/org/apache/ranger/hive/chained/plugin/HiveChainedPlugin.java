@@ -46,6 +46,8 @@ import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_PERSIST_INTERVAL_POSTFIX;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_DEFAULT;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_POSTFIX;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED_DEFAULT;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED_POSTFIX;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX;
 
@@ -56,6 +58,7 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
     private final HiveResourceMappingStore resourceMappingsStore;
     private final ResourceMappingFetcher resourceMappingFetcher;
     private final boolean tableColumnScopedReadEnabled;
+    private final boolean resourceOwnerEnabled;
 
     protected HiveChainedPlugin(RangerBasePlugin rootPlugin, String serviceName) throws IOException {
         super(rootPlugin, HIVE_SERVICE_TYPE, serviceName);
@@ -87,6 +90,9 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
         this.tableColumnScopedReadEnabled = rootPlugin.getConfig().getBoolean(
             rootPlugin.getConfig().getPropertyPrefix()
                 + TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX, TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT);
+        this.resourceOwnerEnabled = rootPlugin.getConfig().getBoolean(
+            rootPlugin.getConfig().getPropertyPrefix()
+                + RESOURCE_OWNER_ENABLED_POSTFIX, RESOURCE_OWNER_ENABLED_DEFAULT);
     }
 
     @Override
@@ -127,12 +133,32 @@ public abstract class HiveChainedPlugin extends BaseHiveChainedPlugin {
         }
 
         return maybeHiveEntity
-            .map(entity -> toHiveAccessRequests(toHiveResource(entity, request), request))
+            .map(entity -> toHiveAccessRequests(withOwner(toHiveResource(entity, request), entity), request))
             .orElseGet(Collections::emptyList);
     }
 
     protected RangerHiveResource toHiveResource(HiveEntity entity, RangerAccessRequest request) {
         return toHiveResource(entity);
+    }
+
+    /**
+     * If enabled, the owner of the mapped Hive entity becomes the owner of the Hive resource. The owner of a table
+     * also owns its columns, as in Hive. A table found by a database mapping (StarRocks carries the table name of the
+     * request over) gets no owner: the database owner does not own the tables of the database.
+     */
+    private RangerHiveResource withOwner(RangerHiveResource hiveResource, HiveEntity entity) {
+        if (resourceOwnerEnabled && entity.getOwner() != null && isOwnedBy(hiveResource, entity)) {
+            hiveResource.setOwnerUser(entity.getOwner());
+        }
+        return hiveResource;
+    }
+
+    private static boolean isOwnedBy(RangerHiveResource hiveResource, HiveEntity entity) {
+        HiveObjectType resourceType = hiveResource.getObjectType();
+        if (entity.getType() == HiveObjectType.DATABASE) {
+            return resourceType == HiveObjectType.DATABASE;
+        }
+        return resourceType == HiveObjectType.TABLE || resourceType == HiveObjectType.COLUMN;
     }
 
     /**

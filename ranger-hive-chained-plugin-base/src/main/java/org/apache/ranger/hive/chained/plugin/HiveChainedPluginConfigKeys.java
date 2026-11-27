@@ -35,4 +35,11 @@ public class HiveChainedPluginConfigKeys {
      */
     public static final String TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX = ".hive.table.column.scoped.read.enabled";
     public static final boolean TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT = false;
+
+    /**
+     * If enabled, the owner of the Hive table or database published by RMM is the owner of the mapped Hive resource,
+     * so {OWNER} in Hive policies applies to the requests of the chained plugin.
+     */
+    public static final String RESOURCE_OWNER_ENABLED_POSTFIX = ".hive.resource.owner.enabled";
+    public static final boolean RESOURCE_OWNER_ENABLED_DEFAULT = false;
 }

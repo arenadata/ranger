@@ -156,7 +156,7 @@ class DerivingResourceMappingDiffDaoTest {
 
     private static ResourceMappingDiff createDiff() {
         return MetastoreEntityDiffFactory.createEntity(
-            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, 1L);
+            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, null, 1L);
     }
 
     private static ResourceMapping mapping(String name, String location) {

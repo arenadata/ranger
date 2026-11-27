@@ -22,6 +22,9 @@ package org.apache.ranger.resource.mapper.hive.event.fetch;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.PrincipalType;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.resource.mapper.event.ResourceDiffSource;
 
@@ -44,4 +47,26 @@ public abstract class BaseHiveMetastoreFetcher implements ResourceDiffSource {
         return String.join(".", nameParts);
     }
 
+    /**
+     * @return the user owning the table, or null if a role or a group owns it: {OWNER} in Hive policies
+     *         is matched against the user name only
+     */
+    public static String userOwner(Table table) {
+        return userOwner(table.getOwner(), table.getOwnerType());
+    }
+
+    /**
+     * @return the user owning the database, or null if a role or a group owns it
+     */
+    public static String userOwner(Database database) {
+        return userOwner(database.getOwnerName(), database.getOwnerType());
+    }
+
+    private static String userOwner(String owner, PrincipalType ownerType) {
+        if (owner == null || owner.trim().isEmpty()) {
+            return null;
+        }
+        // HMS treats a missing owner type as a user one
+        return ownerType == null || ownerType == PrincipalType.USER ? owner : null;
+    }
 }
