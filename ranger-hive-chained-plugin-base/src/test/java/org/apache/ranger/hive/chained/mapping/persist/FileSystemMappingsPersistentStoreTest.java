@@ -134,8 +134,8 @@ class FileSystemMappingsPersistentStoreTest {
         Files.write(Paths.get(store.getMappingsLocation()), (
             "7\n"
                 + "{\"path\":\"/warehouse/db1.db/t1\",\"name\":\"hive.db1.t1\",\"type\":\"TABLE\"}\n"
-                + "{\"path\":\"/warehouse/db1.db\",\"name\":\"hive.db1\",\"type\":\"DATABASE\",\"owner\":\"bob\","
-                + "\"comment\":\"unknown\"}\n").getBytes(StandardCharsets.UTF_8));
+                + "{\"path\":\"/warehouse/db1.db\",\"name\":\"hive.db1\",\"type\":\"DATABASE\",\"owner\":\"bob\"}\n")
+            .getBytes(StandardCharsets.UTF_8));
 
         HiveMappings mappings = store.getMappings().get();
 

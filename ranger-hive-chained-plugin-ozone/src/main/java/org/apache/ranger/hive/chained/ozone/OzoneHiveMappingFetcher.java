@@ -35,10 +35,7 @@ public class OzoneHiveMappingFetcher extends HiveMappingFetcher {
 
     @Override
     protected ResourceMapping transformMapping(ResourceMapping mapping) {
-        return new ResourceMapping(
-            mapping.getName(),
-            extractRelativePath(mapping.getLocation())
-        );
+        return mapping.withLocation(extractRelativePath(mapping.getLocation()));
     }
 
     private String extractRelativePath(String fullPath) {

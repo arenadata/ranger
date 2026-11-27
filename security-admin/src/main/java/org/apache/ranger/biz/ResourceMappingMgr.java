@@ -73,7 +73,8 @@ public class ResourceMappingMgr {
     private ResourceMapping toDto(org.apache.ranger.entity.ResourceMapping mapping) {
         return mapping == null ? null : new ResourceMapping(
             mapping.getName(),
-            mapping.getLocation()
+            mapping.getLocation(),
+            mapping.getOwner()
         );
     }
 }

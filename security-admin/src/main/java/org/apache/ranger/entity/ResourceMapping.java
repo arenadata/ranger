@@ -24,6 +24,7 @@ import javax.persistence.Embeddable;
 public class ResourceMapping {
     private String name;
     private String location;
+    private String owner;
 
     public String getName() {
         return name;
@@ -41,6 +42,14 @@ public class ResourceMapping {
         this.location = location;
     }
 
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -50,12 +59,12 @@ public class ResourceMapping {
             return false;
         }
         ResourceMapping that = (ResourceMapping) o;
-        return Objects.equals(name, that.name) && Objects.equals(location, that.location);
+        return Objects.equals(name, that.name) && Objects.equals(location, that.location) && Objects.equals(owner, that.owner);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, location);
+        return Objects.hash(name, location, owner);
     }
 
     @Override
@@ -63,6 +72,7 @@ public class ResourceMapping {
         return "MetastoreMapping{" +
             "name='" + name + '\'' +
             ", location='" + location + '\'' +
+            ", owner='" + owner + '\'' +
             '}';
     }
 }

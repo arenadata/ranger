@@ -40,6 +40,7 @@ public class MetastoreEntityDiffFactory {
         String name,
         HiveEntityType type,
         String location,
+        String owner,
         long eventId) {
         return ResourceMappingDiff.builder()
             .sourceService(HIVE_SERVICE)
@@ -47,6 +48,7 @@ public class MetastoreEntityDiffFactory {
             .oldEntity(ResourceMapping.builder()
                 .name(name)
                 .location(location)
+                .owner(owner)
                 .build())
             .diffType(HiveEntityDiffType.CREATE.name())
             .entityType(type.name())

@@ -142,6 +142,7 @@ public class HiveMetastoreSnapshotFetcher extends BaseHiveMetastoreFetcher {
             fullName(catalog, database.getName()),
             HiveEntityType.DATABASE,
             database.getLocationUri(),
+            userOwner(database),
             diffId);
     }
 
@@ -152,6 +153,7 @@ public class HiveMetastoreSnapshotFetcher extends BaseHiveMetastoreFetcher {
             name,
             HiveEntityType.TABLE,
             table.getSd().getLocation(),
+            userOwner(table),
             diffId);
     }
 

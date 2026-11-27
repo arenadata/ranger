@@ -169,6 +169,7 @@
         <maven.version.required>3.6.3</maven.version.required>
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.12.4</mockito.version>
+        <mysql-connector-j.version>9.6.0</mysql-connector-j.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <netty-all.version>4.1.137.Final</netty-all.version>
@@ -182,6 +183,7 @@
         <ozone.version>1.4.1</ozone.version>
         <paranamer.version>2.3</paranamer.version>
         <poi.version>5.2.2</poi.version>
+        <postgresql.version>42.7.7</postgresql.version>
         <!-- presto plugin deps -->
         <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
@@ -214,6 +216,7 @@
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
         <testng.version>7.5.1</testng.version>
         <tomcat.embed.version>9.0.121</tomcat.embed.version>
 
@@ -233,6 +236,13 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
                 <version>${netty-all.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -346,6 +356,12 @@
                 <version>${jacoco.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql-connector-j.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql-connector-java.version}</version>
@@ -373,6 +389,12 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
