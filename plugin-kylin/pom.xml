@@ -30,6 +30,20 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <!-- kylin 4.0.4 transitively requires org.roaringbitmap:RoaringBitmap:0.7.36-os-kylin-r1,
+         Kylin's own build hosted in repository.kyligence.io, which has been down (502/DNS fail)
+         since Sep 2026. The fork's net functional diff vs mainline 0.7.36 is five lines in
+         Roaring64NavigableMap, a class this plugin's graph never touches, so pin the mainline
+         artifact; shims follows at 0.7.36 via RoaringBitmap's pom. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.7.36</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
 
         <dependency>

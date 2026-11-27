@@ -345,6 +345,18 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
             </dependency>
+            <!-- kylin 4.0.4 transitively requires the Kylin-forked
+                 org.roaringbitmap:RoaringBitmap:0.7.36-os-kylin-r1 hosted in the dead
+                 repository.kyligence.io (502/DNS since Sep 2026). The fork's net
+                 functional diff vs mainline 0.7.36 is five lines in Roaring64NavigableMap,
+                 a class nothing in this build touches, so pin the mainline artifact.
+                 Root-level on purpose: module-scoped pins do not propagate to consumers,
+                 and the distro assemblies resolve the kylin plugin graph. -->
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.7.36</version>
+            </dependency>
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
