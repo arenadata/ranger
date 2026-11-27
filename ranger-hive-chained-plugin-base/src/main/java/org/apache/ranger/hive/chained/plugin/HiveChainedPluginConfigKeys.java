@@ -37,9 +37,9 @@ public class HiveChainedPluginConfigKeys {
     public static final boolean TABLE_COLUMN_SCOPED_READ_ENABLED_DEFAULT = false;
 
     /**
-     * If enabled, the owner of the Hive table or database published by RMM is the owner of the mapped Hive resource,
-     * so {OWNER} in Hive policies applies to the requests of the chained plugin.
+     * A config of the Hive service in Ranger Admin, so one value applies to all chained plugins of the service. If
+     * true, the owner of the Hive table or database published by RMM is the owner of the mapped Hive resource, so
+     * {OWNER} in Hive policies applies to the requests of the chained plugins.
      */
-    public static final String RESOURCE_OWNER_ENABLED_POSTFIX = ".hive.resource.owner.enabled";
-    public static final boolean RESOURCE_OWNER_ENABLED_DEFAULT = false;
+    public static final String RESOURCE_OWNER_ENABLED = "ranger.plugin.hive.resource.owner.enabled";
 }

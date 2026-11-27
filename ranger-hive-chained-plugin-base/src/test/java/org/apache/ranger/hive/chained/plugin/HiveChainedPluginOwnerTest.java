@@ -20,7 +20,7 @@
 package org.apache.ranger.hive.chained.plugin;
 
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_FILE_LOCATION_POSTFIX;
-import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED_POSTFIX;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -101,6 +101,17 @@ public class HiveChainedPluginOwnerTest {
         assertFalse(plugin.isAccessAllowed(request(TABLE_FILE, "alice")).getIsAllowed());
     }
 
+    /** the option is a config of the Hive service, it is switched with the next policy download */
+    @Test
+    public void testOwnerIsSwitchedOffWithTheHivePolicies() throws Exception {
+        TestPlugin plugin = newPlugin(true, false);
+        assertTrue(plugin.isAccessAllowed(request(TABLE_FILE, "alice")).getIsAllowed());
+
+        plugin.setHivePolicies(false, ownerPolicy("*"));
+
+        assertFalse(plugin.isAccessAllowed(request(TABLE_FILE, "alice")).getIsAllowed());
+    }
+
     /** a mapping published before RMM started to publish owners */
     @Test
     public void testMappingWithoutOwner() throws Exception {
@@ -163,9 +174,6 @@ public class HiveChainedPluginOwnerTest {
 
         RangerPluginConfig config = new RangerPluginConfig("test", "test", "test", null, null, null);
         config.set(config.getPropertyPrefix() + MAPPINGS_FILE_LOCATION_POSTFIX, mappingsFile.toString());
-        if (resourceOwnerEnabled != null) {
-            config.setBoolean(config.getPropertyPrefix() + RESOURCE_OWNER_ENABLED_POSTFIX, resourceOwnerEnabled);
-        }
         config.setBoolean(config.getPropertyPrefix() + TABLE_COLUMN_SCOPED_READ_ENABLED_POSTFIX, columnScopedRead);
 
         RangerPluginContext pluginContext = mock(RangerPluginContext.class);
@@ -179,7 +187,7 @@ public class HiveChainedPluginOwnerTest {
         when(rootPlugin.getAppId()).thenReturn("test");
 
         TestPlugin plugin = new TestPlugin(rootPlugin, mapsRequestLevels, columnScopedRead);
-        plugin.setHivePolicies(policy);
+        plugin.setHivePolicies(resourceOwnerEnabled, policy);
         return plugin;
     }
 
@@ -235,8 +243,12 @@ public class HiveChainedPluginOwnerTest {
             return columnScopedRead;
         }
 
-        public void setHivePolicies(RangerPolicy... policies) throws Exception {
+        public void setHivePolicies(Boolean resourceOwnerEnabled, RangerPolicy... policies) throws Exception {
             ServicePolicies servicePolicies = new ServicePolicies();
+            if (resourceOwnerEnabled != null) {
+                servicePolicies.setServiceConfig(
+                    Collections.singletonMap(RESOURCE_OWNER_ENABLED, resourceOwnerEnabled.toString()));
+            }
             servicePolicies.setServiceName(HIVE_SERVICE);
             servicePolicies.setPolicyVersion(1L);
             servicePolicies.setServiceDef(EmbeddedServiceDefsUtil.instance()

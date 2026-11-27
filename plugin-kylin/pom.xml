@@ -30,6 +30,15 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.7.36</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
 
         <dependency>

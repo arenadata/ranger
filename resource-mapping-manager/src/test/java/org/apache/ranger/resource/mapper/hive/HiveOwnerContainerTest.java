@@ -21,7 +21,7 @@ package org.apache.ranger.resource.mapper.hive;
 
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_FILE_LOCATION_POSTFIX;
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_REFRESH_INTERVAL_POSTFIX;
-import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED_POSTFIX;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED;
 import static org.apache.ranger.resource.mapper.testing.HiveMetastoreCluster.CATALOG;
 import static org.apache.ranger.resource.mapper.testing.HiveMetastoreCluster.database;
 import static org.apache.ranger.resource.mapper.testing.HiveMetastoreCluster.externalTable;
@@ -181,7 +181,6 @@ public class HiveOwnerContainerTest {
         config.set(prefix + ".policy.pollIntervalMs", "60000");
         config.set(prefix + MAPPINGS_FILE_LOCATION_POSTFIX, tempDir.resolve("mappings").toString());
         config.set(prefix + MAPPINGS_REFRESH_INTERVAL_POSTFIX, "200");
-        config.setBoolean(prefix + RESOURCE_OWNER_ENABLED_POSTFIX, true);
 
         HdfsHiveChainedPlugin plugin = new HdfsHiveChainedPlugin(new RangerBasePlugin(config), HIVE_SERVICE);
         plugin.init();
@@ -286,6 +285,7 @@ public class HiveOwnerContainerTest {
         policy.setPolicyItems(Collections.singletonList(item));
 
         ServicePolicies policies = new ServicePolicies();
+        policies.setServiceConfig(Collections.singletonMap(RESOURCE_OWNER_ENABLED, "true"));
         policies.setServiceName(HIVE_SERVICE);
         policies.setPolicyVersion(1L);
         policies.setServiceDef(EmbeddedServiceDefsUtil.instance()

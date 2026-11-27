@@ -20,7 +20,7 @@
 package org.apache.ranger.hive.chained.starrocks;
 
 import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.MAPPINGS_FILE_LOCATION_POSTFIX;
-import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED_POSTFIX;
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,7 +99,6 @@ public class StarRocksHiveChainedPluginOwnerTest {
 
         RangerPluginConfig config = new RangerPluginConfig("starrocks", "dev_starrocks", "starrocks", null, null, null);
         config.set(config.getPropertyPrefix() + MAPPINGS_FILE_LOCATION_POSTFIX, mappingsFile.toString());
-        config.setBoolean(config.getPropertyPrefix() + RESOURCE_OWNER_ENABLED_POSTFIX, true);
 
         RangerPluginContext pluginContext = mock(RangerPluginContext.class);
         when(pluginContext.getConfig()).thenReturn(config);
@@ -191,6 +190,7 @@ public class StarRocksHiveChainedPluginOwnerTest {
 
         public void setHivePolicies(RangerPolicy... policies) throws Exception {
             ServicePolicies servicePolicies = new ServicePolicies();
+            servicePolicies.setServiceConfig(Collections.singletonMap(RESOURCE_OWNER_ENABLED, "true"));
             servicePolicies.setServiceName(HIVE_SERVICE);
             servicePolicies.setPolicyVersion(1L);
             servicePolicies.setServiceDef(EmbeddedServiceDefsUtil.instance()

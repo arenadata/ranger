@@ -356,6 +356,11 @@
                 <version>${jacoco.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.7.36</version>
+            </dependency>
+            <dependency>
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector-j.version}</version>

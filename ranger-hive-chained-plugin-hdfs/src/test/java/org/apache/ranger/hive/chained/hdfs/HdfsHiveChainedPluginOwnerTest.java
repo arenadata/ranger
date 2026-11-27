@@ -19,6 +19,7 @@
 
 package org.apache.ranger.hive.chained.hdfs;
 
+import static org.apache.ranger.hive.chained.plugin.HiveChainedPluginConfigKeys.RESOURCE_OWNER_ENABLED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -77,6 +78,7 @@ public class HdfsHiveChainedPluginOwnerTest {
     private HttpServer admin;
     private final List<ResourceMappingDiff> publishedDiffs = new CopyOnWriteArrayList<>();
     private final List<String> requestedMappings = new CopyOnWriteArrayList<>();
+    private volatile boolean resourceOwnerEnabled;
 
     @BeforeEach
     public void startAdmin() throws IOException {
@@ -125,6 +127,7 @@ public class HdfsHiveChainedPluginOwnerTest {
     }
 
     private HdfsHiveChainedPlugin startPlugin(boolean resourceOwnerEnabled) throws Exception {
+        this.resourceOwnerEnabled = resourceOwnerEnabled;
         RangerPluginConfig config = new RangerPluginConfig("hdfs", "dev_hdfs", "hdfs", null, null, null);
         String prefix = config.getPropertyPrefix();
         config.set(prefix + ".policy.rest.url", "http://localhost:" + admin.getAddress().getPort());
@@ -132,7 +135,6 @@ public class HdfsHiveChainedPluginOwnerTest {
         config.set(prefix + ".policy.pollIntervalMs", "60000");
         config.set(prefix + ".hive.resource.mappings.file.location", tempDir.resolve("mappings").toString());
         config.set(prefix + ".hive.resource.mappings.refresh.interval.ms", "100");
-        config.setBoolean(prefix + ".hive.resource.owner.enabled", resourceOwnerEnabled);
 
         HdfsHiveChainedPlugin plugin = new HdfsHiveChainedPlugin(new RangerBasePlugin(config), HIVE_SERVICE);
         plugin.init();
@@ -191,7 +193,7 @@ public class HdfsHiveChainedPluginOwnerTest {
         }
     }
 
-    private static ServicePolicies hivePolicies() throws Exception {
+    private ServicePolicies hivePolicies() throws Exception {
         Map<String, RangerPolicyResource> resources = new HashMap<>();
         resources.put("database", new RangerPolicyResource("db1"));
         resources.put("table", new RangerPolicyResource("*"));
@@ -210,6 +212,7 @@ public class HdfsHiveChainedPluginOwnerTest {
         policy.setPolicyItems(Collections.singletonList(item));
 
         ServicePolicies policies = new ServicePolicies();
+        policies.setServiceConfig(Collections.singletonMap(RESOURCE_OWNER_ENABLED, String.valueOf(resourceOwnerEnabled)));
         policies.setServiceName(HIVE_SERVICE);
         policies.setPolicyVersion(1L);
         policies.setServiceDef(EmbeddedServiceDefsUtil.instance()
