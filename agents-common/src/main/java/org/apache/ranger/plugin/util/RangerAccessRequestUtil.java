@@ -20,9 +20,11 @@
 package org.apache.ranger.plugin.util;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -156,6 +158,15 @@ public class RangerAccessRequestUtil {
 		setTokenInContext(context, KEY_OWNER, owner);
 	}
 
+	/**
+	 * Stores the owner token to be read from the resource only when a policy resource refers to it: some plugins look the
+	 * resource owner up with a remote call. An unknown or empty owner leaves the token as is.
+	 */
+	public static void setOwnerInContext(Map<String, Object> context, RangerAccessResource resource) {
+		Supplier<String> owner = () -> StringUtils.defaultIfEmpty(resource.getOwnerUser(), null);
+		setTokenInContext(context, KEY_OWNER, owner);
+	}
+
 	public static String getCurrentUserFromContext(Map<String, Object> context) {
 		Object ret = getTokenFromContext(context, KEY_USER);
 		return ret != null ? ret.toString() : "";
@@ -166,9 +177,13 @@ public class RangerAccessRequestUtil {
 		context.put(tokenNameWithNamespace, tokenValue);
 	}
 
+	/**
+	 * Returns the token value; a token stored as a supplier is resolved on each call.
+	 */
 	public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
 		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
-		return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
+		Object ret = MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
+		return ret instanceof Supplier ? ((Supplier<?>) ret).get() : ret;
 	}
 
 	public static void setCurrentUserRolesInContext(Map<String, Object> context, Set<String> roles) {

@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.policyengine;
 
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -31,11 +30,11 @@ import java.util.Map;
 public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 	private final RangerPolicyResourceMatcher.MatchType matchType;
 	public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
-		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+		RangerAccessResource resource = request.getResource();
 
 		matchType = resourceTag.getMatchType();
 
-		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, owner));
+		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, resource));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());
 		super.setUserRoles(request.getUserRoles());
@@ -50,8 +49,8 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
 		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
-		if (StringUtils.isNotEmpty(owner)) {
-			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
+		if (resource != null) {
+			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), resource);
 		}
 		super.setContext(requestContext);
 

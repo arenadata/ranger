@@ -131,7 +131,8 @@ public class HiveMappingFetcher extends BaseResourceMappingFetcher {
     private HiveEntity toHiveEntity(ResourceMapping mapping, String entityType) {
         return new HiveEntity(
             mapping.getName(),
-            HiveObjectType.valueOf(entityType)
+            HiveObjectType.valueOf(entityType),
+            mapping.getOwner()
         );
     }
 }

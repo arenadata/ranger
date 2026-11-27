@@ -30,6 +30,7 @@ import lombok.Getter;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.NotificationEvent;
+import org.apache.hadoop.hive.metastore.api.PrincipalType;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.messaging.AlterDatabaseMessage;
@@ -52,6 +53,11 @@ public class NotificationEventFactory {
     private static final MessageSerializer MESSAGE_ENCODER = new JSONMessageEncoder().getSerializer();
 
     public static NotificationEvent newCreateTableEvent(long id, String fullName, TableType tableType, String location) {
+        return newCreateTableEvent(id, fullName, tableType, location, null, null);
+    }
+
+    public static NotificationEvent newCreateTableEvent(long id, String fullName, TableType tableType, String location,
+                                                        String owner, PrincipalType ownerType) {
         EntityName entityName = new EntityName(fullName);
         NotificationEvent event = baseEvent(id, entityName);
         event.setEventType(CREATE_TABLE.name());
@@ -59,7 +65,7 @@ public class NotificationEventFactory {
         CreateTableMessage message = new JSONCreateTableMessage(
             "server:1234",
             "serverPrincipal",
-            buildTable(entityName, tableType, location),
+            buildTable(entityName, tableType, location, owner, ownerType),
             null,
             0L
         );
@@ -69,6 +75,11 @@ public class NotificationEventFactory {
     }
 
     public static NotificationEvent newCreateDbEvent(long id, String fullName, String location) {
+        return newCreateDbEvent(id, fullName, location, null, null);
+    }
+
+    public static NotificationEvent newCreateDbEvent(long id, String fullName, String location,
+                                                     String owner, PrincipalType ownerType) {
         EntityName entityName = new EntityName(fullName);
         NotificationEvent event = baseEvent(id, entityName);
         event.setEventType(CREATE_DATABASE.name());
@@ -76,7 +87,7 @@ public class NotificationEventFactory {
         CreateDatabaseMessage message = new JSONCreateDatabaseMessage(
             "server:1234",
             "serverPrincipal",
-            buildDb(entityName, location),
+            buildDb(entityName, location, owner, ownerType),
             0L
         );
         event.setMessage(MESSAGE_ENCODER.serialize(message));
@@ -87,6 +98,16 @@ public class NotificationEventFactory {
                                                        TableType tableType,
                                                        ResourceMapping oldMapping,
                                                        ResourceMapping newMapping) {
+        return newAlterTableEvent(id, tableType, oldMapping, PrincipalType.USER, newMapping, PrincipalType.USER);
+    }
+
+    /** the owners of the table before and after the change are the owners of the mappings */
+    public static NotificationEvent newAlterTableEvent(long id,
+                                                       TableType tableType,
+                                                       ResourceMapping oldMapping,
+                                                       PrincipalType oldOwnerType,
+                                                       ResourceMapping newMapping,
+                                                       PrincipalType newOwnerType) {
         EntityName entityName = new EntityName(oldMapping.getName());
         NotificationEvent event = baseEvent(id, entityName);
         event.setEventType(ALTER_TABLE.name());
@@ -94,8 +115,9 @@ public class NotificationEventFactory {
         AlterTableMessage message = new JSONAlterTableMessage(
             "server:1234",
             "serverPrincipal",
-            buildTable(entityName, tableType, oldMapping.getLocation()),
-            buildTable(new EntityName(newMapping.getName()), tableType, newMapping.getLocation()),
+            buildTable(entityName, tableType, oldMapping.getLocation(), oldMapping.getOwner(), oldOwnerType),
+            buildTable(new EntityName(newMapping.getName()), tableType, newMapping.getLocation(),
+                newMapping.getOwner(), newOwnerType),
             false,
             null,
             0L
@@ -105,6 +127,15 @@ public class NotificationEventFactory {
     }
 
     public static NotificationEvent newAlterDbEvent(long id, ResourceMapping oldMapping, ResourceMapping newMapping) {
+        return newAlterDbEvent(id, oldMapping, PrincipalType.USER, newMapping, PrincipalType.USER);
+    }
+
+    /** the owners of the database before and after the change are the owners of the mappings */
+    public static NotificationEvent newAlterDbEvent(long id,
+                                                    ResourceMapping oldMapping,
+                                                    PrincipalType oldOwnerType,
+                                                    ResourceMapping newMapping,
+                                                    PrincipalType newOwnerType) {
         EntityName entityName = new EntityName(oldMapping.getName());
         NotificationEvent event = baseEvent(id, entityName);
         event.setEventType(ALTER_DATABASE.name());
@@ -112,8 +143,8 @@ public class NotificationEventFactory {
         AlterDatabaseMessage message = new JSONAlterDatabaseMessage(
             "server:1234",
             "serverPrincipal",
-            buildDb(entityName, oldMapping.getLocation()),
-            buildDb(new EntityName(newMapping.getName()), newMapping.getLocation()),
+            buildDb(entityName, oldMapping.getLocation(), oldMapping.getOwner(), oldOwnerType),
+            buildDb(new EntityName(newMapping.getName()), newMapping.getLocation(), newMapping.getOwner(), newOwnerType),
             0L
         );
         event.setMessage(MESSAGE_ENCODER.serialize(message));
@@ -128,7 +159,7 @@ public class NotificationEventFactory {
         DropTableMessage message = new JSONDropTableMessage(
             "server:1234",
             "serverPrincipal",
-            buildTable(entityName, tableType, location),
+            buildTable(entityName, tableType, location, null, null),
             0L
         );
         event.setMessage(MESSAGE_ENCODER.serialize(message));
@@ -143,7 +174,7 @@ public class NotificationEventFactory {
         DropDatabaseMessage message = new JSONDropDatabaseMessage(
             "server:1234",
             "serverPrincipal",
-            buildDb(entityName, location),
+            buildDb(entityName, location, null, null),
             0L
         );
         event.setMessage(MESSAGE_ENCODER.serialize(message));
@@ -162,8 +193,11 @@ public class NotificationEventFactory {
         return event;
     }
 
-    private static Table buildTable(EntityName entityName, TableType tableType, String location) {
+    private static Table buildTable(EntityName entityName, TableType tableType, String location,
+                                    String owner, PrincipalType ownerType) {
         Table table = new Table();
+        table.setOwner(owner);
+        table.setOwnerType(ownerType);
         table.setCatName(entityName.catalogName);
         table.setDbName(entityName.dbName);
         table.setTableName(entityName.tableName);
@@ -176,8 +210,10 @@ public class NotificationEventFactory {
         return table;
     }
 
-    private static Database buildDb(EntityName entityName, String location) {
+    private static Database buildDb(EntityName entityName, String location, String owner, PrincipalType ownerType) {
         Database db = new Database();
+        db.setOwnerName(owner);
+        db.setOwnerType(ownerType);
         db.setCatalogName(entityName.catalogName);
         db.setName(entityName.dbName);
         db.setLocationUri(location);

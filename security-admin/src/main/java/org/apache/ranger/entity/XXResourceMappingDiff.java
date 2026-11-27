@@ -43,14 +43,16 @@ public class XXResourceMappingDiff implements Serializable {
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "old_name")),
-        @AttributeOverride(name = "location", column = @Column(name = "old_location"))
+        @AttributeOverride(name = "location", column = @Column(name = "old_location")),
+        @AttributeOverride(name = "owner", column = @Column(name = "old_owner"))
     })
     protected ResourceMapping oldEntity;
 
     @Embedded
     @AttributeOverrides({
         @AttributeOverride(name = "name", column = @Column(name = "new_name")),
-        @AttributeOverride(name = "location", column = @Column(name = "new_location"))
+        @AttributeOverride(name = "location", column = @Column(name = "new_location")),
+        @AttributeOverride(name = "owner", column = @Column(name = "new_owner"))
     })
     protected ResourceMapping newEntity;
 

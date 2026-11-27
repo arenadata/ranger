@@ -28,15 +28,23 @@ import java.io.Serializable;
 public class ResourceMapping implements Serializable {
     private final String name;
     private final String location;
+    private final String owner;
+
+    public ResourceMapping(String name, String location) {
+        this(name, location, null);
+    }
 
     @JsonCreator
     public ResourceMapping(
         @JsonProperty(value = "name")
         String name,
         @JsonProperty(value = "location")
-        String location) {
+        String location,
+        @JsonProperty(value = "owner")
+        String owner) {
         this.name = name;
         this.location = location;
+        this.owner = owner;
     }
 
     public String getName() {
@@ -45,5 +53,19 @@ public class ResourceMapping implements Serializable {
 
     public String getLocation() {
         return location;
+    }
+
+    /**
+     * @return the user owning the Hive entity, or null if a role or a group owns it or the owner is unknown
+     */
+    public String getOwner() {
+        return owner;
+    }
+
+    /**
+     * @return the same entity at another location, e.g. the location converted to the form of the target service
+     */
+    public ResourceMapping withLocation(String location) {
+        return new ResourceMapping(name, location, owner);
     }
 }

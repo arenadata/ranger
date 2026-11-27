@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.hive.authorizer;
 
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
 import java.io.File;
@@ -38,6 +39,7 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 
 
 	private HiveObjectType objectType = null;
+	private final RangerAccessResource ownerSource;
 
 	//FirstLevelResource => Database or URL or Hive Service or Global
 	//SecondLevelResource => Table or UDF
@@ -51,7 +53,17 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 	}
 	
 	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource, String thirdLevelResource) {
-		this.objectType = objectType;
+		this(objectType, firstLevelResource, secondLevelResource, thirdLevelResource, null);
+	}
+
+	/**
+	 * Creates a resource owned by the owner of another resource, e.g. of the resource of another service that a chained
+	 * plugin checks against Hive policies. The owner is read only when a policy refers to it: some services look the
+	 * owner up with a remote call.
+	 */
+	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource, String thirdLevelResource, RangerAccessResource ownerSource) {
+		this.objectType  = objectType;
+		this.ownerSource = ownerSource;
 
 		switch(objectType) {
 			case DATABASE:
@@ -113,6 +125,16 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 			default:
 			break;
 		}
+	}
+
+	/**
+	 * @return the owner set on this resource or, if none is set, the owner of the owner source
+	 */
+	@Override
+	public String getOwnerUser() {
+		String ownerUser = super.getOwnerUser();
+
+		return ownerUser != null || ownerSource == null ? ownerUser : ownerSource.getOwnerUser();
 	}
 
 	public HiveObjectType getObjectType() {

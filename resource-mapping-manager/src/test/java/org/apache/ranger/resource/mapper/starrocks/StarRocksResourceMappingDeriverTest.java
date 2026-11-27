@@ -50,7 +50,7 @@ class StarRocksResourceMappingDeriverTest {
     @Test
     void aTableIsDerivedForEveryCatalog() {
         ResourceMappingDiff diff = MetastoreEntityDiffFactory.createEntity(
-            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, 42L);
+            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, "alice", 42L);
 
         List<ResourceMappingDiff> derived = deriver.derive(diff);
 
@@ -63,6 +63,7 @@ class StarRocksResourceMappingDeriverTest {
         assertEquals("starrocks", first.getTargetService());
         assertEquals("hive.db1.t1", first.getOldEntity().getName());
         assertEquals("hive_catalog.db1.t1", first.getOldEntity().getLocation());
+        assertEquals("alice", first.getOldEntity().getOwner(), "{OWNER} in Hive policies needs the owner in StarRocks too");
         assertNull(first.getNewEntity());
         assertEquals("iceberg_catalog.db1.t1", derived.get(1).getOldEntity().getLocation());
     }
@@ -82,7 +83,7 @@ class StarRocksResourceMappingDeriverTest {
     void aRenameCarriesBothNames() {
         ResourceMappingDiff diff = MetastoreEntityDiffFactory.updateEntity(
             mapping("hive.db1.t1", HDFS_LOCATION),
-            mapping("hive.db1.t2", "hdfs://nn:8020/warehouse/db1.db/t2"),
+            ResourceMapping.builder().name("hive.db1.t2").location("hdfs://nn:8020/warehouse/db1.db/t2").owner("bob").build(),
             HiveEntityType.TABLE, 8L);
 
         List<ResourceMappingDiff> derived = deriver.derive(diff);
@@ -91,6 +92,7 @@ class StarRocksResourceMappingDeriverTest {
         assertEquals("hive_catalog.db1.t1", derived.get(0).getOldEntity().getLocation());
         assertEquals("hive.db1.t2", derived.get(0).getNewEntity().getName());
         assertEquals("hive_catalog.db1.t2", derived.get(0).getNewEntity().getLocation());
+        assertEquals("bob", derived.get(0).getNewEntity().getOwner());
     }
 
     @Test
@@ -110,7 +112,7 @@ class StarRocksResourceMappingDeriverTest {
             new StarRocksResourceMappingDeriver(Collections.emptyList());
 
         assertTrue(empty.derive(MetastoreEntityDiffFactory.createEntity(
-            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, 1L)).isEmpty());
+            "hive.db1.t1", HiveEntityType.TABLE, HDFS_LOCATION, null, 1L)).isEmpty());
         assertTrue(empty.derive(mapping("hive.db1.t1", HDFS_LOCATION)).isEmpty());
     }
 
@@ -133,7 +135,7 @@ class StarRocksResourceMappingDeriverTest {
     void malformedEntityNamesAreSkipped() {
         for (String name : Arrays.asList("db1", "hive", "hive..t1", "hive.db1.", ".db1.t1", "")) {
             assertTrue(deriver.derive(MetastoreEntityDiffFactory.createEntity(
-                name, HiveEntityType.TABLE, HDFS_LOCATION, 1L)).isEmpty(), name);
+                name, HiveEntityType.TABLE, HDFS_LOCATION, null, 1L)).isEmpty(), name);
             assertTrue(deriver.derive(mapping(name, HDFS_LOCATION)).isEmpty(), name);
         }
     }

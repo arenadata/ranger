@@ -21,6 +21,7 @@ package org.apache.ranger.hive.chained.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -135,6 +136,32 @@ class HiveMappingFetcherTest {
         assertFalse(mappingStore.get("/location2").isPresent());
         assertTrue(mappingStore.get("/location3").isPresent());
         assertEquals("another.name", mappingStore.get("/location3").get().fullName());
+    }
+
+    @ParameterizedTest
+    @MethodSource(value = "objectTypesParamSource")
+    public void testOwnerIsKept(HiveObjectType objectType) {
+        mappingFetcher.applyDiff(newTestDiff(HiveMappingFetcher.HiveEntityDiffType.CREATE, objectType,
+            new ResourceMapping("hive.db1.t1", "/location1", "alice"), null));
+        assertEquals("alice", mappingStore.get("/location1").get().getOwner());
+
+        // only the owner changed
+        mappingFetcher.applyDiff(newTestDiff(HiveMappingFetcher.HiveEntityDiffType.UPDATE, objectType,
+            new ResourceMapping("hive.db1.t1", "/location1", "alice"),
+            new ResourceMapping("hive.db1.t1", "/location1", "bob")));
+        assertEquals("bob", mappingStore.get("/location1").get().getOwner());
+
+        mappingFetcher.applyDiff(newTestDiff(HiveMappingFetcher.HiveEntityDiffType.UPDATE, objectType,
+            new ResourceMapping("hive.db1.t1", "/location1", "bob"),
+            new ResourceMapping("hive.db1.t2", "/location2", "bob")));
+        assertFalse(mappingStore.get("/location1").isPresent());
+        assertEquals("bob", mappingStore.get("/location2").get().getOwner());
+
+        // a role took the entity over
+        mappingFetcher.applyDiff(newTestDiff(HiveMappingFetcher.HiveEntityDiffType.UPDATE, objectType,
+            new ResourceMapping("hive.db1.t2", "/location2", "bob"),
+            new ResourceMapping("hive.db1.t2", "/location2")));
+        assertNull(mappingStore.get("/location2").get().getOwner());
     }
 
     private ResourceMappingDiff newCreateDiff(HiveObjectType objectType, String name, String location) {

@@ -62,6 +62,14 @@ class StarRocksHiveMappingFetcherTest {
         assertEquals(HiveObjectType.TABLE, entity.getType());
     }
 
+    /** {OWNER} in Hive policies needs the owner of the mapped table */
+    @Test
+    public void theOwnerSurvivesTheLocationConversion() {
+        apply(CREATE, HiveObjectType.TABLE, new ResourceMapping("hive.db1.t1", "hive_catalog.db1.t1", "alice"), null);
+
+        assertEquals("alice", required("/hive_catalog/db1/t1").getOwner());
+    }
+
     @Test
     void aTableMappingAlsoCoversItsColumns() {
         apply(CREATE, HiveObjectType.TABLE, mapping("hive.db1.t1", "hive_catalog.db1.t1"), null);

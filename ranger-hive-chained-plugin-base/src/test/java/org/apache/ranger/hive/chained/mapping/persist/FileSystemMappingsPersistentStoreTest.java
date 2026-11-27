@@ -21,6 +21,7 @@ package org.apache.ranger.hive.chained.mapping.persist;
 
 import static org.apache.ranger.hive.chained.mapping.TrieHiveResourceMappingStore.pathToTrieKey;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URL;
@@ -113,6 +114,34 @@ class FileSystemMappingsPersistentStoreTest {
         String expectedMappings = fileContent(resolveResourcePath("mappings/fs-test-mappings.txt"));
         String actualMappings = fileContent(store.getMappingsLocation());
         assertEquals(expectedMappings, actualMappings);
+    }
+
+    @Test
+    public void testOwnerIsPersisted() throws Exception {
+        trie.put(pathToTrieKey("/root/owned"), new HiveEntity("hive.db1.t9", HiveObjectType.TABLE, "alice"));
+        persist(12L);
+
+        HiveEntity entity = store.getMappings().get().getMappings().get("/root/owned");
+
+        assertEquals("hive.db1.t9", entity.fullName());
+        assertEquals("alice", entity.getOwner());
+        assertNull(store.getMappings().get().getMappings().get("/key1").getOwner());
+    }
+
+    /** a mappings file of the previous version has no owners; a file of a later version may have more fields */
+    @Test
+    public void testFileWithoutOwnersIsRead() throws Exception {
+        Files.write(Paths.get(store.getMappingsLocation()), (
+            "7\n"
+                + "{\"path\":\"/warehouse/db1.db/t1\",\"name\":\"hive.db1.t1\",\"type\":\"TABLE\"}\n"
+                + "{\"path\":\"/warehouse/db1.db\",\"name\":\"hive.db1\",\"type\":\"DATABASE\",\"owner\":\"bob\"}\n")
+            .getBytes(StandardCharsets.UTF_8));
+
+        HiveMappings mappings = store.getMappings().get();
+
+        assertEquals(7L, mappings.getVersion());
+        assertEquals(new HiveEntity("hive.db1.t1", HiveObjectType.TABLE), mappings.getMappings().get("/warehouse/db1.db/t1"));
+        assertEquals(new HiveEntity("hive.db1", HiveObjectType.DATABASE, "bob"), mappings.getMappings().get("/warehouse/db1.db"));
     }
 
     private String fileContent(String location) throws Exception {

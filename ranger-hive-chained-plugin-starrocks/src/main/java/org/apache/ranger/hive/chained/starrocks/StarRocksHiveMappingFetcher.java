@@ -40,9 +40,6 @@ public class StarRocksHiveMappingFetcher extends HiveMappingFetcher {
 
     @Override
     protected ResourceMapping transformMapping(ResourceMapping mapping) {
-        return new ResourceMapping(
-            mapping.getName(),
-            StarRocksResourcePath.fromLocation(mapping.getLocation())
-        );
+        return mapping.withLocation(StarRocksResourcePath.fromLocation(mapping.getLocation()));
     }
 }

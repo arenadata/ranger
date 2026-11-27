@@ -90,6 +90,9 @@ public class TrinoHiveChainedPlugin
                 .orElseGet(Collections::emptyList);
     }
 
+    /**
+     * Maps a Trino schema, table or column to the Hive resource with the same names and the same owner.
+     */
     private Optional<RangerHiveResource> toRangerHiveResource(RangerAccessResource trinoResource)
     {
         String schema = (String) trinoResource.getValue(SCHEMA_RESOURCE);
@@ -101,21 +104,21 @@ public class TrinoHiveChainedPlugin
         Optional.ofNullable(trinoResource.getValue(COLUMN_RESOURCE))
                 .map(String.class::cast)
                 .ifPresent(objects::add);
-        return createHiveResource(objects);
+        return createHiveResource(objects, trinoResource);
     }
 
-    private Optional<RangerHiveResource> createHiveResource(List<String> objects)
+    private Optional<RangerHiveResource> createHiveResource(List<String> objects, RangerAccessResource trinoResource)
     {
         RangerHiveResource hiveResource = null;
         if (objects.size() == 1) {
-            hiveResource = new RangerHiveResource(HiveObjectType.DATABASE, objects.get(0));
+            hiveResource = new RangerHiveResource(HiveObjectType.DATABASE, objects.get(0), null, null, trinoResource);
         }
         else if (objects.size() == 2) {
-            hiveResource = new RangerHiveResource(HiveObjectType.TABLE, objects.get(0), objects.get(1));
+            hiveResource = new RangerHiveResource(HiveObjectType.TABLE, objects.get(0), objects.get(1), null, trinoResource);
         }
         else if (objects.size() == 3) {
             hiveResource =
-                    new RangerHiveResource(HiveObjectType.COLUMN, objects.get(0), objects.get(1), objects.get(2));
+                    new RangerHiveResource(HiveObjectType.COLUMN, objects.get(0), objects.get(1), objects.get(2), trinoResource);
         }
         return Optional.ofNullable(hiveResource);
     }

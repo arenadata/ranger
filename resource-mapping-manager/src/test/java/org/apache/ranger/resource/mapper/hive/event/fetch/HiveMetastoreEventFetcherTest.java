@@ -55,6 +55,7 @@ import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.NotificationEvent;
 import org.apache.hadoop.hive.metastore.api.NotificationEventResponse;
+import org.apache.hadoop.hive.metastore.api.PrincipalType;
 import org.apache.hadoop.hive.metastore.messaging.json.JSONMessageDeserializer;
 import org.apache.ranger.resource.mapper.event.retry.PolicyBasedRetrySupport;
 import org.apache.ranger.resource.mapper.event.retry.RetryPolicyFactory;
@@ -156,6 +157,74 @@ class HiveMetastoreEventFetcherTest {
 
         assertEquals(Collections.singletonList(0L), eventsHolder.requestedOffsetIds);
         assertEquals(403L, eventFetcher.getLastHandledEventId());
+    }
+
+    /** {OWNER} in Hive policies is matched against users, so only user owners are published */
+    @Test
+    public void testUserOwnersArePublished() {
+        eventsHolder.addEvents(Arrays.asList(
+            newCreateDbEvent(1L, "hive.db1", "/db1", "dbowner", PrincipalType.USER),
+            newCreateTableEvent(2L, "hive.db1.t1", TableType.MANAGED_TABLE, "/db1/t1", "alice", PrincipalType.USER),
+            newCreateTableEvent(3L, "hive.db1.t2", TableType.EXTERNAL_TABLE, "/db1/t2", "admins", PrincipalType.ROLE),
+            newCreateDbEvent(4L, "hive.db2", "/db2", "analysts", PrincipalType.GROUP),
+            newCreateTableEvent(5L, "hive.db1.t3", TableType.MANAGED_TABLE, "/db1/t3", null, null)
+        ));
+
+        List<ResourceDiffStreamRecord> records = getFetchedEvents();
+
+        assertEquals(Arrays.asList("dbowner", "alice", null, null, null), oldOwners(records));
+    }
+
+    @Test
+    public void testOwnerChangeIsPublished() {
+        eventsHolder.addEvents(Arrays.asList(
+            newAlterTableEvent(1L, TableType.MANAGED_TABLE,
+                mapping("hive.db1.t1", "/db1/t1", "alice"),
+                mapping("hive.db1.t1", "/db1/t1", "bob")),
+            newAlterDbEvent(2L,
+                mapping("hive.db1", "/db1", "alice"),
+                mapping("hive.db1", "/db1", "bob")),
+            // a role takes the table over: the table has no user owner any more
+            newAlterTableEvent(3L, TableType.MANAGED_TABLE,
+                mapping("hive.db1.t2", "/db1/t2", "bob"), PrincipalType.USER,
+                mapping("hive.db1.t2", "/db1/t2", "bob"), PrincipalType.ROLE),
+            // properties, columns or statistics of the table changed, its mapping did not
+            newAlterTableEvent(4L, TableType.MANAGED_TABLE,
+                mapping("hive.db1.t3", "/db1/t3", "alice"),
+                mapping("hive.db1.t3", "/db1/t3", "alice")),
+            // a rename keeps the owner
+            newAlterTableEvent(5L, TableType.MANAGED_TABLE,
+                mapping("hive.db1.t3", "/db1/t3", "alice"),
+                mapping("hive.db1.t4", "/db1/t4", "alice"))
+        ));
+
+        List<ResourceDiffStreamRecord> records = getFetchedEvents();
+
+        assertEquals(Arrays.asList(
+            updateDiff(1L, TABLE, mapping("hive.db1.t1", "/db1/t1", null), mapping("hive.db1.t1", "/db1/t1", null)),
+            updateDiff(2L, DATABASE, mapping("hive.db1", "/db1", null), mapping("hive.db1", "/db1", null)),
+            updateDiff(3L, TABLE, mapping("hive.db1.t2", "/db1/t2", null), mapping("hive.db1.t2", "/db1/t2", null)),
+            updateDiff(5L, TABLE, mapping("hive.db1.t3", "/db1/t3", null), mapping("hive.db1.t4", "/db1/t4", null))
+        ), records);
+        assertEquals(Arrays.asList("alice", "alice", "bob", "alice"), oldOwners(records));
+        assertEquals(Arrays.asList("bob", "bob", null, "alice"), newOwners(records));
+        assertEquals(5L, eventFetcher.getLastHandledEventId());
+    }
+
+    private static ResourceMapping mapping(String name, String location, String owner) {
+        return new ResourceMapping(name, location, owner);
+    }
+
+    private static List<String> oldOwners(List<ResourceDiffStreamRecord> records) {
+        return records.stream()
+            .map(record -> ((ResourceMappingDiff) record).getOldEntity().getOwner())
+            .collect(Collectors.toList());
+    }
+
+    private static List<String> newOwners(List<ResourceDiffStreamRecord> records) {
+        return records.stream()
+            .map(record -> ((ResourceMappingDiff) record).getNewEntity().getOwner())
+            .collect(Collectors.toList());
     }
 
     private List<ResourceDiffStreamRecord> getFetchedEvents() {

@@ -70,6 +70,10 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 public class TestPolicyEngine {
 	static RangerPluginContext pluginContext;
@@ -374,6 +378,42 @@ public class TestPolicyEngine {
 
 		runTestsFromResourceFiles(resourceFiles);
 	}
+
+	@Test
+	public void testPolicyEngine_ownerIsResolvedLazily() {
+		InputStreamReader    reader   = new InputStreamReader(this.getClass().getResourceAsStream("/policyengine/test_policyengine_owner.json"));
+		PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
+
+		ServicePolicies servicePolicies = new ServicePolicies();
+		servicePolicies.setPolicyVersion(100L);
+		servicePolicies.setServiceName(testCase.serviceName);
+		servicePolicies.setServiceDef(testCase.serviceDef);
+		servicePolicies.setPolicies(testCase.policies);
+
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, null);
+
+		RangerAccessResourceImpl unmatchedResource = evaluateReadByOwner(policyEngine, "/tmp/unmatched.txt", Collections.emptySet(), false);
+		verify(unmatchedResource, never()).getOwnerUser();
+
+		RangerAccessResourceImpl resourceWithoutOwnerPolicy = evaluateReadByOwner(policyEngine, "/data/report.csv", Collections.singleton("analysts"), true);
+		verify(resourceWithoutOwnerPolicy, never()).getOwnerUser();
+
+		RangerAccessResourceImpl resourceWithOwnerPolicy = evaluateReadByOwner(policyEngine, "/home/user1/notes.txt", Collections.emptySet(), true);
+		verify(resourceWithOwnerPolicy, atLeastOnce()).getOwnerUser();
+	}
+
+	/**
+	 * Evaluates read access of user1 to a path owned by user1 and returns the spied resource to check its owner reads.
+	 */
+	private RangerAccessResourceImpl evaluateReadByOwner(RangerPolicyEngine policyEngine, String path, Set<String> userGroups, boolean expectedIsAllowed) {
+		RangerAccessResourceImpl resource = spy(new RangerAccessResourceImpl(Collections.singletonMap("path", path), "user1"));
+		RangerAccessRequest      request  = new RangerAccessRequestImpl(resource, "read", "user1", userGroups, Collections.emptySet());
+
+		assertEquals("isAllowed mismatched! - " + path, expectedIsAllowed, policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null).getIsAllowed());
+
+		return resource;
+	}
+
 	@Test
 	public void testPolicyEngine_temporary() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_temporary.json"};

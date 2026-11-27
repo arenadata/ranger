@@ -22,25 +22,33 @@ package org.apache.ranger.hive.chained.mapping;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.apache.ranger.authorization.hive.authorizer.HiveObjectType;
 
 @Data
-@RequiredArgsConstructor
 public class HiveEntity {
     private final List<String> nameSegments;
     private final HiveObjectType type;
+    /**
+     * User owning the Hive entity, or null if a role or a group owns it or the owner is unknown (e.g. a mapping
+     * published before RMM started to publish owners).
+     */
+    private final String owner;
 
     public HiveEntity(String fullName, HiveObjectType type) {
+        this(fullName, type, null);
+    }
+
+    public HiveEntity(String fullName, HiveObjectType type, String owner) {
         this.nameSegments = toNameSegments(fullName);
         this.type = type;
+        this.owner = owner;
     }
 
     public String fullName() {
         return String.join(".", nameSegments);
     }
 
-    private List<String> toNameSegments(String fullName) {
+    private static List<String> toNameSegments(String fullName) {
         return Arrays.asList(fullName.split("\\."));
     }
 }

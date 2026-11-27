@@ -23,6 +23,7 @@ import static lombok.AccessLevel.PROTECTED;
 import static org.apache.ranger.resource.mapper.hive.event.MetastoreEntityDiffFactory.HIVE_SERVICE;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -219,10 +220,12 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
             return;
         }
 
+        Table table = createTableMessage.getTableObj();
         ResourceMappingDiff createEntityDiff = MetastoreEntityDiffFactory.createEntity(
             tableName,
             HiveEntityType.TABLE,
-            createTableMessage.getTableObj().getSd().getLocation(),
+            table.getSd().getLocation(),
+            userOwner(table),
             event.getEventId());
 
         outputQueue.put(createEntityDiff);
@@ -234,10 +237,12 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
         CreateDatabaseMessage createDatabaseMessage = eventMessageDeserializer
             .getCreateDatabaseMessage(event.getMessage());
 
+        Database database = createDatabaseMessage.getDatabaseObject();
         ResourceMappingDiff createEntityDiff = MetastoreEntityDiffFactory.createEntity(
             fullDbName(event),
             HiveEntityType.DATABASE,
-            createDatabaseMessage.getDatabaseObject().getLocationUri(),
+            database.getLocationUri(),
+            userOwner(database),
             event.getEventId());
 
         outputQueue.put(createEntityDiff);
@@ -292,17 +297,21 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
 
         String newFullName = fullName(event.getCatName(), event.getDbName(), tableObjAfter.getTableName());
 
-        if (!oldFullName.equals(newFullName)
-            || !tableObjBefore.getSd().getLocation().equals(tableObjAfter.getSd().getLocation())) {
+        ResourceMapping oldMapping = new ResourceMapping(
+            oldFullName,
+            tableObjBefore.getSd().getLocation(),
+            userOwner(tableObjBefore));
+        ResourceMapping newMapping = new ResourceMapping(
+            newFullName,
+            tableObjAfter.getSd().getLocation(),
+            userOwner(tableObjAfter));
+
+        if (isChanged(oldMapping, newMapping)) {
             log.debug("Handle alter table event: {}", event);
 
             ResourceMappingDiff resourceMappingDiff = MetastoreEntityDiffFactory.updateEntity(
-                new ResourceMapping(
-                    oldFullName,
-                    tableObjBefore.getSd().getLocation()),
-                new ResourceMapping(
-                    newFullName,
-                    tableObjAfter.getSd().getLocation()),
+                oldMapping,
+                newMapping,
                 HiveEntityType.TABLE,
                 event.getEventId()
             );
@@ -318,23 +327,36 @@ public class HiveMetastoreEventFetcher extends BaseHiveMetastoreFetcher {
         Database dbObjBefore = alterDatabaseMessage.getDbObjBefore();
         Database dbObjAfter = alterDatabaseMessage.getDbObjAfter();
 
-        if (!dbObjBefore.getName().equals(dbObjAfter.getName())
-            || !dbObjBefore.getLocationUri().equals(dbObjAfter.getLocationUri())) {
+        ResourceMapping oldMapping = new ResourceMapping(
+            fullDbName(event),
+            dbObjBefore.getLocationUri(),
+            userOwner(dbObjBefore));
+        ResourceMapping newMapping = new ResourceMapping(
+            fullName(event.getCatName(), dbObjAfter.getName()),
+            dbObjAfter.getLocationUri(),
+            userOwner(dbObjAfter));
+
+        if (isChanged(oldMapping, newMapping)) {
             log.debug("Handle alter db event: {}", event);
 
             ResourceMappingDiff resourceMappingDiff = MetastoreEntityDiffFactory.updateEntity(
-                new ResourceMapping(
-                    fullDbName(event),
-                    dbObjBefore.getLocationUri()),
-                new ResourceMapping(
-                    fullName(event.getCatName(), dbObjAfter.getName()),
-                    dbObjAfter.getLocationUri()),
+                oldMapping,
+                newMapping,
                 HiveEntityType.DATABASE,
                 event.getEventId()
             );
 
             outputQueue.put(resourceMappingDiff);
         }
+    }
+
+    /**
+     * A rename, a new location or a new owner changes the mapping; other changes (properties, columns, statistics)
+     * do not.
+     */
+    private static boolean isChanged(ResourceMapping oldMapping, ResourceMapping newMapping) {
+        return !oldMapping.equals(newMapping)
+            || !Objects.equals(oldMapping.getOwner(), newMapping.getOwner());
     }
 
     private boolean isSupportedEvent(NotificationEvent event) {

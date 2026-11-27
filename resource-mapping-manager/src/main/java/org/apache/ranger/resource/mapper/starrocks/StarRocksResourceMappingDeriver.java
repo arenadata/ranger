@@ -97,6 +97,7 @@ public class StarRocksResourceMappingDeriver implements ResourceMappingDeriver {
             .map(location -> ResourceMapping.builder()
                 .name(hiveMapping.getName())
                 .location(location)
+                .owner(hiveMapping.getOwner())
                 .build());
     }
 

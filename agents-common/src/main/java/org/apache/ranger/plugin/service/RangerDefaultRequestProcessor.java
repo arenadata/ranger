@@ -111,10 +111,8 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
-        String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
-
-        if (StringUtils.isNotEmpty(owner)) {
-            RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
+        if (request.getResource() != null) {
+            RangerAccessRequestUtil.setOwnerInContext(request.getContext(), request.getResource());
         }
 
         Set<String> roles = request.getUserRoles();

@@ -89,6 +89,19 @@ Hive data-mask policies apply to the mapped columns. `MASK_SHOW_LAST_4`, `MASK_S
 any other mask type its service definition lacks becomes `MASK_NULL`. Row filters and Hive `CUSTOM`
 masks are forwarded as they are, so their expression has to be valid StarRocks SQL.
 
+## `{OWNER}` in Hive policies
+
+With the config `ranger.plugin.hive.resource.owner.enabled=true` of the Hive service in Ranger Admin
+(`false` by default), the `{OWNER}` items of Hive policies apply to the users owning Hive tables and
+databases, as RMM publishes them with the mappings. The owner of a database owns the database only,
+not its tables.
+
+The config switches all chained plugins of the Hive service at once (HDFS, Ozone, StarRocks): they
+get it with the policies of the service, without a restart.
+
+Upgrade Ranger Admin before RMM, and run a full sync once (`ranger.rmm.hms.sync.full=true`) to
+publish the owners of the existing Hive entities.
+
 ## Configuration
 
 ### RMM

@@ -21,6 +21,7 @@ package org.apache.ranger.resource.mapper.model;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 @Builder
@@ -29,4 +30,14 @@ import lombok.RequiredArgsConstructor;
 public class ResourceMapping {
     private final String name;
     private final String location;
+    /**
+     * User owning the Hive entity, or null if it is owned by a role or a group or the owner is unknown.
+     * The owner is not part of the mapping identity: mappings are found and deleted by name and location.
+     */
+    @EqualsAndHashCode.Exclude
+    private final String owner;
+
+    public ResourceMapping(String name, String location) {
+        this(name, location, null);
+    }
 }

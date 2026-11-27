@@ -20,6 +20,7 @@
 package org.apache.ranger.hive.chained.mapping.persist;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,7 @@ public class JsonMappingSerializer implements MappingSerializer {
     @Override
     public String serialize(String path, HiveEntity entity) {
         try {
-            return mapper.writeValueAsString(new Mapping(path, entity.fullName(), entity.getType()));
+            return mapper.writeValueAsString(new Mapping(path, entity.fullName(), entity.getType(), entity.getOwner()));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error serializing mapping", e);
         }
@@ -44,17 +45,19 @@ public class JsonMappingSerializer implements MappingSerializer {
     public void deserialize(String value, Map<String, HiveEntity> accumulator) {
         try {
             Mapping mapping = mapper.readValue(value, Mapping.class);
-            accumulator.put(mapping.path, new HiveEntity(mapping.name, mapping.type));
+            accumulator.put(mapping.path, new HiveEntity(mapping.name, mapping.type, mapping.owner));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error deserializing mapping", e);
         }
     }
 
     @Getter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class Mapping {
         private final String path;
         private final String name;
         private final HiveObjectType type;
+        private final String owner;
 
         @JsonCreator
         public Mapping(
@@ -63,10 +66,13 @@ public class JsonMappingSerializer implements MappingSerializer {
             @JsonProperty(value = "name")
             String name,
             @JsonProperty(value = "type")
-            HiveObjectType type) {
+            HiveObjectType type,
+            @JsonProperty(value = "owner")
+            String owner) {
             this.path = path;
             this.name = name;
             this.type = type;
+            this.owner = owner;
         }
     }
 

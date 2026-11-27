@@ -25,15 +25,19 @@ import static org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType.CR
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityDiffType.DELETE;
 import static org.apache.ranger.resource.mapper.hive.model.HiveEntityType.TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.resource.mapper.dao.ResourceMappingDiffDao;
+import org.apache.ranger.resource.mapper.hive.model.HiveEntityType;
 import org.apache.ranger.resource.mapper.model.ResourceDiffStreamRecord;
 import org.apache.ranger.resource.mapper.model.ResourceMapping;
 import org.apache.ranger.resource.mapper.model.ResourceMappingDiff;
@@ -79,6 +83,32 @@ class DbHiveIntermediateEventsResolverTest {
         );
 
         checkRecords(records, expectedDeletedMappings, expectedInsertedDiffs);
+    }
+
+    /** the owner changed while the snapshot was taken: the mapping is published again with the new owner */
+    @Test
+    public void testOwnerChangeKeepsTheNewOwner() {
+        List<ResourceDiffStreamRecord> records = Arrays.asList(
+            MetastoreEntityDiffFactory.createEntity("hive.db1.t1", HiveEntityType.TABLE, "/t1", "alice", 1L),
+            updateDiff(2L, TABLE,
+                new ResourceMapping("hive.db1.t1", "/t1", "alice"),
+                new ResourceMapping("hive.db1.t1", "/t1", "bob")),
+            // a table of the snapshot
+            updateDiff(3L, TABLE,
+                new ResourceMapping("hive.db1.t2", "/t2", "alice"),
+                new ResourceMapping("hive.db1.t2", "/t2", "carol"))
+        );
+
+        records.forEach(eventsResolver::handle);
+        eventsResolver.flush();
+
+        Map<String, String> insertedOwners = new HashMap<>();
+        diffDao.insertedDiffs.forEach(diff -> insertedOwners.put(diff.getOldEntity().getName(), diff.getOldEntity().getOwner()));
+        Map<String, String> expectedOwners = new HashMap<>();
+        expectedOwners.put("hive.db1.t1", "bob");
+        expectedOwners.put("hive.db1.t2", "carol");
+        assertEquals(expectedOwners, insertedOwners);
+        assertTrue(diffDao.deletedMappings.isEmpty(), "the mapping stays: only its owner changed");
     }
 
     private void checkRecords(List<ResourceDiffStreamRecord> records,
